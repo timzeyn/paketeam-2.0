@@ -51,38 +51,38 @@ const CFG = {
   ],
   variants: {
     sticker: [
-      { id:'round', name:'Round' },
-      { id:'square', name:'Square' },
-      { id:'rectangle', name:'Rectangle' },
-      { id:'oval', name:'Oval' },
-      { id:'custom-shape', name:'Custom shape' },
+      { id:'round', name:'Круглая', multiplier: 1.00 },
+      { id:'square', name:'Квадратная', multiplier: 1.00 },
+      { id:'rectangle', name:'Прямоугольная', multiplier: 1.05 },
+      { id:'oval', name:'Овальная', multiplier: 1.10 },
+      { id:'custom-shape', name:'Фигурная', multiplier: 1.25 },
     ],
     box: [
-      { id:'mailer-box', name:'Mailer box' },
-      { id:'tuck-top-box', name:'Tuck top' },
-      { id:'sleeve-box', name:'Sleeve box' },
-      { id:'window-box', name:'Window box' },
-      { id:'lid-bottom-box', name:'Lid + bottom' },
+      { id:'mailer-box', name:'Почтовая коробка', multiplier: 1.00 },
+      { id:'tuck-top-box', name:'Самосборная', multiplier: 1.10 },
+      { id:'sleeve-box', name:'Коробка-пенал', multiplier: 1.20 },
+      { id:'window-box', name:'Коробка с окном', multiplier: 1.35 },
+      { id:'lid-bottom-box', name:'Крышка-дно', multiplier: 1.30 },
     ],
     bag: [
-      { id:'doy-pack', name:'Doy-pack' },
-      { id:'zip-lock-bag', name:'Zip-lock' },
-      { id:'flat-bottom-bag', name:'Flat bottom' },
-      { id:'paper-bag-with-handles', name:'Paper handles' },
-      { id:'courier-bag', name:'Courier bag' },
+      { id:'doy-pack', name:'Дой-пак', multiplier: 1.00 },
+      { id:'zip-lock-bag', name:'Zip-lock', multiplier: 1.15 },
+      { id:'flat-bottom-bag', name:'С плоским дном', multiplier: 1.20 },
+      { id:'paper-bag-with-handles', name:'Бумажный с ручками', multiplier: 1.30 },
+      { id:'courier-bag', name:'Курьерский пакет', multiplier: 1.10 },
     ],
     cup: [
-      { id:'single-wall', name:'Single wall' },
-      { id:'double-wall', name:'Double wall' },
-      { id:'ripple-cup', name:'Ripple cup' },
-      { id:'cold-cup', name:'Cold cup' },
+      { id:'single-wall', name:'Однослойный', multiplier: 1.00 },
+      { id:'double-wall', name:'Двухслойный', multiplier: 1.20 },
+      { id:'ripple-cup', name:'Гофрированный', multiplier: 1.35 },
+      { id:'cold-cup', name:'Холодный стакан', multiplier: 1.25 },
     ],
   },
   sideOptions: {
-    sticker: [{ id:'front', label:'Front' }],
-    cup: [{ id:'front', label:'Front' }, { id:'back', label:'Back' }],
-    bag: [{ id:'front', label:'Front' }, { id:'back', label:'Back' }, { id:'left', label:'Left' }, { id:'right', label:'Right' }],
-    box: [{ id:'front', label:'Front' }, { id:'back', label:'Back' }, { id:'left', label:'Left' }, { id:'right', label:'Right' }, { id:'top', label:'Top' }, { id:'bottom', label:'Bottom' }],
+    sticker: [{ id:'front', label:'Лицо' }],
+    cup: [{ id:'front', label:'Лицо' }, { id:'back', label:'Задняя сторона' }],
+    bag: [{ id:'front', label:'Лицо' }, { id:'back', label:'Задняя сторона' }, { id:'left', label:'Левый бок' }, { id:'right', label:'Правый бок' }],
+    box: [{ id:'front', label:'Лицо' }, { id:'back', label:'Задняя сторона' }, { id:'left', label:'Левый бок' }, { id:'right', label:'Правый бок' }, { id:'top', label:'Верх' }, { id:'bottom', label:'Низ' }],
   },
   qty: [50, 100, 200, 500, 1000, 2000, 5000],
   sides: ['Лицо', 'Зад', 'Бок Л', 'Бок П', 'Верх', 'Низ'],
@@ -102,6 +102,7 @@ function createSides(type, color, text = 'малые тиражи'){
   }, {});
 }
 function activeSide(state){ return state.sides?.[state.activeSide] || state.sides?.front || createSideState(state.color || '#B08A5B'); }
+function variantConfig(type, variant){ return (CFG.variants[type] || []).find(v=>v.id===variant) || CFG.variants[type]?.[0] || { multiplier: 1 }; }
 function variantName(type, variant){ return (CFG.variants[type] || []).find(v=>v.id===variant)?.name || variant; }
 function sideLabel(type, sideId){ return sideOptionsForType(type).find(s=>s.id===sideId)?.label || sideId; }
 
@@ -154,15 +155,15 @@ function SettingsPanel({ state, set, setSide, tweaks }){
     { id:'side', label:'07. Сторона' },
   ];
   const sections = [
-    { id:'type', label:'01. Type' },
-    { id:'variant', label:'02. Variant' },
-    { id:'size', label:'03. Size' },
-    { id:'material', label:'04. Material' },
-    { id:'side', label:'05. Side' },
-    { id:'color', label:'06. Side color' },
-    { id:'logo', label:'07. Side logo' },
-    { id:'text', label:'08. Side text' },
-    { id:'visibility', label:'09. Visibility' },
+    { id:'type', label:'01. Тип упаковки' },
+    { id:'variant', label:'02. Вид / форма' },
+    { id:'size', label:'03. Размер' },
+    { id:'material', label:'04. Материал' },
+    { id:'side', label:'05. Сторона редактирования' },
+    { id:'color', label:'06. Цвет стороны' },
+    { id:'logo', label:'07. Логотип стороны' },
+    { id:'text', label:'08. Текст стороны' },
+    { id:'visibility', label:'09. Видимость стороны' },
   ];
   const onLogoFile = (e) => {
     const file = e.target.files?.[0];
@@ -206,7 +207,7 @@ function SettingsPanel({ state, set, setSide, tweaks }){
                 {variants.map(v=> (
                   <button key={v.id} className="tile cst-tile-sm" aria-selected={state.variant===v.id} onClick={()=>set('variant', v.id)}>
                     <div className="tile-title">{v.name}</div>
-                    <div className="tile-sub mono" style={{fontSize:10.5}}>{v.id}</div>
+                    <div className="tile-sub mono" style={{fontSize:10.5}}>коэф. × {v.multiplier.toFixed(2)}</div>
                   </button>
                 ))}
               </div>
@@ -259,7 +260,7 @@ function SettingsPanel({ state, set, setSide, tweaks }){
                 {side.logo ? (
                   <div className="cst-logo-preview">
                     <img src={side.logo} alt=""/>
-                    <button className="btn btn-ghost btn-sm" onClick={()=>setSide(state.activeSide, { logo: null })}>Remove</button>
+                    <button className="btn btn-ghost btn-sm" onClick={()=>setSide(state.activeSide, { logo: null })}>Удалить</button>
                   </div>
                 ) : (
                   <label className="cst-logo-drop">
@@ -286,7 +287,7 @@ function SettingsPanel({ state, set, setSide, tweaks }){
                        onChange={(e)=>set('text', e.target.value)}/>
                 <div className="cst-text-meta mono">
                   <span>{side.text.length}/42</span>
-                  <span>{sideLabel(state.type, state.activeSide)} side</span>
+                  <span>{sideLabel(state.type, state.activeSide)}</span>
                 </div>
               </div>
             )}
@@ -302,8 +303,8 @@ function SettingsPanel({ state, set, setSide, tweaks }){
             {section.id === 'visibility' && (
               <button className="cst-toggle-row" type="button" aria-pressed={side.visible} onClick={()=>setSide(state.activeSide, { visible: !side.visible })}>
                 <span>
-                  <b>{side.visible ? 'Visible' : 'Hidden'}</b>
-                  <small>{sideLabel(state.type, state.activeSide)} side artwork</small>
+                  <b>{side.visible ? 'Отображается' : 'Скрыто'}</b>
+                  <small>{sideLabel(state.type, state.activeSide)}</small>
                 </span>
                 <i/>
               </button>
@@ -420,6 +421,7 @@ function CalcPanel({ state, set, tweaks, onSubmit, requestState }){
       <div className="cst-summary">
         <Row label="Базовая цена" value={`${price.base} ₽/шт`}/>
         <Row label="Коэф. материала" value={`× ${price.matMult.toFixed(2)}`}/>
+        <Row label="Коэф. вида упаковки" value={`× ${price.variantMult.toFixed(2)}`}/>
         <Row label="Коэф. тиража" value={`× ${price.qtyMult.toFixed(2)}`}/>
         <div className="cst-row-divider"/>
         <Row label="Цена за штуку" value={<><b className="tabular">{price.perUnit}</b> ₽</>} large/>
@@ -471,6 +473,7 @@ function calcPrice(state, tweaks){
   const type = CFG.types.find(t=>t.id===state.type);
   const size = CFG.sizes[state.type].find(s=>s.id===state.size) || CFG.sizes[state.type][1];
   const mat = CFG.materials.find(m=>m.id===state.material);
+  const variant = variantConfig(state.type, state.variant);
   const qtyMult =
       state.qty <= 100  ? 1.40 :
       state.qty <= 200  ? 1.20 :
@@ -478,12 +481,13 @@ function calcPrice(state, tweaks){
       state.qty <= 1000 ? 0.85 :
       state.qty <= 2000 ? 0.78 : 0.70;
   const base = Math.round(type.basePrice * size.mult);
-  const perUnit = Math.max(2, Math.round(base * mat.multiplier * qtyMult));
+  const variantMult = variant.multiplier || 1;
+  const perUnit = Math.max(2, Math.round(base * mat.multiplier * variantMult * qtyMult));
   const days =
       state.qty <= 100  ? 7 :
       state.qty <= 500  ? 10 :
       state.qty <= 2000 ? 14 : 21;
-  return { base, matMult: mat.multiplier, qtyMult, perUnit, days };
+  return { base, matMult: mat.multiplier, variantMult, qtyMult, perUnit, days };
 }
 function currentTypeName(id){ return CFG.types.find(t=>t.id===id).name; }
 function currentSizeDims(state){
@@ -598,7 +602,7 @@ function ConstructorSuccess({ state, onBack, onHome }){
             </div>
             <div className="cst-success-info">
               <Row label="Тип" value={currentTypeName(state.type)}/>
-              <Row label="Variant" value={variantName(state.type, state.variant)}/>
+              <Row label="Вид упаковки" value={variantName(state.type, state.variant)}/>
               <Row label="Размер" value={currentSizeDims(state)}/>
               <Row label="Материал" value={currentMaterialName(state.material)}/>
               <Row label="Тираж" value={`${state.qty.toLocaleString('ru-RU')} шт`}/>
