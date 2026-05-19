@@ -205,6 +205,19 @@ const PKG_STYLE = `
 }
 
 /* Бесконечный нежный сдвиг для idle-вращения */
+.pkg-window{position:absolute;inset:18% 24% auto;height:34%;border-radius:10px;background:rgba(255,255,255,.38);border:1px solid rgba(255,255,255,.55);box-shadow:0 0 0 1px rgba(0,0,0,.08) inset;z-index:1}
+.pkg-sleeve{position:absolute;left:0;right:0;top:36%;height:28%;background:rgba(255,255,255,.18);border-top:1px dashed rgba(255,255,255,.45);border-bottom:1px dashed rgba(0,0,0,.18);z-index:1}
+.pkg-lid-line,.pkg-tuck-line{position:absolute;left:0;right:0;border-top:1px dashed rgba(0,0,0,.22);z-index:1}
+.pkg-lid-line{top:22%}.pkg-tuck-line{top:15%}
+.pkg-handles{position:absolute;top:7px;left:50%;width:92px;height:38px;transform:translateX(-50%);z-index:4}
+.pkg-handles i{position:absolute;top:0;width:30px;height:36px;border:4px solid rgba(255,255,255,.55);border-bottom:0;border-radius:999px 999px 0 0}
+.pkg-handles i:first-child{left:10px}.pkg-handles i:last-child{right:10px}
+.pkg-flat-bottom{position:absolute;left:10%;right:10%;bottom:0;height:28px;background:rgba(0,0,0,.12);border-top:1px dashed rgba(255,255,255,.35);z-index:2}
+.pkg-courier-flap{position:absolute;left:0;right:0;top:20px;height:34px;background:rgba(255,255,255,.16);border-bottom:1px dashed rgba(255,255,255,.5);z-index:2}
+.pkg-ripple{position:absolute;inset:17% 10% 12%;background:repeating-linear-gradient(180deg,rgba(255,255,255,.14) 0 7px,rgba(0,0,0,.06) 7px 12px);pointer-events:none}
+.pkg-double-wall{position:absolute;inset:8% 8% 7%;border:5px solid rgba(255,255,255,.18);border-radius:5px 5px 12px 12px;pointer-events:none}
+.pkg-cold-rim{position:absolute;top:2%;left:12%;right:12%;height:22px;border-radius:50%;background:rgba(255,255,255,.45);pointer-events:none}
+
 @keyframes pkt-idle-rotate{
   0%   { transform: translate3d(-50%,-50%,0) rotateX(-12deg) rotateY(-22deg); }
   50%  { transform: translate3d(-50%,-50%,0) rotateX(-12deg) rotateY(22deg); }
@@ -222,7 +235,11 @@ function pktContrast(hex){
   return (r*299 + g*587 + b*114) > 145000 ? '#0F1626' : '#FFFFFF';
 }
 
-function PkgArt({ logo, text, side }) {
+function PkgArt({ artwork, logo, text, side }) {
+  const data = artwork || { logo, text, visible: true };
+  if (data.visible === false) return null;
+  logo = data.logo;
+  text = data.text;
   return (
     <div className={`pkg-art ${side||''}`}>
       <div className={`pkg-logo ${logo ? 'img' : ''}`}>
@@ -233,75 +250,113 @@ function PkgArt({ logo, text, side }) {
   );
 }
 
+const SIDE_IDS = ['front', 'back', 'left', 'right', 'top', 'bottom'];
+function buildSides({ sides, color, logo, text }) {
+  const fallback = { logo, text, backgroundColor: color, visible: true };
+  return SIDE_IDS.reduce((acc, id) => {
+    acc[id] = { ...fallback, text: id === 'front' ? text : '', ...(sides?.[id] || {}) };
+    if (acc[id].backgroundColor == null) acc[id].backgroundColor = color;
+    if (acc[id].visible == null) acc[id].visible = true;
+    return acc;
+  }, {});
+}
+function sideStyle(side, extra = {}) {
+  const bg = side?.backgroundColor || '#B08A5B';
+  return { ...extra, backgroundColor: bg, ['--pkg-color']: bg, ['--pkg-art-color']: pktContrast(bg) };
+}
+function BoxVariantDetails({ variant }) {
+  if (variant === 'window-box') return <div className="pkg-window" />;
+  if (variant === 'sleeve-box') return <div className="pkg-sleeve" />;
+  if (variant === 'lid-bottom-box') return <div className="pkg-lid-line" />;
+  if (variant === 'tuck-top-box') return <div className="pkg-tuck-line" />;
+  return null;
+}
+function BagVariantDetails({ variant }) {
+  if (variant === 'paper-bag-with-handles') return <div className="pkg-handles"><i/><i/></div>;
+  if (variant === 'flat-bottom-bag') return <div className="pkg-flat-bottom" />;
+  if (variant === 'courier-bag') return <div className="pkg-courier-flap" />;
+  return null;
+}
+function CupVariantDetails({ variant }) {
+  if (variant === 'ripple-cup') return <div className="pkg-ripple" />;
+  if (variant === 'double-wall') return <div className="pkg-double-wall" />;
+  if (variant === 'cold-cup') return <div className="pkg-cold-rim" />;
+  return null;
+}
+
 // ── BOX 3D ─────────────────────────────────────────────────
-function Box3D({ color, logo, text, rotation, idle, size }){
+function Box3D({ sides, rotation, idle, size, variant }){
   const w = size?.w || 240, h = size?.h || 200, d = size?.d || 160;
   const tx = `translate3d(-50%, -50%, 0) rotateX(${rotation.x}deg) rotateY(${rotation.y}deg)`;
   const style = {
     width: w, height: h,
     transform: tx,
     position: 'absolute', left: '50%', top: '50%',
-    ['--pkg-color']: color,
-    ['--pkg-art-color']: pktContrast(color),
   };
   const half = { x:w/2, y:h/2, z:d/2 };
   return (
-    <div className={`pkg-3d pkg-box ${idle?'idle':''}`} style={style}>
-      <div className="face" style={{transform:`translateZ(${half.z}px)`}}>
-        <PkgArt logo={logo} text={text} />
+    <div className={`pkg-3d pkg-box pkg-box-${variant || 'mailer-box'} ${idle?'idle':''}`} style={style}>
+      <div className="face" style={sideStyle(sides.front, {transform:`translateZ(${half.z}px)`})}>
+        <BoxVariantDetails variant={variant} />
+        <PkgArt artwork={sides.front} />
       </div>
-      <div className="face" style={{transform:`rotateY(180deg) translateZ(${half.z}px)`, backgroundColor: 'rgba(0,0,0,.06)', backgroundBlendMode: 'multiply'}}/>
-      <div className="face" style={{width:d, left:(w-d)/2, transform:`rotateY(90deg) translateZ(${w/2}px)`, backgroundColor: 'rgba(0,0,0,.12)', backgroundBlendMode: 'multiply'}}/>
-      <div className="face" style={{width:d, left:(w-d)/2, transform:`rotateY(-90deg) translateZ(${w/2}px)`, backgroundColor: 'rgba(0,0,0,.12)', backgroundBlendMode: 'multiply'}}/>
-      <div className="face" style={{height:d, top:(h-d)/2, transform:`rotateX(90deg) translateZ(${h/2}px)`, backgroundColor: 'rgba(255,255,255,.18)', backgroundBlendMode: 'screen'}}/>
-      <div className="face" style={{height:d, top:(h-d)/2, transform:`rotateX(-90deg) translateZ(${h/2}px)`, backgroundColor: 'rgba(0,0,0,.18)', backgroundBlendMode: 'multiply'}}/>
+      <div className="face" style={sideStyle(sides.back, {transform:`rotateY(180deg) translateZ(${half.z}px)`, backgroundBlendMode: 'multiply'})}><PkgArt artwork={sides.back} /></div>
+      <div className="face" style={sideStyle(sides.right, {width:d, left:(w-d)/2, transform:`rotateY(90deg) translateZ(${w/2}px)`, backgroundBlendMode: 'multiply'})}><PkgArt artwork={sides.right} side="left" /></div>
+      <div className="face" style={sideStyle(sides.left, {width:d, left:(w-d)/2, transform:`rotateY(-90deg) translateZ(${w/2}px)`, backgroundBlendMode: 'multiply'})}><PkgArt artwork={sides.left} side="left" /></div>
+      <div className="face" style={sideStyle(sides.top, {height:d, top:(h-d)/2, transform:`rotateX(90deg) translateZ(${h/2}px)`, backgroundBlendMode: 'screen'})}><PkgArt artwork={sides.top} /></div>
+      <div className="face" style={sideStyle(sides.bottom, {height:d, top:(h-d)/2, transform:`rotateX(-90deg) translateZ(${h/2}px)`, backgroundBlendMode: 'multiply'})}><PkgArt artwork={sides.bottom} /></div>
     </div>
   );
 }
 
 // ── BAG 3D ─────────────────────────────────────────────────
-function Bag3D({ color, logo, text, rotation, idle }){
+function Bag3D({ sides, rotation, idle, variant }){
   const w = 200, h = 260, d = 60;
   const tx = `translate3d(-50%, -50%, 0) rotateX(${rotation.x}deg) rotateY(${rotation.y}deg)`;
   const style = {
     width: w, height: h,
     transform: tx,
     position:'absolute', left:'50%', top:'50%',
-    ['--pkg-color']: color, ['--pkg-art-color']: pktContrast(color),
   };
   return (
-    <div className={`pkg-3d pkg-bag ${idle?'idle':''}`} style={style}>
-      <div className="face" style={{transform:`translateZ(${d/2}px)`}}>
+    <div className={`pkg-3d pkg-bag pkg-bag-${variant || 'doy-pack'} ${idle?'idle':''}`} style={style}>
+      <div className="face" style={sideStyle(sides.front, {transform:`translateZ(${d/2}px)`})}>
         <div className="seal" />
-        <PkgArt logo={logo} text={text} />
+        <BagVariantDetails variant={variant} />
+        <PkgArt artwork={sides.front} />
       </div>
-      <div className="face" style={{transform:`rotateY(180deg) translateZ(${d/2}px)`}}>
+      <div className="face" style={sideStyle(sides.back, {transform:`rotateY(180deg) translateZ(${d/2}px)`})}>
         <div className="seal" />
+        <PkgArt artwork={sides.back} />
       </div>
-      <div className="face" style={{width:d, left:(w-d)/2, transform:`rotateY(90deg) translateZ(${w/2}px)`}}>
+      <div className="face" style={sideStyle(sides.right, {width:d, left:(w-d)/2, transform:`rotateY(90deg) translateZ(${w/2}px)`})}>
         <div className="seal" />
+        <PkgArt artwork={sides.right} side="left" />
       </div>
-      <div className="face" style={{width:d, left:(w-d)/2, transform:`rotateY(-90deg) translateZ(${w/2}px)`}}>
+      <div className="face" style={sideStyle(sides.left, {width:d, left:(w-d)/2, transform:`rotateY(-90deg) translateZ(${w/2}px)`})}>
         <div className="seal" />
+        <PkgArt artwork={sides.left} side="left" />
       </div>
     </div>
   );
 }
 
 // ── CUP 3D ─────────────────────────────────────────────────
-function Cup3D({ color, logo, text, rotation, idle }){
+function Cup3D({ sides, activeSide, rotation, idle, variant }){
+  const artwork = sides[activeSide] || sides.front;
   const tx = `translate3d(-50%, -50%, 0) rotateX(${rotation.x}deg) rotateY(${rotation.y}deg)`;
   const style = {
     width: 220, height: 250,
     transform: tx,
     position:'absolute', left:'50%', top:'50%',
-    ['--pkg-color']: color, ['--pkg-art-color']: pktContrast(color),
+    ['--pkg-color']: artwork.backgroundColor, ['--pkg-art-color']: pktContrast(artwork.backgroundColor),
   };
   return (
-    <div className={`pkg-3d pkg-cup-wrap ${idle?'idle':''}`} style={style}>
+    <div className={`pkg-3d pkg-cup-wrap pkg-cup-${variant || 'single-wall'} ${idle?'idle':''}`} style={style}>
       <div className="pkg-cup">
         <div className="pkg-cup-rim" />
-        <PkgArt logo={logo} text={text} />
+        <CupVariantDetails variant={variant} />
+        <PkgArt artwork={artwork} />
         <div className="pkg-cup-bottom" />
       </div>
     </div>
@@ -309,20 +364,22 @@ function Cup3D({ color, logo, text, rotation, idle }){
 }
 
 // ── STICKER 3D ─────────────────────────────────────────────
-function Sticker3D({ color, logo, text, rotation, idle, shape }){
+function Sticker3D({ sides, rotation, idle, variant }){
+  const artwork = sides.front;
   const tx = `translate3d(-50%, -50%, 0) rotateX(${rotation.x}deg) rotateY(${rotation.y}deg)`;
-  const radius = shape === 'square' ? '14px' : shape === 'rounded' ? '22%' : '50%';
+  const radius = variant === 'square' ? '14px' : variant === 'rectangle' ? '12px' : variant === 'oval' ? '50%' : variant === 'custom-shape' ? '38% 62% 46% 54% / 45% 40% 60% 55%' : '50%';
+  const dims = variant === 'rectangle' ? { width: 280, height: 180 } : variant === 'oval' ? { width: 270, height: 190 } : { width: 240, height: 240 };
   const style = {
-    width: 240, height: 240,
+    ...dims,
     transform: tx,
     position:'absolute', left:'50%', top:'50%',
-    ['--pkg-color']: color, ['--pkg-art-color']: pktContrast(color),
+    ['--pkg-color']: artwork.backgroundColor, ['--pkg-art-color']: pktContrast(artwork.backgroundColor),
     ['--pkg-radius']: radius,
   };
   return (
-    <div className={`pkg-3d pkg-sticker-wrap ${idle?'idle':''}`} style={style}>
+    <div className={`pkg-3d pkg-sticker-wrap pkg-sticker-${variant || 'round'} ${idle?'idle':''}`} style={style}>
       <div className="pkg-sticker">
-        <PkgArt logo={logo} text={text} />
+        <PkgArt artwork={artwork} />
       </div>
     </div>
   );
@@ -408,11 +465,16 @@ function Unfold({ type, color, logo, text, size }){
 }
 
 // ── PackagingPreview (главный экспорт) ─────────────────────
-export function PackagingPreview({ type='box', color='#B08A5B', logo=null, text='', view='3d', interactive=true, idle=true, size }){
+export function PackagingPreview({ type='box', variant='', color='#B08A5B', logo=null, text='', sides=null, activeSide='front', view='3d', interactive=true, idle=true, size }){
   const [rot, setRot] = React.useState({ x: -12, y: -22 });
   const [dragging, setDragging] = React.useState(false);
   const startRef = React.useRef(null);
   const userInteracted = React.useRef(false);
+  const allSides = buildSides({ sides, color, logo, text });
+  const currentSide = allSides[activeSide] || allSides.front;
+  const flatSize = type === 'sticker'
+    ? { ...(size || {}), shape: variant === 'square' ? 'square' : variant === 'rectangle' ? 'rounded' : 'round' }
+    : size;
 
   const onDown = (e) => {
     if (!interactive) return;
@@ -440,17 +502,17 @@ export function PackagingPreview({ type='box', color='#B08A5B', logo=null, text=
     return (
       <div className="pkg-stage">
         <style>{PKG_STYLE}</style>
-        <Unfold type={type} color={color} logo={logo} text={text} size={size}/>
+        <Unfold type={type} color={currentSide.backgroundColor} logo={currentSide.logo} text={currentSide.text} size={flatSize}/>
       </div>
     );
   }
 
-  const props = { color, logo, text, rotation: rot, idle: idle && !userInteracted.current };
+  const props = { sides: allSides, activeSide, rotation: rot, idle: idle && !userInteracted.current, variant };
   let Body;
   if (type === 'box') Body = <Box3D {...props} size={size}/>;
   else if (type === 'bag') Body = <Bag3D {...props}/>;
   else if (type === 'cup') Body = <Cup3D {...props}/>;
-  else Body = <Sticker3D {...props} shape={size?.shape || 'round'}/>;
+  else Body = <Sticker3D {...props}/>;
 
   return (
     <div

@@ -49,9 +49,61 @@ const CFG = {
     '#15803D', '#DC2626', '#F59E0B', '#7C3AED',
     '#F8F4EC', '#0EA5E9'
   ],
+  variants: {
+    sticker: [
+      { id:'round', name:'Round' },
+      { id:'square', name:'Square' },
+      { id:'rectangle', name:'Rectangle' },
+      { id:'oval', name:'Oval' },
+      { id:'custom-shape', name:'Custom shape' },
+    ],
+    box: [
+      { id:'mailer-box', name:'Mailer box' },
+      { id:'tuck-top-box', name:'Tuck top' },
+      { id:'sleeve-box', name:'Sleeve box' },
+      { id:'window-box', name:'Window box' },
+      { id:'lid-bottom-box', name:'Lid + bottom' },
+    ],
+    bag: [
+      { id:'doy-pack', name:'Doy-pack' },
+      { id:'zip-lock-bag', name:'Zip-lock' },
+      { id:'flat-bottom-bag', name:'Flat bottom' },
+      { id:'paper-bag-with-handles', name:'Paper handles' },
+      { id:'courier-bag', name:'Courier bag' },
+    ],
+    cup: [
+      { id:'single-wall', name:'Single wall' },
+      { id:'double-wall', name:'Double wall' },
+      { id:'ripple-cup', name:'Ripple cup' },
+      { id:'cold-cup', name:'Cold cup' },
+    ],
+  },
+  sideOptions: {
+    sticker: [{ id:'front', label:'Front' }],
+    cup: [{ id:'front', label:'Front' }, { id:'back', label:'Back' }],
+    bag: [{ id:'front', label:'Front' }, { id:'back', label:'Back' }, { id:'left', label:'Left' }, { id:'right', label:'Right' }],
+    box: [{ id:'front', label:'Front' }, { id:'back', label:'Back' }, { id:'left', label:'Left' }, { id:'right', label:'Right' }, { id:'top', label:'Top' }, { id:'bottom', label:'Bottom' }],
+  },
   qty: [50, 100, 200, 500, 1000, 2000, 5000],
   sides: ['Лицо', 'Зад', 'Бок Л', 'Бок П', 'Верх', 'Низ'],
 };
+
+const SIDE_IDS = ['front', 'back', 'left', 'right', 'top', 'bottom'];
+function defaultVariantForType(type){ return CFG.variants[type]?.[0]?.id || ''; }
+function sideOptionsForType(type){ return CFG.sideOptions[type] || CFG.sideOptions.box; }
+function firstSideForType(type){ return sideOptionsForType(type)[0]?.id || 'front'; }
+function createSideState(color, text = ''){ return { logo: null, text, backgroundColor: color, visible: true }; }
+function createSides(type, color, text = 'малые тиражи'){
+  const visible = new Set(sideOptionsForType(type).map(s=>s.id));
+  return SIDE_IDS.reduce((acc, id)=>{
+    acc[id] = createSideState(color, id === 'front' ? text : '');
+    acc[id].visible = visible.has(id);
+    return acc;
+  }, {});
+}
+function activeSide(state){ return state.sides?.[state.activeSide] || state.sides?.front || createSideState(state.color || '#B08A5B'); }
+function variantName(type, variant){ return (CFG.variants[type] || []).find(v=>v.id===variant)?.name || variant; }
+function sideLabel(type, sideId){ return sideOptionsForType(type).find(s=>s.id===sideId)?.label || sideId; }
 
 // ── Top stepper ────────────────────────────────────────────
 function Stepper({ step, onStep, full }){
@@ -87,8 +139,11 @@ function Stepper({ step, onStep, full }){
 }
 
 // ── Left panel: settings ───────────────────────────────────
-function SettingsPanel({ state, set, tweaks }){
+function SettingsPanel({ state, set, setSide, tweaks }){
   const detail = tweaks.constructorDetail || 'full';
+  const side = activeSide(state);
+  const sideOptions = sideOptionsForType(state.type);
+  const variants = CFG.variants[state.type] || [];
   const SECTIONS = [
     { id:'type', label:'01. Тип упаковки' },
     { id:'size', label:'02. Размер' },
@@ -98,17 +153,29 @@ function SettingsPanel({ state, set, tweaks }){
     { id:'text', label:'06. Текст' },
     { id:'side', label:'07. Сторона' },
   ];
+  const sections = [
+    { id:'type', label:'01. Type' },
+    { id:'variant', label:'02. Variant' },
+    { id:'size', label:'03. Size' },
+    { id:'material', label:'04. Material' },
+    { id:'side', label:'05. Side' },
+    { id:'color', label:'06. Side color' },
+    { id:'logo', label:'07. Side logo' },
+    { id:'text', label:'08. Side text' },
+    { id:'visibility', label:'09. Visibility' },
+  ];
   const onLogoFile = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = (ev) => set('logo', ev.target.result);
+    reader.onload = (ev) => setSide(state.activeSide, { logo: ev.target.result });
     reader.readAsDataURL(file);
+    e.target.value = '';
   };
   const sizes = CFG.sizes[state.type];
   const visibleSections = detail === 'compact'
-    ? SECTIONS.filter(s=>['type','size','material','color'].includes(s.id))
-    : SECTIONS;
+    ? sections.filter(s=>['type','variant','size','material','side','color'].includes(s.id))
+    : sections;
 
   return (
     <aside className="cst-left">
@@ -130,6 +197,16 @@ function SettingsPanel({ state, set, tweaks }){
                       </div>
                       <span className="mono cst-tile-price">{t.basePrice}₽</span>
                     </div>
+                  </button>
+                ))}
+              </div>
+            )}
+            {section.id === 'variant' && (
+              <div className="cst-grid-2">
+                {variants.map(v=> (
+                  <button key={v.id} className="tile cst-tile-sm" aria-selected={state.variant===v.id} onClick={()=>set('variant', v.id)}>
+                    <div className="tile-title">{v.name}</div>
+                    <div className="tile-sub mono" style={{fontSize:10.5}}>{v.id}</div>
                   </button>
                 ))}
               </div>
@@ -164,25 +241,25 @@ function SettingsPanel({ state, set, tweaks }){
                 {CFG.colors.map(c=> (
                   <button key={c}
                           className="cst-color"
-                          aria-selected={state.color===c}
+                          aria-selected={side.backgroundColor===c}
                           onClick={()=>set('color', c)}
                           style={{background:c}}
                           aria-label={c}>
-                    {state.color===c && <span/>}
+                    {side.backgroundColor===c && <span/>}
                   </button>
                 ))}
                 <label className="cst-color-custom">
-                  <input type="color" value={state.color} onChange={(e)=>set('color', e.target.value)}/>
+                  <input type="color" value={side.backgroundColor} onChange={(e)=>set('color', e.target.value)}/>
                   <span className="mono">свой</span>
                 </label>
               </div>
             )}
             {section.id === 'logo' && (
               <div className="cst-logo">
-                {state.logo ? (
+                {side.logo ? (
                   <div className="cst-logo-preview">
-                    <img src={state.logo} alt=""/>
-                    <button className="btn btn-ghost btn-sm" onClick={()=>set('logo', null)}>Удалить</button>
+                    <img src={side.logo} alt=""/>
+                    <button className="btn btn-ghost btn-sm" onClick={()=>setSide(state.activeSide, { logo: null })}>Remove</button>
                   </div>
                 ) : (
                   <label className="cst-logo-drop">
@@ -205,22 +282,31 @@ function SettingsPanel({ state, set, tweaks }){
             {section.id === 'text' && (
               <div>
                 <input className="input" placeholder="Например: «Малые тиражи · с любовью»"
-                       value={state.text} maxLength={42}
+                       value={side.text} maxLength={42}
                        onChange={(e)=>set('text', e.target.value)}/>
                 <div className="cst-text-meta mono">
-                  <span>{state.text.length}/42</span>
-                  <span>отображается под лого</span>
+                  <span>{side.text.length}/42</span>
+                  <span>{sideLabel(state.type, state.activeSide)} side</span>
                 </div>
               </div>
             )}
             {section.id === 'side' && (
               <div className="cst-sides">
-                {CFG.sides.map(s=> (
-                  <button key={s} className="cst-side-btn" aria-selected={state.side===s} onClick={()=>set('side', s)}>
-                    {s}
+                {sideOptions.map(s=> (
+                  <button key={s.id} className="cst-side-btn" aria-selected={state.activeSide===s.id} onClick={()=>set('activeSide', s.id)}>
+                    {s.label}
                   </button>
                 ))}
               </div>
+            )}
+            {section.id === 'visibility' && (
+              <button className="cst-toggle-row" type="button" aria-pressed={side.visible} onClick={()=>setSide(state.activeSide, { visible: !side.visible })}>
+                <span>
+                  <b>{side.visible ? 'Visible' : 'Hidden'}</b>
+                  <small>{sideLabel(state.type, state.activeSide)} side artwork</small>
+                </span>
+                <i/>
+              </button>
             )}
           </Section>
         ))}
@@ -246,6 +332,7 @@ function Section({ label, children }){
 
 // ── Center preview area ────────────────────────────────────
 function PreviewArea({ state, view, setView }){
+  const side = activeSide(state);
   return (
     <section className="cst-center">
       <div className="cst-preview-bar">
@@ -254,19 +341,20 @@ function PreviewArea({ state, view, setView }){
           <button className={view==='flat'?'active':''} onClick={()=>setView('flat')}>Развёртка</button>
         </div>
         <div className="cst-preview-meta mono">
-          <span>{currentTypeName(state.type)} · {currentSizeDims(state)}</span>
+          <span>{currentTypeName(state.type)} · {variantName(state.type, state.variant)}</span>
           <span className="cst-dot"/>
-          <span>{currentMaterialName(state.material)}</span>
+          <span>{currentSizeDims(state)} · {sideLabel(state.type, state.activeSide)}</span>
           <span className="cst-dot"/>
-          <span style={{color:'var(--pkt-craft-dark)'}}>RGB {state.color.toUpperCase()}</span>
+          <span style={{color:'var(--pkt-craft-dark)'}}>RGB {side.backgroundColor.toUpperCase()}</span>
         </div>
       </div>
       <div className="cst-preview-box">
         <PackagingPreview
           type={state.type}
-          color={state.color}
-          logo={state.logo}
-          text={state.text}
+          variant={state.variant}
+          color={side.backgroundColor}
+          sides={state.sides}
+          activeSide={state.activeSide}
           view={view}
           interactive={true}
           idle={false}
@@ -277,7 +365,7 @@ function PreviewArea({ state, view, setView }){
           </div>
         )}
         <div className="cst-preview-stamp">
-          <div className="stamp solid"><span className="mono">PROOF · A-{Math.floor(2000 + state.type.length*7 + state.color.length*3)}</span></div>
+          <div className="stamp solid"><span className="mono">PROOF · A-{Math.floor(2000 + state.type.length*7 + side.backgroundColor.length*3)}</span></div>
         </div>
       </div>
       <div className="cst-preview-actions">
@@ -406,17 +494,47 @@ function currentMaterialName(id){ return CFG.materials.find(m=>m.id===id).name; 
 
 // ── Constructor root ───────────────────────────────────────
 export function Constructor({ onNavigate, tweaks, initial }){
+  const initialType = initial?.type || tweaks.heroType || 'box';
+  const initialColor = tweaks.heroType ? '#2563EB' : '#B08A5B';
   const [state, setState] = React.useState({
-    type: initial?.type || tweaks.heroType || 'box',
+    type: initialType,
+    variant: defaultVariantForType(initialType),
     size: 'm',
     material: 'craft',
-    color: tweaks.heroType ? '#2563EB' : '#B08A5B',
+    color: initialColor,
     logo: null,
     text: 'малые тиражи',
-    side: 'Лицо',
+    activeSide: firstSideForType(initialType),
+    sides: createSides(initialType, initialColor),
     qty: 200,
   });
-  const set = (k, v) => setState(s=>({...s, [k]: v}));
+  const setSide = (sideId, edits) => setState(s=>({
+    ...s,
+    sides: { ...s.sides, [sideId]: { ...s.sides[sideId], ...edits } },
+  }));
+  const set = (k, v) => setState(s=>{
+    if (k === 'type') {
+      const nextColor = activeSide(s).backgroundColor || s.color;
+      return { ...s, type: v, variant: defaultVariantForType(v), activeSide: firstSideForType(v), sides: createSides(v, nextColor, s.sides?.front?.text || s.text || ''), color: nextColor };
+    }
+    if (k === 'variant') return { ...s, variant: v };
+    if (k === 'activeSide') return { ...s, activeSide: v };
+    if (k === 'color') {
+      const current = s.activeSide;
+      return { ...s, color: v, sides: { ...s.sides, [current]: { ...s.sides[current], backgroundColor: v } } };
+    }
+    if (k === 'text') {
+      const current = s.activeSide;
+      return { ...s, text: v, sides: { ...s.sides, [current]: { ...s.sides[current], text: v } } };
+    }
+    if (k === 'material') {
+      const material = CFG.materials.find(m=>m.id===v);
+      const color = material?.color || s.color;
+      const current = s.activeSide;
+      return { ...s, material: v, color, sides: { ...s.sides, [current]: { ...s.sides[current], backgroundColor: color } } };
+    }
+    return {...s, [k]: v};
+  });
   const [step, setStep] = React.useState(1);
   const [view, setView] = React.useState('3d');
   const [reqState, setReqState] = React.useState('idle');
@@ -446,7 +564,7 @@ export function Constructor({ onNavigate, tweaks, initial }){
     <main className="cst-page">
       <Stepper step={step} onStep={setStep}/>
       <div className="cst-layout">
-        <SettingsPanel state={state} set={set} tweaks={tweaks}/>
+        <SettingsPanel state={state} set={set} setSide={setSide} tweaks={tweaks}/>
         <PreviewArea state={state} view={view} setView={setView}/>
         <CalcPanel state={state} set={set} tweaks={tweaks} onSubmit={onSubmit} requestState={reqState}/>
       </div>
@@ -457,6 +575,7 @@ export function Constructor({ onNavigate, tweaks, initial }){
 // ── Success screen ─────────────────────────────────────────
 function ConstructorSuccess({ state, onBack, onHome }){
   const orderId = `A-${Math.floor(2000 + Math.random()*8000)}`;
+  const side = activeSide(state);
   return (
     <main className="cst-success">
       <div className="pkt-container">
@@ -474,15 +593,16 @@ function ConstructorSuccess({ state, onBack, onHome }){
           <div className="cst-success-grid">
             <div className="cst-success-card">
               <div className="cst-success-preview">
-                <PackagingPreview type={state.type} color={state.color} logo={state.logo} text={state.text} interactive={false} idle={true}/>
+                <PackagingPreview type={state.type} variant={state.variant} color={side.backgroundColor} sides={state.sides} activeSide={state.activeSide} interactive={false} idle={true}/>
               </div>
             </div>
             <div className="cst-success-info">
               <Row label="Тип" value={currentTypeName(state.type)}/>
+              <Row label="Variant" value={variantName(state.type, state.variant)}/>
               <Row label="Размер" value={currentSizeDims(state)}/>
               <Row label="Материал" value={currentMaterialName(state.material)}/>
               <Row label="Тираж" value={`${state.qty.toLocaleString('ru-RU')} шт`}/>
-              <Row label="Сторона" value={state.side}/>
+              <Row label="Сторона" value={sideLabel(state.type, state.activeSide)}/>
               <div className="cst-row-divider"/>
               <Row label="Срок" value={`${calcPrice(state, {}).days} дн.`}/>
               <Row label="Цена" value={<b className="tabular">{(state.qty * calcPrice(state, {}).perUnit).toLocaleString('ru-RU')} ₽</b>} large/>
