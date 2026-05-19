@@ -92,7 +92,7 @@ const SIDE_IDS = ['front', 'back', 'left', 'right', 'top', 'bottom'];
 function defaultVariantForType(type){ return CFG.variants[type]?.[0]?.id || ''; }
 function sideOptionsForType(type){ return CFG.sideOptions[type] || CFG.sideOptions.box; }
 function firstSideForType(type){ return sideOptionsForType(type)[0]?.id || 'front'; }
-function createSideState(color, text = ''){ return { logo: null, text, backgroundColor: color, visible: true }; }
+function createSideState(color, text = ''){ return { logo: null, text, backgroundColor: color, visible: true, alignment: 'center', scale: 1 }; }
 function createSides(type, color, text = 'малые тиражи'){
   const visible = new Set(sideOptionsForType(type).map(s=>s.id));
   return SIDE_IDS.reduce((acc, id)=>{
@@ -105,16 +105,35 @@ function activeSide(state){ return state.sides?.[state.activeSide] || state.side
 function variantConfig(type, variant){ return (CFG.variants[type] || []).find(v=>v.id===variant) || CFG.variants[type]?.[0] || { multiplier: 1 }; }
 function variantName(type, variant){ return (CFG.variants[type] || []).find(v=>v.id===variant)?.name || variant; }
 function sideLabel(type, sideId){ return sideOptionsForType(type).find(s=>s.id===sideId)?.label || sideId; }
+function visibleSideIds(type){ return sideOptionsForType(type).map(s=>s.id); }
+function sideHasContent(side){ return !!(side?.visible && (side.logo || String(side.text || '').trim())); }
+function hasAnySideContent(state){ return visibleSideIds(state.type).some(id=>sideHasContent(state.sides?.[id])); }
+function readinessInfo(state){
+  const active = activeSide(state);
+  const checks = [
+    { id:'type', label:'Тип упаковки выбран', done: !!state.type },
+    { id:'variant', label:'Вид / форма выбраны', done: !!state.variant },
+    { id:'material', label:'Материал выбран', done: !!state.material },
+    { id:'content', label:'Есть логотип или текст', done: hasAnySideContent(state) },
+    { id:'qty', label:'Тираж выбран', done: !!state.qty },
+    { id:'activeSide', label:'Активная сторона отображается', done: active.visible !== false },
+  ];
+  const completed = checks.filter(c=>c.done).length;
+  const rawPercent = Math.round((completed / checks.length) * 100);
+  const hasContent = checks.find(c=>c.id === 'content')?.done;
+  return { checks, percent: hasContent ? rawPercent : Math.min(rawPercent, 75), hasContent };
+}
 
 // ── Top stepper ────────────────────────────────────────────
 function Stepper({ step, onStep, full }){
   const STEPS = [
     { n:1, label:'Тип' },
-    { n:2, label:'Размер' },
-    { n:3, label:'Материал' },
-    { n:4, label:'Дизайн' },
-    { n:5, label:'Тираж' },
-    { n:6, label:'Заявка' },
+    { n:2, label:'Вид / форма' },
+    { n:3, label:'Размер' },
+    { n:4, label:'Материал' },
+    { n:5, label:'Дизайн сторон' },
+    { n:6, label:'Тираж' },
+    { n:7, label:'Заявка' },
   ];
   return (
     <div className="cst-stepper">
@@ -163,7 +182,8 @@ function SettingsPanel({ state, set, setSide, tweaks }){
     { id:'color', label:'06. Цвет стороны' },
     { id:'logo', label:'07. Логотип стороны' },
     { id:'text', label:'08. Текст стороны' },
-    { id:'visibility', label:'09. Видимость стороны' },
+    { id:'artwork', label:'09. Положение макета' },
+    { id:'visibility', label:'10. Видимость стороны' },
   ];
   const onLogoFile = (e) => {
     const file = e.target.files?.[0];
@@ -238,22 +258,27 @@ function SettingsPanel({ state, set, setSide, tweaks }){
               </div>
             )}
             {section.id === 'color' && (
-              <div className="cst-colors">
-                {CFG.colors.map(c=> (
-                  <button key={c}
-                          className="cst-color"
-                          aria-selected={side.backgroundColor===c}
-                          onClick={()=>set('color', c)}
-                          style={{background:c}}
-                          aria-label={c}>
-                    {side.backgroundColor===c && <span/>}
-                  </button>
-                ))}
-                <label className="cst-color-custom">
-                  <input type="color" value={side.backgroundColor} onChange={(e)=>set('color', e.target.value)}/>
-                  <span className="mono">свой</span>
-                </label>
-              </div>
+              <>
+                <div className="cst-colors">
+                  {CFG.colors.map(c=> (
+                    <button key={c}
+                            className="cst-color"
+                            aria-selected={side.backgroundColor===c}
+                            onClick={()=>set('color', c)}
+                            style={{background:c}}
+                            aria-label={c}>
+                      {side.backgroundColor===c && <span/>}
+                    </button>
+                  ))}
+                  <label className="cst-color-custom">
+                    <input type="color" value={side.backgroundColor} onChange={(e)=>set('color', e.target.value)}/>
+                    <span className="mono">свой</span>
+                  </label>
+                </div>
+                <button className="btn btn-ghost btn-sm cst-full-btn" type="button" onClick={()=>set('applyColorAll', side.backgroundColor)}>
+                  Применить цвет ко всем сторонам
+                </button>
+              </>
             )}
             {section.id === 'logo' && (
               <div className="cst-logo">
@@ -298,6 +323,38 @@ function SettingsPanel({ state, set, setSide, tweaks }){
                     {s.label}
                   </button>
                 ))}
+              </div>
+            )}
+            {section.id === 'artwork' && (
+              <div className="cst-control-stack">
+                <div>
+                  <div className="cst-control-label mono upper">Выравнивание</div>
+                  <div className="cst-segment">
+                    {[
+                      { value:'left', label:'Слева' },
+                      { value:'center', label:'Центр' },
+                      { value:'right', label:'Справа' },
+                    ].map(opt=> (
+                      <button key={opt.value} type="button" aria-selected={(side.alignment || 'center') === opt.value} onClick={()=>setSide(state.activeSide, { alignment: opt.value })}>
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <div className="cst-control-label mono upper">Масштаб</div>
+                  <div className="cst-segment">
+                    {[
+                      { value:0.8, label:'80%' },
+                      { value:1, label:'100%' },
+                      { value:1.2, label:'120%' },
+                    ].map(opt=> (
+                      <button key={opt.value} type="button" aria-selected={(side.scale || 1) === opt.value} onClick={()=>setSide(state.activeSide, { scale: opt.value })}>
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </div>
             )}
             {section.id === 'visibility' && (
@@ -350,6 +407,7 @@ function PreviewArea({ state, view, setView }){
         </div>
       </div>
       <div className="cst-preview-box">
+        <div className="cst-print-specs mono">CMYK · 300 DPI · вылет 3 мм</div>
         <PackagingPreview
           type={state.type}
           variant={state.variant}
@@ -365,9 +423,17 @@ function PreviewArea({ state, view, setView }){
             ☞ потяните курсором — упаковка повернётся
           </div>
         )}
+        <div className="cst-safe-hint">
+          Безопасная зона: держите текст и логотип внутри центральной области
+        </div>
         <div className="cst-preview-stamp">
           <div className="stamp solid"><span className="mono">PROOF · A-{Math.floor(2000 + state.type.length*7 + side.backgroundColor.length*3)}</span></div>
         </div>
+      </div>
+      <div className="cst-preview-footer mono">
+        <span>{currentTypeName(state.type)}</span>
+        <span>{variantName(state.type, state.variant)}</span>
+        <span>{sideLabel(state.type, state.activeSide)}</span>
       </div>
       <div className="cst-preview-actions">
         <button className="btn btn-ghost btn-sm">
@@ -389,6 +455,8 @@ function PreviewArea({ state, view, setView }){
 // ── Right calc panel ───────────────────────────────────────
 function CalcPanel({ state, set, tweaks, onSubmit, requestState }){
   const price = calcPrice(state, tweaks);
+  const readiness = readinessInfo(state);
+  const canSubmit = readiness.percent >= 80;
   const total = price.perUnit * state.qty;
   const commission = Math.round(total * 0.08);
   const subDiscount = (tweaks.pricingMode === 'subscription' || tweaks.pricingMode === 'mixed') ? Math.round(total * 0.12) : 0;
@@ -418,6 +486,31 @@ function CalcPanel({ state, set, tweaks, onSubmit, requestState }){
         </div>
       </div>
 
+      <div className="cst-readiness">
+        <div className="cst-readiness-head">
+          <div>
+            <span className="mono upper">готовность к печати</span>
+            <h4>{readiness.percent}%</h4>
+          </div>
+          <div className="cst-readiness-ring" style={{['--ready']: `${readiness.percent}%`}}>
+            <span>{readiness.percent}</span>
+          </div>
+        </div>
+        <div className="cst-checklist">
+          {readiness.checks.map(item=> (
+            <div key={item.id} className="cst-check" data-done={item.done ? '1' : '0'}>
+              <i>{item.done ? '✓' : '•'}</i>
+              <span>{item.label}</span>
+            </div>
+          ))}
+        </div>
+        {!readiness.hasContent && (
+          <div className="cst-warning">
+            Добавьте логотип или текст хотя бы на одну сторону, чтобы макет выглядел как брендированная упаковка.
+          </div>
+        )}
+      </div>
+
       <div className="cst-summary">
         <Row label="Базовая цена" value={`${price.base} ₽/шт`}/>
         <Row label="Коэф. материала" value={`× ${price.matMult.toFixed(2)}`}/>
@@ -428,6 +521,7 @@ function CalcPanel({ state, set, tweaks, onSubmit, requestState }){
         <Row label={`× ${state.qty.toLocaleString('ru-RU')} шт`} value={<span className="tabular">{total.toLocaleString('ru-RU')} ₽</span>}/>
         <Row label="Комиссия сервиса (8%)" value={<span className="tabular">+{commission.toLocaleString('ru-RU')} ₽</span>}/>
         {subDiscount > 0 && <Row label="Скидка подписчика (–12%)" value={<span className="tabular" style={{color:'var(--pkt-ok)'}}>−{subDiscount.toLocaleString('ru-RU')} ₽</span>}/>}
+        <Row label="Срок производства" value={`${price.days} дн.`}/>
         <div className="cst-row-divider"/>
         <Row label="Итого" value={<><b className="tabular" style={{fontSize:22}}>{finalTotal.toLocaleString('ru-RU')}</b> ₽</>} xl/>
       </div>
@@ -444,9 +538,12 @@ function CalcPanel({ state, set, tweaks, onSubmit, requestState }){
       </div>
 
       <div className="cst-actions">
-        <button className="btn btn-primary" style={{width:'100%'}} onClick={onSubmit} disabled={requestState==='loading'}>
+        <button className="btn btn-primary" style={{width:'100%'}} onClick={onSubmit} disabled={requestState==='loading' || !canSubmit}>
           {requestState==='loading' ? 'Отправляем…' : requestState==='submitted' ? '✓ Заявка отправлена' : 'Оставить заявку →'}
         </button>
+        <div className="cst-cta-help">
+          {canSubmit ? 'Макет достаточно готов для предварительной заявки.' : 'Заполните ключевые параметры, чтобы отправить заявку.'}
+        </div>
         <button className="btn btn-ghost btn-sm" style={{width:'100%'}}>
           Сохранить как черновик
         </button>
@@ -537,6 +634,14 @@ export function Constructor({ onNavigate, tweaks, initial }){
       const current = s.activeSide;
       return { ...s, material: v, color, sides: { ...s.sides, [current]: { ...s.sides[current], backgroundColor: color } } };
     }
+    if (k === 'applyColorAll') {
+      const visible = new Set(visibleSideIds(s.type));
+      const sides = Object.fromEntries(Object.entries(s.sides).map(([id, side])=>[
+        id,
+        visible.has(id) ? { ...side, backgroundColor: v } : side,
+      ]));
+      return { ...s, color: v, sides };
+    }
     return {...s, [k]: v};
   });
   const [step, setStep] = React.useState(1);
@@ -545,10 +650,10 @@ export function Constructor({ onNavigate, tweaks, initial }){
 
   // sync step with section focus heuristic
   React.useEffect(()=>{
-    const map = { box:1, bag:1, cup:1, sticker:1 };
-    if (state.size) setStep(s=>Math.max(s,2));
-    if (state.material) setStep(s=>Math.max(s,3));
-  }, [state.material, state.size]);
+    if (state.variant) setStep(s=>Math.max(s,2));
+    if (state.size) setStep(s=>Math.max(s,3));
+    if (state.material) setStep(s=>Math.max(s,4));
+  }, [state.material, state.size, state.variant]);
 
   // Tweaks override request state
   React.useEffect(()=>{

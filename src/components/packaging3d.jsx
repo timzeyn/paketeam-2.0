@@ -240,8 +240,10 @@ function PkgArt({ artwork, logo, text, side }) {
   if (data.visible === false) return null;
   logo = data.logo;
   text = data.text;
+  const alignment = data.alignment || 'center';
+  const alignItems = alignment === 'left' ? 'flex-start' : alignment === 'right' ? 'flex-end' : 'center';
   return (
-    <div className={`pkg-art ${side||''}`}>
+    <div className={`pkg-art ${side||''}`} style={{ alignItems, textAlign: alignment, transform: `scale(${data.scale || 1})`, transformOrigin: 'center' }}>
       <div className={`pkg-logo ${logo ? 'img' : ''}`}>
         {logo ? <img src={logo} alt="" /> : 'ПАКЕТЕАМ'}
       </div>

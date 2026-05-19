@@ -736,6 +736,45 @@
   color: var(--pkt-brand);
   border-color: var(--pkt-brand);
 }
+.cst-full-btn{
+  width: 100%;
+  margin-top: 10px;
+}
+.cst-control-stack{
+  display:flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.cst-control-label{
+  font-size: 10.5px;
+  color: var(--pkt-muted);
+  margin-bottom: 6px;
+}
+.cst-segment{
+  display:grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 3px;
+  background: var(--pkt-bg);
+  border: 1px solid var(--pkt-border);
+  border-radius: 9px;
+  padding: 3px;
+}
+.cst-segment button{
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: var(--pkt-muted);
+  border-radius: 6px;
+  padding: 7px 6px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+}
+.cst-segment button[aria-selected="true"]{
+  background: white;
+  color: var(--pkt-brand);
+  box-shadow: 0 1px 2px rgba(15,23,42,.08);
+}
 
 /* ── Center ── */
 .cst-toggle-row{
@@ -828,6 +867,18 @@
   min-height: 460px;
   display: flex; align-items: center; justify-content: center;
 }
+.cst-print-specs{
+  position:absolute;
+  top: 16px;
+  left: 16px;
+  z-index: 2;
+  padding: 5px 10px;
+  border: 1px solid var(--pkt-border);
+  border-radius: var(--r-pill);
+  background: rgba(255,255,255,.82);
+  color: var(--pkt-muted);
+  font-size: 11px;
+}
 .cst-preview-hint{
   position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%);
   font-size: 11px;
@@ -838,8 +889,40 @@
   border: 1px solid var(--pkt-border);
   pointer-events: none;
 }
+.cst-safe-hint{
+  position:absolute;
+  left: 50%;
+  top: 16px;
+  transform: translateX(-50%);
+  max-width: min(520px, 70%);
+  padding: 6px 12px;
+  border-radius: var(--r-pill);
+  border: 1px dashed rgba(37,99,235,.28);
+  background: rgba(239,246,255,.86);
+  color: var(--pkt-brand);
+  font-size: 12px;
+  text-align: center;
+  pointer-events: none;
+}
 .cst-preview-stamp{
   position: absolute; top: 16px; right: 16px;
+}
+.cst-preview-footer{
+  display:flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+  padding: 10px 18px;
+  border-top: 1px solid var(--pkt-border);
+  background: white;
+  color: var(--pkt-muted);
+  font-size: 11px;
+}
+.cst-preview-footer span{
+  padding: 3px 8px;
+  border-radius: var(--r-pill);
+  background: var(--pkt-bg);
+  border: 1px solid var(--pkt-border);
 }
 .cst-preview-actions{
   display:flex; gap: 8px; justify-content: space-between;
@@ -918,6 +1001,84 @@
 .cst-summary{
   padding: 16px 20px;
 }
+.cst-readiness{
+  padding: 16px 20px;
+  border-bottom: 1px dashed var(--pkt-border);
+}
+.cst-readiness-head{
+  display:flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.cst-readiness-head .upper{
+  color: var(--pkt-muted);
+  font-size: 11px;
+}
+.cst-readiness-head h4{
+  margin: 4px 0 0;
+  font-size: 26px;
+  line-height: 1;
+  color: var(--pkt-ink);
+}
+.cst-readiness-ring{
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display:grid;
+  place-items:center;
+  background:
+    radial-gradient(circle at center, white 58%, transparent 60%),
+    conic-gradient(var(--pkt-brand) var(--ready), var(--pkt-border) 0);
+  border: 1px solid var(--pkt-border);
+}
+.cst-readiness-ring span{
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--pkt-brand);
+}
+.cst-checklist{
+  display:flex;
+  flex-direction: column;
+  gap: 7px;
+}
+.cst-check{
+  display:flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  color: var(--pkt-muted);
+}
+.cst-check i{
+  display:grid;
+  place-items:center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 1px solid var(--pkt-border);
+  font-style: normal;
+  font-size: 11px;
+  flex-shrink: 0;
+}
+.cst-check[data-done="1"]{
+  color: var(--pkt-ink);
+}
+.cst-check[data-done="1"] i{
+  background: rgba(21,128,61,.1);
+  border-color: rgba(21,128,61,.22);
+  color: var(--pkt-ok);
+}
+.cst-warning{
+  margin-top: 12px;
+  padding: 10px 12px;
+  border-radius: var(--r-md);
+  background: rgba(245,158,11,.1);
+  border: 1px solid rgba(245,158,11,.24);
+  color: #8a5a08;
+  font-size: 12.5px;
+  line-height: 1.45;
+}
 .cst-row{
   display:flex; justify-content: space-between; align-items: baseline;
   padding: 5px 0;
@@ -945,6 +1106,17 @@
 .cst-actions{
   display:flex; flex-direction: column; gap: 8px;
   padding: 0 20px 16px;
+}
+.cst-actions .btn:disabled{
+  opacity: .55;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+.cst-cta-help{
+  font-size: 12px;
+  color: var(--pkt-muted);
+  text-align: center;
+  line-height: 1.35;
 }
 .cst-disclaimer{
   padding: 12px 20px 20px;
