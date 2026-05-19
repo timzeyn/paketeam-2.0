@@ -193,6 +193,21 @@ const PKG_STYLE = `
   border: none;
   outline: none;
 }
+.pkg-unfold .panel.muted{
+  background:
+    repeating-linear-gradient(135deg,
+      rgba(15,22,38,.04) 0 8px,
+      rgba(15,22,38,.08) 8px 16px);
+  border-color: rgba(15,22,38,.12);
+  outline-color: rgba(15,22,38,.12);
+}
+.pkg-unfold .panel.muted::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  background: rgba(255,255,255,.45);
+  pointer-events:none;
+}
 .pkg-unfold .panel-label{
   position:absolute; top:6px; left:6px;
   font-family: var(--font-mono);
@@ -265,6 +280,18 @@ function buildSides({ sides, color, logo, text }) {
 function sideStyle(side, extra = {}) {
   const bg = side?.backgroundColor || '#B08A5B';
   return { ...extra, backgroundColor: bg, ['--pkg-color']: bg, ['--pkg-art-color']: pktContrast(bg) };
+}
+function stickerRadius(variant) {
+  if (variant === 'square') return '14px';
+  if (variant === 'rectangle') return '12px';
+  if (variant === 'oval') return '50%';
+  if (variant === 'custom-shape') return '38% 62% 46% 54% / 45% 40% 60% 55%';
+  return '50%';
+}
+function stickerDims(variant) {
+  if (variant === 'rectangle') return { width: 280, height: 180 };
+  if (variant === 'oval') return { width: 270, height: 190 };
+  return { width: 240, height: 240 };
 }
 function BoxVariantDetails({ variant }) {
   if (variant === 'window-box') return <div className="pkg-window" />;
@@ -369,8 +396,8 @@ function Cup3D({ sides, activeSide, rotation, idle, variant }){
 function Sticker3D({ sides, rotation, idle, variant }){
   const artwork = sides.front;
   const tx = `translate3d(-50%, -50%, 0) rotateX(${rotation.x}deg) rotateY(${rotation.y}deg)`;
-  const radius = variant === 'square' ? '14px' : variant === 'rectangle' ? '12px' : variant === 'oval' ? '50%' : variant === 'custom-shape' ? '38% 62% 46% 54% / 45% 40% 60% 55%' : '50%';
-  const dims = variant === 'rectangle' ? { width: 280, height: 180 } : variant === 'oval' ? { width: 270, height: 190 } : { width: 240, height: 240 };
+  const radius = stickerRadius(variant);
+  const dims = stickerDims(variant);
   const style = {
     ...dims,
     transform: tx,
@@ -388,15 +415,29 @@ function Sticker3D({ sides, rotation, idle, variant }){
 }
 
 // ── UNFOLD (плоская развёртка) ─────────────────────────────
-function Unfold({ type, color, logo, text, size }){
-  const artColor = pktContrast(color);
-  const cssVars = { ['--pkg-color']: color, ['--pkg-art-color']: artColor };
-  const panel = (label, w, h, key, showArt) => (
-    <div key={key} className="panel" style={{width:w, height:h}}>
-      <span className="panel-label">{label}</span>
-      {showArt && <PkgArt logo={logo} text={text} />}
-    </div>
-  );
+const UNFOLD_LABELS = {
+  front: 'Лицо',
+  back: 'Задняя сторона',
+  left: 'Левый бок',
+  right: 'Правый бок',
+  top: 'Верх',
+  bottom: 'Низ',
+};
+
+function Unfold({ type, variant, sides, size }){
+  const panel = (sideId, w, h, key, extra = {}) => {
+    const artwork = sides[sideId];
+    const visible = artwork?.visible !== false;
+    const style = visible
+      ? sideStyle(artwork, { width: w, height: h, ...extra })
+      : { width: w, height: h, ...extra };
+    return (
+      <div key={key} className={`panel ${visible ? '' : 'muted'}`} style={style}>
+        <span className="panel-label">{UNFOLD_LABELS[sideId]}</span>
+        {visible && <PkgArt artwork={artwork} side={sideId === 'left' || sideId === 'right' ? 'left' : undefined} />}
+      </div>
+    );
+  };
   const empty = (w,h,key) => <div key={key} className="panel empty" style={{width:w,height:h}}/>;
 
   if (type === 'box'){
@@ -408,11 +449,10 @@ function Unfold({ type, color, logo, text, size }){
         <div className="pkg-unfold" style={{
           gridTemplateColumns: `${D}px ${W}px ${D}px ${W}px`,
           gridTemplateRows: `${D}px ${H}px ${D}px`,
-          ...cssVars
         }}>
-          {empty(D,D,'a1')} {panel('верх', W, D, 'a2')} {empty(D,D,'a3')} {empty(W,D,'a4')}
-          {panel('левый', D, H, 'b1')} {panel('лицо', W, H, 'b2', true)} {panel('правый', D, H, 'b3')} {panel('задний', W, H, 'b4', true)}
-          {empty(D,D,'c1')} {panel('низ', W, D, 'c2')} {empty(D,D,'c3')} {empty(W,D,'c4')}
+          {empty(D,D,'a1')} {panel('top', W, D, 'a2')} {empty(D,D,'a3')} {empty(W,D,'a4')}
+          {panel('left', D, H, 'b1')} {panel('front', W, H, 'b2')} {panel('right', D, H, 'b3')} {panel('back', W, H, 'b4')}
+          {empty(D,D,'c1')} {panel('bottom', W, D, 'c2')} {empty(D,D,'c3')} {empty(W,D,'c4')}
         </div>
       </div>
     );
@@ -423,9 +463,11 @@ function Unfold({ type, color, logo, text, size }){
         <div className="pkg-unfold" style={{
           gridTemplateColumns: `40px 180px 40px 180px`,
           gridTemplateRows: `230px`,
-          ...cssVars
         }}>
-          {panel('бок', 40, 230, 'a')} {panel('лицо', 180, 230, 'b', true)} {panel('бок', 40, 230, 'c')} {panel('зад', 180, 230, 'd', true)}
+          {panel('left', 40, 230, 'a')}
+          {panel('front', 180, 230, 'b')}
+          {panel('right', 40, 230, 'c')}
+          {panel('back', 180, 230, 'd')}
         </div>
       </div>
     );
@@ -434,33 +476,32 @@ function Unfold({ type, color, logo, text, size }){
     return (
       <div className="pkg-unfold-wrap">
         <div className="pkg-unfold" style={{
-          gridTemplateColumns: `420px`,
+          gridTemplateColumns: `210px 210px`,
           gridTemplateRows: `200px`,
-          ...cssVars
         }}>
-          <div className="panel" style={{
-            width: 420, height: 200,
-            clipPath: 'polygon(8% 0%, 92% 0%, 100% 100%, 0% 100%)'
-          }}>
-            <span className="panel-label">развёртка стакана</span>
-            <PkgArt logo={logo} text={text} />
-          </div>
+          {panel('front', 210, 200, 'front', { clipPath: 'polygon(8% 0%, 92% 0%, 100% 100%, 0% 100%)' })}
+          {panel('back', 210, 200, 'back', { clipPath: 'polygon(0% 0%, 92% 0%, 100% 100%, 8% 100%)' })}
         </div>
       </div>
     );
   }
-  // sticker
+  const dims = stickerDims(variant);
+  const flatDims = variant === 'rectangle'
+    ? { width: 260, height: 170 }
+    : variant === 'oval'
+      ? { width: 250, height: 180 }
+      : { width: 220, height: 220 };
   return (
     <div className="pkg-unfold-wrap">
       <div className="pkg-unfold" style={{
-        gridTemplateColumns: `220px`,
-        gridTemplateRows: `220px`,
-        ...cssVars
+        gridTemplateColumns: `${flatDims.width}px`,
+        gridTemplateRows: `${flatDims.height}px`,
       }}>
-        <div className="panel" style={{ width: 220, height: 220, borderRadius: '50%' }}>
-          <span className="panel-label">наклейка</span>
-          <PkgArt logo={logo} text={text} />
-        </div>
+        {panel('front', flatDims.width, flatDims.height, 'front', {
+          borderRadius: stickerRadius(variant),
+          width: Math.min(dims.width, flatDims.width),
+          height: Math.min(dims.height, flatDims.height),
+        })}
       </div>
     </div>
   );
@@ -473,10 +514,6 @@ export function PackagingPreview({ type='box', variant='', color='#B08A5B', logo
   const startRef = React.useRef(null);
   const userInteracted = React.useRef(false);
   const allSides = buildSides({ sides, color, logo, text });
-  const currentSide = allSides[activeSide] || allSides.front;
-  const flatSize = type === 'sticker'
-    ? { ...(size || {}), shape: variant === 'square' ? 'square' : variant === 'rectangle' ? 'rounded' : 'round' }
-    : size;
 
   const onDown = (e) => {
     if (!interactive) return;
@@ -504,7 +541,7 @@ export function PackagingPreview({ type='box', variant='', color='#B08A5B', logo
     return (
       <div className="pkg-stage">
         <style>{PKG_STYLE}</style>
-        <Unfold type={type} color={currentSide.backgroundColor} logo={currentSide.logo} text={currentSide.text} size={flatSize}/>
+        <Unfold type={type} variant={variant} sides={allSides} size={size}/>
       </div>
     );
   }
