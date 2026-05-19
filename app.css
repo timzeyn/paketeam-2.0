@@ -1126,6 +1126,195 @@
   letter-spacing: .04em;
 }
 
+/* ── Request modal ── */
+.cst-modal-overlay{
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display:flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(15,22,38,.45);
+  backdrop-filter: blur(8px);
+}
+.cst-request-modal{
+  position: relative;
+  width: min(1040px, 100%);
+  max-height: min(880px, calc(100vh - 32px));
+  overflow: auto;
+  background: var(--pkt-surface);
+  border: 1px solid rgba(255,255,255,.68);
+  border-radius: 24px;
+  box-shadow: 0 32px 80px rgba(15,22,38,.24);
+}
+.cst-modal-close{
+  position:absolute;
+  top: 18px;
+  right: 18px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid var(--pkt-border);
+  background: white;
+  color: var(--pkt-muted);
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+}
+.cst-modal-close:disabled{
+  opacity: .5;
+  cursor: not-allowed;
+}
+.cst-modal-head{
+  padding: 30px 34px 18px;
+  border-bottom: 1px solid var(--pkt-border);
+  background:
+    linear-gradient(135deg, rgba(37,99,235,.08), transparent 42%),
+    linear-gradient(0deg, rgba(176,138,91,.08), transparent 72%);
+}
+.cst-modal-head .upper,
+.cst-modal-card-head .upper{
+  color: var(--pkt-brand);
+  font-size: 11px;
+  letter-spacing: .08em;
+}
+.cst-modal-head h2{
+  margin: 8px 42px 8px 0;
+  font-size: clamp(26px, 4vw, 38px);
+  line-height: 1.05;
+  letter-spacing: 0;
+}
+.cst-modal-head p{
+  max-width: 660px;
+  margin: 0;
+  color: var(--pkt-muted);
+  font-size: 15px;
+  line-height: 1.55;
+}
+.cst-modal-body{
+  display:grid;
+  grid-template-columns: minmax(280px, .9fr) minmax(360px, 1.1fr);
+  gap: 18px;
+  padding: 22px;
+}
+.cst-modal-summary,
+.cst-contact-form{
+  background: white;
+  border: 1px solid var(--pkt-border);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-sm);
+  padding: 20px;
+}
+.cst-modal-card-head{
+  display:flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.cst-modal-card-head strong{
+  color: var(--pkt-ink);
+  font-size: 15px;
+}
+.cst-modal-readiness{
+  display:flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 16px;
+  padding: 12px;
+  border-radius: var(--r-md);
+  border: 1px solid var(--pkt-craft-deep);
+  background: var(--pkt-craft);
+}
+.cst-modal-readiness strong{
+  display:block;
+  color: var(--pkt-craft-dark);
+  font-size: 14px;
+}
+.cst-modal-readiness p{
+  margin: 3px 0 0;
+  color: rgba(92,63,34,.78);
+  font-size: 12.5px;
+  line-height: 1.35;
+}
+.cst-contact-form{
+  display:flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.cst-form-two{
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.cst-field{
+  display:flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.cst-field span{
+  color: var(--pkt-muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+.cst-field input,
+.cst-field textarea{
+  width: 100%;
+  border: 1px solid var(--pkt-border);
+  border-radius: 14px;
+  background: #fff;
+  color: var(--pkt-ink);
+  font: inherit;
+  font-size: 14px;
+  padding: 12px 13px;
+  outline: none;
+  transition: border-color .16s ease, box-shadow .16s ease;
+}
+.cst-field textarea{
+  resize: vertical;
+  min-height: 92px;
+}
+.cst-field input:focus,
+.cst-field textarea:focus{
+  border-color: rgba(37,99,235,.52);
+  box-shadow: 0 0 0 4px rgba(37,99,235,.10);
+}
+.cst-field[data-invalid="1"] input{
+  border-color: rgba(220,38,38,.62);
+  box-shadow: 0 0 0 4px rgba(220,38,38,.08);
+}
+.cst-field em{
+  color: #b91c1c;
+  font-size: 12px;
+  font-style: normal;
+}
+.cst-privacy{
+  margin: 2px 0 0;
+  color: var(--pkt-muted);
+  font-size: 12px;
+  line-height: 1.4;
+}
+.cst-contact-form .btn{
+  width: 100%;
+}
+.cst-contact-form .btn:disabled{
+  opacity: .7;
+  cursor: wait;
+}
+@media (max-width: 860px){
+  .cst-modal-body{ grid-template-columns: 1fr; }
+  .cst-request-modal{ max-height: calc(100vh - 18px); }
+}
+@media (max-width: 560px){
+  .cst-modal-overlay{ padding: 9px; }
+  .cst-modal-head{ padding: 26px 20px 16px; }
+  .cst-modal-body{ padding: 14px; }
+  .cst-form-two{ grid-template-columns: 1fr; }
+  .cst-request-modal{ border-radius: 18px; }
+}
+
 /* ── Success screen ── */
 .cst-success{
   min-height: calc(100vh - 68px);

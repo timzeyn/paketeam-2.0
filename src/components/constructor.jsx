@@ -454,13 +454,9 @@ function PreviewArea({ state, view, setView }){
 
 // ── Right calc panel ───────────────────────────────────────
 function CalcPanel({ state, set, tweaks, onSubmit, requestState }){
-  const price = calcPrice(state, tweaks);
   const readiness = readinessInfo(state);
   const canSubmit = readiness.percent >= 80;
-  const total = price.perUnit * state.qty;
-  const commission = Math.round(total * 0.08);
-  const subDiscount = (tweaks.pricingMode === 'subscription' || tweaks.pricingMode === 'mixed') ? Math.round(total * 0.12) : 0;
-  const finalTotal = total + commission - subDiscount;
+  const { price, total, commission, subDiscount, finalTotal } = calcOrderTotals(state, tweaks);
 
   return (
     <aside className="cst-right">
@@ -565,6 +561,143 @@ function Row({ label, value, large, xl }){
   );
 }
 
+function RequestModal({ state, tweaks, onClose, onComplete }){
+  const emptyForm = {
+    name: '',
+    company: '',
+    phone: '',
+    email: '',
+    telegram: '',
+    city: '',
+    comment: '',
+  };
+  const [form, setForm] = React.useState(emptyForm);
+  const [errors, setErrors] = React.useState({});
+  const [sending, setSending] = React.useState(false);
+  const readiness = readinessInfo(state);
+  const { price, finalTotal } = calcOrderTotals(state, tweaks);
+  const hasEnteredData = Object.values(form).some(value=>String(value).trim());
+
+  React.useEffect(()=>{
+    const onKeyDown = (event) => {
+      if (event.key === 'Escape' && !sending) onClose();
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [onClose, sending]);
+
+  const setField = (field, value) => {
+    setForm(current=>({ ...current, [field]: value }));
+    if (errors[field]) setErrors(current=>({ ...current, [field]: '' }));
+  };
+
+  const validate = () => {
+    const nextErrors = {};
+    if (!form.name.trim()) nextErrors.name = 'Укажите имя.';
+    if (!form.phone.trim() && !form.email.trim()) nextErrors.phone = 'Укажите телефон или email.';
+    if (!form.city.trim()) nextErrors.city = 'Укажите город доставки.';
+    setErrors(nextErrors);
+    return Object.keys(nextErrors).length === 0;
+  };
+
+  const handleSubmit = (event) => {
+    event.preventDefault();
+    if (sending || !validate()) return;
+    setSending(true);
+    window.setTimeout(()=>{
+      setSending(false);
+      onComplete();
+    }, 800);
+  };
+
+  const handleOverlayClick = (event) => {
+    if (event.target === event.currentTarget && !hasEnteredData && !sending) onClose();
+  };
+
+  return (
+    <div className="cst-modal-overlay" role="presentation" onMouseDown={handleOverlayClick}>
+      <section className="cst-request-modal" role="dialog" aria-modal="true" aria-labelledby="request-title">
+        <button className="cst-modal-close" type="button" onClick={onClose} aria-label="Закрыть заявку" disabled={sending}>
+          ×
+        </button>
+        <div className="cst-modal-head">
+          <span className="mono upper">предварительный расчёт</span>
+          <h2 id="request-title">Оставить заявку на расчёт</h2>
+          <p>Проверьте параметры макета и оставьте контакты — менеджер свяжется в течение 2 часов.</p>
+        </div>
+        <div className="cst-modal-body">
+          <div className="cst-modal-summary">
+            <div className="cst-modal-card-head">
+              <span className="mono upper">параметры макета</span>
+              <strong>Заказ</strong>
+            </div>
+            <Row label="Тип упаковки" value={currentTypeName(state.type)}/>
+            <Row label="Вид / форма" value={variantName(state.type, state.variant)}/>
+            <Row label="Размер" value={currentSizeDims(state)}/>
+            <Row label="Материал" value={currentMaterialName(state.material)}/>
+            <Row label="Активная сторона" value={sideLabel(state.type, state.activeSide)}/>
+            <Row label="Тираж" value={`${state.qty.toLocaleString('ru-RU')} шт`}/>
+            <Row label="Срок производства" value={`${price.days} дн.`}/>
+            <div className="cst-row-divider"/>
+            <Row label="Итоговая сумма" value={<><b>{finalTotal.toLocaleString('ru-RU')}</b> ₽</>} large/>
+
+            <div className="cst-modal-readiness">
+              <div className="cst-readiness-ring" style={{['--ready']: `${readiness.percent}%`}}>
+                <span>{readiness.percent}</span>
+              </div>
+              <div>
+                <strong>{readiness.percent}% готовности</strong>
+                <p>{readiness.percent >= 80 ? 'Макет готов для предварительного расчёта' : 'Заполните ключевые параметры перед отправкой'}</p>
+              </div>
+            </div>
+          </div>
+
+          <form className="cst-contact-form" onSubmit={handleSubmit} noValidate>
+            <div className="cst-modal-card-head">
+              <span className="mono upper">контакты</span>
+              <strong>Как с вами связаться</strong>
+            </div>
+            <ContactField label="Имя" value={form.name} error={errors.name} onChange={(value)=>setField('name', value)} required/>
+            <ContactField label="Компания / бренд" value={form.company} onChange={(value)=>setField('company', value)}/>
+            <div className="cst-form-two">
+              <ContactField label="Телефон" value={form.phone} error={errors.phone} onChange={(value)=>setField('phone', value)} inputMode="tel"/>
+              <ContactField label="Email" value={form.email} onChange={(value)=>setField('email', value)} inputMode="email"/>
+            </div>
+            <div className="cst-form-two">
+              <ContactField label="Telegram" value={form.telegram} onChange={(value)=>setField('telegram', value)} placeholder="@username"/>
+              <ContactField label="Город доставки" value={form.city} error={errors.city} onChange={(value)=>setField('city', value)} required/>
+            </div>
+            <label className="cst-field">
+              <span>Комментарий</span>
+              <textarea value={form.comment} onChange={(event)=>setField('comment', event.target.value)} rows="4" placeholder="Пожелания по срокам, материалам или доставке"/>
+            </label>
+            <p className="cst-privacy">Нажимая кнопку, вы соглашаетесь с обработкой данных для расчёта заказа.</p>
+            <button className="btn btn-primary btn-lg" type="submit" disabled={sending}>
+              {sending ? 'Отправляем заявку…' : 'Отправить заявку'}
+            </button>
+          </form>
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function ContactField({ label, value, error, onChange, required, inputMode, placeholder }){
+  return (
+    <label className="cst-field" data-invalid={error ? '1' : '0'}>
+      <span>{label}{required ? ' *' : ''}</span>
+      <input
+        value={value}
+        onChange={(event)=>onChange(event.target.value)}
+        inputMode={inputMode}
+        placeholder={placeholder}
+        aria-invalid={error ? 'true' : 'false'}
+      />
+      {error && <em>{error}</em>}
+    </label>
+  );
+}
+
 // ── price calc helpers ─────────────────────────────────────
 function calcPrice(state, tweaks){
   const type = CFG.types.find(t=>t.id===state.type);
@@ -586,6 +719,14 @@ function calcPrice(state, tweaks){
       state.qty <= 2000 ? 14 : 21;
   return { base, matMult: mat.multiplier, variantMult, qtyMult, perUnit, days };
 }
+function calcOrderTotals(state, tweaks = {}){
+  const price = calcPrice(state, tweaks);
+  const total = price.perUnit * state.qty;
+  const commission = Math.round(total * 0.08);
+  const subDiscount = (tweaks.pricingMode === 'subscription' || tweaks.pricingMode === 'mixed') ? Math.round(total * 0.12) : 0;
+  const finalTotal = total + commission - subDiscount;
+  return { price, total, commission, subDiscount, finalTotal };
+}
 function currentTypeName(id){ return CFG.types.find(t=>t.id===id).name; }
 function currentSizeDims(state){
   const s = CFG.sizes[state.type].find(s=>s.id===state.size) || CFG.sizes[state.type][1];
@@ -594,7 +735,7 @@ function currentSizeDims(state){
 function currentMaterialName(id){ return CFG.materials.find(m=>m.id===id).name; }
 
 // ── Constructor root ───────────────────────────────────────
-export function Constructor({ onNavigate, tweaks, initial }){
+export function Constructor({ onNavigate, tweaks = {}, initial }){
   const initialType = initial?.type || tweaks.heroType || 'box';
   const initialColor = tweaks.heroType ? '#2563EB' : '#B08A5B';
   const [state, setState] = React.useState({
@@ -647,6 +788,7 @@ export function Constructor({ onNavigate, tweaks, initial }){
   const [step, setStep] = React.useState(1);
   const [view, setView] = React.useState('3d');
   const [reqState, setReqState] = React.useState('idle');
+  const [requestModalOpen, setRequestModalOpen] = React.useState(false);
 
   // sync step with section focus heuristic
   React.useEffect(()=>{
@@ -661,12 +803,18 @@ export function Constructor({ onNavigate, tweaks, initial }){
   }, [tweaks.appState]);
 
   const onSubmit = () => {
+    if (readinessInfo(state).percent < 80) return;
+    setRequestModalOpen(true);
+  };
+
+  const completeRequest = () => {
+    setRequestModalOpen(false);
     setReqState('loading');
-    setTimeout(()=> setReqState('submitted'), 900);
+    setTimeout(()=> setReqState('submitted'), 50);
   };
 
   if (reqState === 'submitted') {
-    return <ConstructorSuccess state={state} onBack={()=>{ setReqState('idle'); }} onHome={()=>onNavigate('home')}/>;
+    return <ConstructorSuccess state={state} tweaks={tweaks} onBack={()=>{ setReqState('idle'); }} onHome={()=>onNavigate('home')}/>;
   }
 
   return (
@@ -677,14 +825,23 @@ export function Constructor({ onNavigate, tweaks, initial }){
         <PreviewArea state={state} view={view} setView={setView}/>
         <CalcPanel state={state} set={set} tweaks={tweaks} onSubmit={onSubmit} requestState={reqState}/>
       </div>
+      {requestModalOpen && (
+        <RequestModal
+          state={state}
+          tweaks={tweaks}
+          onClose={()=>setRequestModalOpen(false)}
+          onComplete={completeRequest}
+        />
+      )}
     </main>
   );
 }
 
 // ── Success screen ─────────────────────────────────────────
-function ConstructorSuccess({ state, onBack, onHome }){
+function ConstructorSuccess({ state, tweaks, onBack, onHome }){
   const orderId = `A-${Math.floor(2000 + Math.random()*8000)}`;
   const side = activeSide(state);
+  const { price, finalTotal } = calcOrderTotals(state, tweaks);
   return (
     <main className="cst-success">
       <div className="pkt-container">
@@ -693,11 +850,11 @@ function ConstructorSuccess({ state, onBack, onHome }){
             <div className="stamp solid mono">ЗАЯВКА · ПОЛУЧЕНА</div>
           </div>
           <h1 className="pkt-h1" style={{maxWidth:720, margin:'24px 0 12px'}}>
-            Спасибо! Ваш макет передан в&nbsp;производство.
+            Спасибо! Заявка принята в расчёт.
           </h1>
           <p className="pkt-lead" style={{maxWidth:580}}>
             Номер заявки <span className="mono" style={{color:'var(--pkt-brand)'}}>{orderId}</span>.
-            Менеджер свяжется в течение 2 часов для подтверждения деталей.
+            Мы сохранили параметры макета и передали их менеджеру.
           </p>
           <div className="cst-success-grid">
             <div className="cst-success-card">
@@ -713,8 +870,8 @@ function ConstructorSuccess({ state, onBack, onHome }){
               <Row label="Тираж" value={`${state.qty.toLocaleString('ru-RU')} шт`}/>
               <Row label="Сторона" value={sideLabel(state.type, state.activeSide)}/>
               <div className="cst-row-divider"/>
-              <Row label="Срок" value={`${calcPrice(state, {}).days} дн.`}/>
-              <Row label="Цена" value={<b className="tabular">{(state.qty * calcPrice(state, {}).perUnit).toLocaleString('ru-RU')} ₽</b>} large/>
+              <Row label="Срок" value={`${price.days} дн.`}/>
+              <Row label="Цена" value={<b className="tabular">{finalTotal.toLocaleString('ru-RU')} ₽</b>} large/>
             </div>
           </div>
           <div className="cst-success-actions">
