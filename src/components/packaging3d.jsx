@@ -58,6 +58,221 @@ const PKG_STYLE = `
     linear-gradient(135deg, rgba(255,255,255,.18), rgba(0,0,0,.12));
   pointer-events: none;
 }
+.pkg-box .face-front::before,
+.pkg-box .face-back::before,
+.pkg-box .face-left::before,
+.pkg-box .face-right::before,
+.pkg-box .face-top::before,
+.pkg-box .face-bottom::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:
+    repeating-linear-gradient(90deg,
+      rgba(255,255,255,.035) 0 1px,
+      transparent 1px 5px),
+    repeating-linear-gradient(0deg,
+      rgba(0,0,0,.025) 0 1px,
+      transparent 1px 7px);
+  mix-blend-mode: soft-light;
+  pointer-events:none;
+}
+.pkg-box-detail{
+  position:absolute;
+  z-index:1;
+  pointer-events:none;
+}
+.pkg-box-line{
+  background: rgba(0,0,0,.24);
+  box-shadow: 0 1px 0 rgba(255,255,255,.24);
+}
+.pkg-box-dash{
+  border-top: 1px dashed rgba(0,0,0,.34);
+}
+.pkg-box .pkg-art{ z-index:3; }
+.pkg-box-mailer-box .face-front::before{
+  background:
+    repeating-linear-gradient(0deg,
+      rgba(255,255,255,.05) 0 2px,
+      rgba(0,0,0,.045) 2px 4px,
+      transparent 4px 9px),
+    linear-gradient(135deg, rgba(255,255,255,.14), rgba(0,0,0,.08));
+}
+.pkg-mailer-top-seam{ left:8%; right:8%; top:16%; height:0; }
+.pkg-mailer-lock{
+  left:50%;
+  bottom:9%;
+  width:42%;
+  height:22px;
+  transform:translateX(-50%);
+  border:1px solid rgba(0,0,0,.22);
+  border-top-style:dashed;
+  border-radius:0 0 12px 12px;
+  background:rgba(255,255,255,.10);
+}
+.pkg-mailer-lock::after{
+  content:"";
+  position:absolute;
+  left:34%;
+  right:34%;
+  top:7px;
+  border-top:2px solid rgba(0,0,0,.22);
+}
+.pkg-mailer-top-flap{
+  left:9%;
+  right:9%;
+  top:47%;
+  height:0;
+  transform:translateY(-50%);
+  border-top:2px dashed rgba(0,0,0,.26);
+}
+.pkg-mailer-top-wing{
+  top:18%;
+  bottom:18%;
+  width:0;
+  border-left:1px dashed rgba(0,0,0,.24);
+}
+.pkg-mailer-top-wing.left{ left:22%; transform:rotate(-10deg); }
+.pkg-mailer-top-wing.right{ right:22%; transform:rotate(10deg); }
+.pkg-tuck-lid{
+  left:0;
+  right:0;
+  top:0;
+  height:28%;
+  background:linear-gradient(180deg, rgba(255,255,255,.24), rgba(255,255,255,.06));
+  border-bottom:1px solid rgba(0,0,0,.22);
+}
+.pkg-tuck-lid::after{
+  content:"";
+  position:absolute;
+  left:31%;
+  right:31%;
+  bottom:-12px;
+  height:12px;
+  border:1px solid rgba(0,0,0,.2);
+  border-top:0;
+  border-radius:0 0 10px 10px;
+  background:rgba(255,255,255,.10);
+}
+.pkg-tuck-front-seam{ left:10%; right:10%; top:28%; height:0; }
+.pkg-tuck-side-hint{
+  top:5%;
+  bottom:5%;
+  width:20px;
+  border-top:1px dashed rgba(0,0,0,.22);
+  border-bottom:1px dashed rgba(0,0,0,.22);
+  opacity:.85;
+}
+.pkg-tuck-side-hint.left{ left:0; border-right:1px dashed rgba(0,0,0,.22); }
+.pkg-tuck-side-hint.right{ right:0; border-left:1px dashed rgba(0,0,0,.22); }
+.pkg-tuck-top-flap{
+  left:14%;
+  right:14%;
+  top:38%;
+  height:34%;
+  border:1px solid rgba(0,0,0,.2);
+  border-radius:8px;
+  background:rgba(255,255,255,.12);
+}
+.pkg-sleeve-band{
+  left:-4%;
+  right:-4%;
+  top:31%;
+  height:34%;
+  background:linear-gradient(90deg, rgba(255,255,255,.26), rgba(255,255,255,.10) 55%, rgba(0,0,0,.08));
+  border-top:1px solid rgba(255,255,255,.45);
+  border-bottom:1px solid rgba(0,0,0,.24);
+  box-shadow:0 10px 24px rgba(0,0,0,.08) inset;
+}
+.pkg-sleeve-tray{
+  left:7%;
+  right:-9%;
+  bottom:8%;
+  height:15%;
+  border-radius:0 0 8px 8px;
+  background:rgba(255,255,255,.18);
+  border-top:1px solid rgba(0,0,0,.24);
+  box-shadow:5px 4px 0 rgba(0,0,0,.10);
+}
+.pkg-sleeve-pull{
+  right:6%;
+  top:42%;
+  width:18px;
+  height:18px;
+  border-radius:50%;
+  border:1px solid rgba(0,0,0,.22);
+  background:rgba(255,255,255,.24);
+}
+.pkg-sleeve-top-band{
+  left:-5%;
+  right:-5%;
+  top:33%;
+  height:30%;
+  border-top:1px solid rgba(255,255,255,.36);
+  border-bottom:1px solid rgba(0,0,0,.2);
+  background:rgba(255,255,255,.12);
+}
+.pkg-window{
+  left:50%;
+  top:9%;
+  width:44%;
+  height:30%;
+  transform:translateX(-50%);
+  border-radius:14px;
+  background:linear-gradient(135deg, rgba(255,255,255,.52), rgba(255,255,255,.16));
+  border:1px solid rgba(255,255,255,.72);
+  box-shadow:0 0 0 1px rgba(0,0,0,.10) inset, 0 8px 18px rgba(0,0,0,.08);
+}
+.pkg-window::before{
+  content:"";
+  position:absolute;
+  left:13%;
+  top:10%;
+  width:30%;
+  height:80%;
+  border-radius:999px;
+  transform:rotate(20deg);
+  background:rgba(255,255,255,.42);
+}
+.pkg-window-cut-line{
+  left:20%;
+  right:20%;
+  top:43%;
+  height:0;
+  opacity:.75;
+}
+.pkg-lid-cap{
+  left:-4%;
+  right:-4%;
+  top:0;
+  height:31%;
+  background:linear-gradient(180deg, rgba(255,255,255,.30), rgba(255,255,255,.08));
+  border-bottom:2px solid rgba(0,0,0,.28);
+  box-shadow:0 8px 18px rgba(0,0,0,.10);
+}
+.pkg-lid-base{
+  left:0;
+  right:0;
+  bottom:0;
+  height:30%;
+  background:linear-gradient(180deg, rgba(0,0,0,.04), rgba(0,0,0,.16));
+  border-top:1px solid rgba(255,255,255,.28);
+}
+.pkg-lid-seam{
+  left:0;
+  right:0;
+  top:31%;
+  height:0;
+  border-top:2px solid rgba(0,0,0,.30);
+  box-shadow:0 2px 0 rgba(255,255,255,.20);
+}
+.pkg-lid-top-rim{
+  inset:9% 7%;
+  border:1px solid rgba(255,255,255,.34);
+  box-shadow:0 0 0 2px rgba(0,0,0,.08) inset;
+  border-radius:8px;
+  background:rgba(255,255,255,.08);
+}
 
 /* ── BAG (Doypack/Mailer) ── */
 .pkg-bag{ width: 200px; height: 260px; }
@@ -220,10 +435,6 @@ const PKG_STYLE = `
 }
 
 /* Бесконечный нежный сдвиг для idle-вращения */
-.pkg-window{position:absolute;inset:18% 24% auto;height:34%;border-radius:10px;background:rgba(255,255,255,.38);border:1px solid rgba(255,255,255,.55);box-shadow:0 0 0 1px rgba(0,0,0,.08) inset;z-index:1}
-.pkg-sleeve{position:absolute;left:0;right:0;top:36%;height:28%;background:rgba(255,255,255,.18);border-top:1px dashed rgba(255,255,255,.45);border-bottom:1px dashed rgba(0,0,0,.18);z-index:1}
-.pkg-lid-line,.pkg-tuck-line{position:absolute;left:0;right:0;border-top:1px dashed rgba(0,0,0,.22);z-index:1}
-.pkg-lid-line{top:22%}.pkg-tuck-line{top:15%}
 .pkg-handles{position:absolute;top:7px;left:50%;width:92px;height:38px;transform:translateX(-50%);z-index:4}
 .pkg-handles i{position:absolute;top:0;width:30px;height:36px;border:4px solid rgba(255,255,255,.55);border-bottom:0;border-radius:999px 999px 0 0}
 .pkg-handles i:first-child{left:10px}.pkg-handles i:last-child{right:10px}
@@ -293,11 +504,71 @@ function stickerDims(variant) {
   if (variant === 'oval') return { width: 270, height: 190 };
   return { width: 240, height: 240 };
 }
-function BoxVariantDetails({ variant }) {
-  if (variant === 'window-box') return <div className="pkg-window" />;
-  if (variant === 'sleeve-box') return <div className="pkg-sleeve" />;
-  if (variant === 'lid-bottom-box') return <div className="pkg-lid-line" />;
-  if (variant === 'tuck-top-box') return <div className="pkg-tuck-line" />;
+function BoxVariantDetails({ variant, face }) {
+  if (variant === 'mailer-box') {
+    if (face === 'front') {
+      return (
+        <>
+          <div className="pkg-box-detail pkg-box-dash pkg-mailer-top-seam" />
+          <div className="pkg-box-detail pkg-mailer-lock" />
+        </>
+      );
+    }
+    if (face === 'top') {
+      return (
+        <>
+          <div className="pkg-box-detail pkg-mailer-top-flap" />
+          <div className="pkg-box-detail pkg-mailer-top-wing left" />
+          <div className="pkg-box-detail pkg-mailer-top-wing right" />
+        </>
+      );
+    }
+  }
+  if (variant === 'tuck-top-box') {
+    if (face === 'front') {
+      return (
+        <>
+          <div className="pkg-box-detail pkg-tuck-lid" />
+          <div className="pkg-box-detail pkg-box-dash pkg-tuck-front-seam" />
+          <div className="pkg-box-detail pkg-tuck-side-hint left" />
+          <div className="pkg-box-detail pkg-tuck-side-hint right" />
+        </>
+      );
+    }
+    if (face === 'top') return <div className="pkg-box-detail pkg-tuck-top-flap" />;
+  }
+  if (variant === 'sleeve-box') {
+    if (face === 'front') {
+      return (
+        <>
+          <div className="pkg-box-detail pkg-sleeve-band" />
+          <div className="pkg-box-detail pkg-sleeve-tray" />
+          <div className="pkg-box-detail pkg-sleeve-pull" />
+        </>
+      );
+    }
+    if (face === 'top') return <div className="pkg-box-detail pkg-sleeve-top-band" />;
+  }
+  if (variant === 'window-box' && face === 'front') {
+    return (
+      <>
+        <div className="pkg-box-detail pkg-window" />
+        <div className="pkg-box-detail pkg-box-dash pkg-window-cut-line" />
+      </>
+    );
+  }
+  if (variant === 'lid-bottom-box') {
+    if (face === 'front') {
+      return (
+        <>
+          <div className="pkg-box-detail pkg-lid-cap" />
+          <div className="pkg-box-detail pkg-lid-seam" />
+          <div className="pkg-box-detail pkg-lid-base" />
+        </>
+      );
+    }
+    if (face === 'top') return <div className="pkg-box-detail pkg-lid-top-rim" />;
+  }
   return null;
 }
 function BagVariantDetails({ variant }) {
@@ -325,15 +596,15 @@ function Box3D({ sides, rotation, idle, size, variant }){
   const half = { x:w/2, y:h/2, z:d/2 };
   return (
     <div className={`pkg-3d pkg-box pkg-box-${variant || 'mailer-box'} ${idle?'idle':''}`} style={style}>
-      <div className="face" style={sideStyle(sides.front, {transform:`translateZ(${half.z}px)`})}>
-        <BoxVariantDetails variant={variant} />
+      <div className="face face-front" style={sideStyle(sides.front, {transform:`translateZ(${half.z}px)`})}>
+        <BoxVariantDetails variant={variant} face="front" />
         <PkgArt artwork={sides.front} />
       </div>
-      <div className="face" style={sideStyle(sides.back, {transform:`rotateY(180deg) translateZ(${half.z}px)`, backgroundBlendMode: 'multiply'})}><PkgArt artwork={sides.back} /></div>
-      <div className="face" style={sideStyle(sides.right, {width:d, left:(w-d)/2, transform:`rotateY(90deg) translateZ(${w/2}px)`, backgroundBlendMode: 'multiply'})}><PkgArt artwork={sides.right} side="left" /></div>
-      <div className="face" style={sideStyle(sides.left, {width:d, left:(w-d)/2, transform:`rotateY(-90deg) translateZ(${w/2}px)`, backgroundBlendMode: 'multiply'})}><PkgArt artwork={sides.left} side="left" /></div>
-      <div className="face" style={sideStyle(sides.top, {height:d, top:(h-d)/2, transform:`rotateX(90deg) translateZ(${h/2}px)`, backgroundBlendMode: 'screen'})}><PkgArt artwork={sides.top} /></div>
-      <div className="face" style={sideStyle(sides.bottom, {height:d, top:(h-d)/2, transform:`rotateX(-90deg) translateZ(${h/2}px)`, backgroundBlendMode: 'multiply'})}><PkgArt artwork={sides.bottom} /></div>
+      <div className="face face-back" style={sideStyle(sides.back, {transform:`rotateY(180deg) translateZ(${half.z}px)`, backgroundBlendMode: 'multiply'})}><PkgArt artwork={sides.back} /></div>
+      <div className="face face-right" style={sideStyle(sides.right, {width:d, left:(w-d)/2, transform:`rotateY(90deg) translateZ(${w/2}px)`, backgroundBlendMode: 'multiply'})}><PkgArt artwork={sides.right} side="left" /></div>
+      <div className="face face-left" style={sideStyle(sides.left, {width:d, left:(w-d)/2, transform:`rotateY(-90deg) translateZ(${w/2}px)`, backgroundBlendMode: 'multiply'})}><PkgArt artwork={sides.left} side="left" /></div>
+      <div className="face face-top" style={sideStyle(sides.top, {height:d, top:(h-d)/2, transform:`rotateX(90deg) translateZ(${h/2}px)`, backgroundBlendMode: 'screen'})}><BoxVariantDetails variant={variant} face="top" /><PkgArt artwork={sides.top} /></div>
+      <div className="face face-bottom" style={sideStyle(sides.bottom, {height:d, top:(h-d)/2, transform:`rotateX(-90deg) translateZ(${h/2}px)`, backgroundBlendMode: 'multiply'})}><PkgArt artwork={sides.bottom} /></div>
     </div>
   );
 }
