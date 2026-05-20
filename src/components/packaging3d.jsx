@@ -580,46 +580,150 @@ const PKG_STYLE = `
   border-top:2px solid rgba(0,0,0,.17);
   box-shadow:0 1px 0 rgba(255,255,255,.24);
 }
+.pkg-box-lid-bottom-box .face-front{
+  box-shadow:
+    inset 0 0 0 2px rgba(255,255,255,.16),
+    inset 0 -24px 34px rgba(0,0,0,.12);
+}
+.pkg-box-lid-bottom-box .face-front .pkg-art{
+  top:9%;
+  bottom:47%;
+  padding:6% 15%;
+}
+.pkg-box-lid-bottom-box .face-front .pkg-logo{
+  font-size:21px;
+}
 .pkg-lid-cap{
-  left:-7%;
-  right:-7%;
-  top:-2%;
-  height:38%;
-  background:linear-gradient(180deg, rgba(255,255,255,.34), rgba(255,255,255,.10));
-  border:2px solid rgba(255,255,255,.30);
-  border-bottom:4px solid rgba(0,0,0,.30);
-  box-shadow:0 14px 24px rgba(0,0,0,.14);
-}
-.pkg-lid-base{
-  left:0;
-  right:0;
-  bottom:0;
-  height:36%;
-  background:linear-gradient(180deg, rgba(0,0,0,.06), rgba(0,0,0,.22));
-  border-top:2px solid rgba(255,255,255,.30);
-}
-.pkg-lid-seam{
-  left:-7%;
-  right:-7%;
-  top:38%;
-  height:0;
-  border-top:4px solid rgba(0,0,0,.34);
-  box-shadow:0 3px 0 rgba(255,255,255,.18);
-}
-.pkg-lid-top-rim{
-  inset:7% 5%;
-  border:3px solid rgba(255,255,255,.36);
-  box-shadow:0 0 0 3px rgba(0,0,0,.09) inset, 0 8px 18px rgba(0,0,0,.10) inset;
-  border-radius:14px;
-  background:rgba(255,255,255,.10);
-}
-.pkg-lid-side-overhang{
   left:-8%;
   right:-8%;
-  top:0;
-  height:37%;
-  border-bottom:3px solid rgba(0,0,0,.28);
-  background:rgba(255,255,255,.12);
+  top:-4%;
+  height:59%;
+  border-radius:10px 10px 4px 4px;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.36), rgba(255,255,255,.12) 50%, rgba(0,0,0,.04)),
+    linear-gradient(90deg, rgba(255,255,255,.12), transparent 18% 82%, rgba(0,0,0,.10));
+  border:2px solid rgba(255,255,255,.34);
+  border-bottom:0;
+  box-shadow:
+    0 18px 28px rgba(0,0,0,.18),
+    inset 0 1px 0 rgba(255,255,255,.38),
+    inset 0 -12px 18px rgba(0,0,0,.08);
+}
+.pkg-lid-cap::before{
+  content:"";
+  position:absolute;
+  left:5%;
+  right:5%;
+  top:9%;
+  height:34%;
+  border-radius:12px;
+  border:2px solid rgba(255,255,255,.20);
+  box-shadow:inset 0 0 0 2px rgba(0,0,0,.05);
+}
+.pkg-lid-lip{
+  left:-10%;
+  right:-10%;
+  top:50%;
+  height:13%;
+  border-radius:0 0 8px 8px;
+  background:linear-gradient(180deg, rgba(255,255,255,.20), rgba(0,0,0,.18));
+  border-top:1px solid rgba(255,255,255,.28);
+  border-bottom:4px solid rgba(0,0,0,.34);
+  box-shadow:
+    0 10px 18px rgba(0,0,0,.18),
+    inset 0 -1px 0 rgba(255,255,255,.18);
+}
+.pkg-lid-base{
+  left:3%;
+  right:3%;
+  bottom:-2%;
+  height:43%;
+  border-radius:0 0 9px 9px;
+  background:
+    linear-gradient(180deg, rgba(0,0,0,.04), rgba(0,0,0,.24)),
+    linear-gradient(90deg, rgba(0,0,0,.10), transparent 18% 82%, rgba(0,0,0,.16));
+  border:1px solid rgba(0,0,0,.14);
+  border-top:0;
+  box-shadow:
+    inset 0 10px 18px rgba(255,255,255,.08),
+    inset 0 -10px 20px rgba(0,0,0,.14);
+}
+.pkg-lid-base-rim{
+  left:3%;
+  right:3%;
+  top:61%;
+  height:7%;
+  background:linear-gradient(180deg, rgba(255,255,255,.18), rgba(0,0,0,.14));
+  border-top:1px solid rgba(255,255,255,.28);
+  border-bottom:2px solid rgba(0,0,0,.24);
+  box-shadow:0 5px 12px rgba(0,0,0,.10);
+}
+.pkg-lid-seam{
+  left:-10%;
+  right:-10%;
+  top:60%;
+  height:0;
+  border-top:4px solid rgba(0,0,0,.34);
+  box-shadow:
+    0 3px 0 rgba(255,255,255,.18),
+    0 9px 14px rgba(0,0,0,.16);
+}
+.pkg-lid-top-rim{
+  inset:8% 7%;
+  border:5px solid rgba(255,255,255,.34);
+  box-shadow:
+    0 0 0 2px rgba(0,0,0,.10) inset,
+    0 10px 22px rgba(0,0,0,.12) inset,
+    0 1px 0 rgba(255,255,255,.30);
+  border-radius:18px;
+  background:
+    radial-gradient(ellipse at 50% 35%, rgba(255,255,255,.18), transparent 52%),
+    rgba(255,255,255,.09);
+}
+.pkg-lid-top-rim::after{
+  content:"";
+  position:absolute;
+  inset:9%;
+  border-radius:12px;
+  border:1px solid rgba(255,255,255,.22);
+  box-shadow:inset 0 0 0 2px rgba(0,0,0,.05);
+}
+.pkg-lid-top-overhang{
+  inset:0;
+  border:3px solid rgba(255,255,255,.22);
+  border-radius:16px;
+  box-shadow:
+    inset 0 0 0 4px rgba(0,0,0,.07),
+    inset 0 -16px 22px rgba(0,0,0,.08);
+}
+.pkg-lid-side-overhang{
+  left:-3%;
+  right:-3%;
+  top:-3%;
+  height:60%;
+  border-radius:8px 8px 2px 2px;
+  border-bottom:4px solid rgba(0,0,0,.32);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.24), rgba(255,255,255,.08) 55%, rgba(0,0,0,.12)),
+    linear-gradient(90deg, rgba(255,255,255,.10), transparent);
+  box-shadow:0 12px 20px rgba(0,0,0,.16);
+}
+.pkg-lid-side-base{
+  left:3%;
+  right:3%;
+  bottom:-1%;
+  height:41%;
+  border-radius:0 0 7px 7px;
+  background:linear-gradient(180deg, rgba(0,0,0,.06), rgba(0,0,0,.26));
+  box-shadow:inset 0 9px 14px rgba(255,255,255,.08);
+}
+.pkg-lid-side-seam{
+  left:-3%;
+  right:-3%;
+  top:60%;
+  height:0;
+  border-top:4px solid rgba(0,0,0,.32);
+  box-shadow:0 3px 0 rgba(255,255,255,.18);
 }
 
 /* ── BAG (Doypack/Mailer) ── */
@@ -858,7 +962,7 @@ function getBoxVariantGeometry(variant, size) {
     'tuck-top-box': { w: 160, h: 285, d: 105 },
     'sleeve-box': { w: 305, h: 130, d: 135 },
     'window-box': { w: 205, h: 265, d: 120 },
-    'lid-bottom-box': { w: 265, h: 165, d: 190 },
+    'lid-bottom-box': { w: 285, h: 150, d: 205 },
   }[variant || 'mailer-box'] || { w: 240, h: 200, d: 160 };
 
   if (!size?.w) return geometry;
@@ -951,13 +1055,30 @@ function BoxVariantDetails({ variant, face }) {
       return (
         <>
           <div className="pkg-box-detail pkg-lid-cap" />
+          <div className="pkg-box-detail pkg-lid-lip" />
           <div className="pkg-box-detail pkg-lid-seam" />
+          <div className="pkg-box-detail pkg-lid-base-rim" />
           <div className="pkg-box-detail pkg-lid-base" />
         </>
       );
     }
-    if (face === 'top') return <div className="pkg-box-detail pkg-lid-top-rim" />;
-    if (face === 'left' || face === 'right') return <div className="pkg-box-detail pkg-lid-side-overhang" />;
+    if (face === 'top') {
+      return (
+        <>
+          <div className="pkg-box-detail pkg-lid-top-overhang" />
+          <div className="pkg-box-detail pkg-lid-top-rim" />
+        </>
+      );
+    }
+    if (face === 'left' || face === 'right') {
+      return (
+        <>
+          <div className="pkg-box-detail pkg-lid-side-overhang" />
+          <div className="pkg-box-detail pkg-lid-side-seam" />
+          <div className="pkg-box-detail pkg-lid-side-base" />
+        </>
+      );
+    }
   }
   return null;
 }
