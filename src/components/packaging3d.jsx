@@ -457,57 +457,128 @@ const PKG_STYLE = `
   background:rgba(255,255,255,.18);
   box-shadow:inset 5px 0 9px rgba(0,0,0,.14);
 }
-.pkg-window{
-  right:8%;
-  top:16%;
-  width:36%;
-  height:58%;
-  border-radius:22px;
-  background:
-    radial-gradient(ellipse at 50% 70%, rgba(0,0,0,.16), transparent 52%),
-    linear-gradient(135deg, rgba(255,255,255,.62), rgba(255,255,255,.18));
-  border:3px solid rgba(255,255,255,.72);
+.pkg-box-window-box .face-front{
   box-shadow:
-    0 0 0 2px rgba(0,0,0,.12) inset,
-    0 14px 24px rgba(0,0,0,.12);
+    inset 0 0 0 3px rgba(255,255,255,.18),
+    inset 0 -22px 32px rgba(0,0,0,.10);
+}
+.pkg-box-window-box .face-front::before{
+  background:
+    repeating-linear-gradient(0deg,
+      rgba(255,255,255,.026) 0 1px,
+      transparent 1px 7px),
+    linear-gradient(180deg, rgba(255,255,255,.12), rgba(0,0,0,.06));
+}
+.pkg-box-window-box .face-front .pkg-art{
+  top:66%;
+  bottom:4%;
+  padding:5% 14% 7%;
+  justify-content:flex-start;
+}
+.pkg-box-window-box .face-front .pkg-logo{
+  font-size:20px;
+}
+.pkg-box-window-box .face-front .pkg-tag{
+  margin-top:6px;
+}
+.pkg-window-panel-frame{
+  inset:6% 8%;
+  border:2px solid rgba(255,255,255,.24);
+  border-radius:16px;
+  box-shadow:
+    inset 0 0 0 1px rgba(0,0,0,.08),
+    inset 0 10px 18px rgba(255,255,255,.09);
+}
+.pkg-window{
+  left:16%;
+  right:16%;
+  top:13%;
+  height:48%;
+  border-radius:24px;
+  overflow:hidden;
+  background:
+    linear-gradient(145deg, rgba(5,12,24,.26), rgba(5,12,24,.10)),
+    rgba(255,255,255,.12);
+  border:8px solid rgba(255,255,255,.58);
+  box-shadow:
+    0 0 0 2px rgba(0,0,0,.18),
+    0 0 0 7px rgba(0,0,0,.08) inset,
+    inset 0 14px 22px rgba(0,0,0,.30),
+    inset 0 -10px 16px rgba(255,255,255,.14),
+    0 16px 24px rgba(0,0,0,.18);
 }
 .pkg-window::before{
   content:"";
   position:absolute;
-  left:12%;
-  top:8%;
-  width:28%;
-  height:82%;
-  border-radius:999px;
-  transform:rotate(20deg);
-  background:rgba(255,255,255,.46);
+  inset:0;
+  background:
+    linear-gradient(135deg, rgba(255,255,255,.46) 0 12%, transparent 13% 58%, rgba(255,255,255,.20) 59% 70%, transparent 71%),
+    linear-gradient(180deg, rgba(255,255,255,.12), rgba(255,255,255,.02));
+  opacity:.84;
+  pointer-events:none;
 }
 .pkg-window::after{
   content:"";
   position:absolute;
+  inset:6px;
+  border-radius:18px;
+  border:1px solid rgba(255,255,255,.46);
+  box-shadow:
+    inset 0 0 18px rgba(255,255,255,.24),
+    inset 0 0 0 1px rgba(0,0,0,.10);
+  pointer-events:none;
+}
+.pkg-window-backing{
+  position:absolute;
+  inset:7% 9%;
+  border-radius:18px;
+  background:
+    radial-gradient(circle at 50% 42%, rgba(255,255,255,.26), transparent 38%),
+    linear-gradient(180deg, rgba(18,28,46,.18), rgba(18,28,46,.06));
+  box-shadow:inset 0 10px 20px rgba(0,0,0,.14);
+}
+.pkg-window-product{
+  position:absolute;
+  left:50%;
+  bottom:12%;
+  width:36%;
+  height:58%;
+  transform:translateX(-50%);
+  border-radius:18px 18px 8px 8px;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.34), rgba(255,255,255,.10)),
+    linear-gradient(90deg, rgba(15,22,38,.10), rgba(15,22,38,.03));
+  border:1px solid rgba(15,22,38,.10);
+  box-shadow:
+    0 10px 16px rgba(0,0,0,.12),
+    inset 0 8px 10px rgba(255,255,255,.12);
+}
+.pkg-window-product::before{
+  content:"";
+  position:absolute;
   left:28%;
-  right:18%;
-  bottom:14%;
-  height:44%;
-  border-radius:14px 14px 7px 7px;
-  background:linear-gradient(180deg, rgba(15,22,38,.12), rgba(15,22,38,.04));
+  right:28%;
+  top:-10%;
+  height:18%;
+  border-radius:12px 12px 4px 4px;
+  background:rgba(255,255,255,.22);
   border:1px solid rgba(15,22,38,.08);
 }
-.pkg-window-cut-line{
-  right:7%;
-  top:14%;
-  width:38%;
-  height:62%;
-  border:2px dashed rgba(0,0,0,.22);
-  border-radius:24px;
-  opacity:.7;
+.pkg-window-bottom-rail{
+  left:12%;
+  right:12%;
+  top:63%;
+  height:0;
+  border-top:3px solid rgba(0,0,0,.20);
+  box-shadow:0 2px 0 rgba(255,255,255,.24);
 }
 .pkg-window-retail-top{
   left:12%;
   right:12%;
-  top:9%;
+  top:8%;
   height:0;
-  border-top:2px solid rgba(0,0,0,.18);
+  border-top:2px solid rgba(0,0,0,.17);
+  box-shadow:0 1px 0 rgba(255,255,255,.24);
 }
 .pkg-lid-cap{
   left:-7%;
@@ -865,8 +936,12 @@ function BoxVariantDetails({ variant, face }) {
   if (variant === 'window-box' && face === 'front') {
     return (
       <>
-        <div className="pkg-box-detail pkg-window" />
-        <div className="pkg-box-detail pkg-box-dash pkg-window-cut-line" />
+        <div className="pkg-box-detail pkg-window-panel-frame" />
+        <div className="pkg-box-detail pkg-window">
+          <div className="pkg-window-backing" />
+          <div className="pkg-window-product" />
+        </div>
+        <div className="pkg-box-detail pkg-window-bottom-rail" />
         <div className="pkg-box-detail pkg-window-retail-top" />
       </>
     );
