@@ -328,11 +328,17 @@ function BagFace({ variant, artwork, faceId }){
 
 function Bag3D({ sides, rotation, idle, variant }){
   const v = variant || 'doy-pack';
+
+  // ── DOY-PACK: dedicated 2.5D mockup (NOT the generic 4-face cube) ──
+  if (v === 'doy-pack') {
+    return <DoyPack2D sides={sides} rotation={rotation} idle={idle} />;
+  }
+
+  // ── All other bag variants: keep the existing 4-face 3D cube ──
   const { w, h, d } = BAG_GEOMETRY[v] || BAG_GEOMETRY['doy-pack'];
   const tx = `translate3d(-50%, -50%, 0) rotateX(${rotation.x}deg) rotateY(${rotation.y}deg)`;
   const frontColor = sides.front?.backgroundColor || '#B08A5B';
   const klass =
-    v === 'doy-pack' ? 'pkg-bag-doy' :
     v === 'zip-lock-bag' ? 'pkg-bag-zip' :
     v === 'flat-bottom-bag' ? 'pkg-bag-flat' :
     v === 'paper-bag-with-handles' ? 'pkg-bag-paper' :
@@ -347,46 +353,101 @@ function Bag3D({ sides, rotation, idle, variant }){
     ['--pkg-handle-color']: shade(frontColor, -0.35),
   };
 
-  // боковые "гассеты" — тонкие, тёмные, дают объём
   const sideBg = (s) => {
     const c = s?.backgroundColor || frontColor;
     return shade(c, -0.20);
   };
 
-  // For doy-pack, use a dedicated side gusset with diamond profile
-  const isDoy = v === 'doy-pack';
-
   return (
     <div className={`pkg-bag-wrap pkg-3d ${klass} ${idle?'idle':''}`} style={style}>
       {/* передняя */}
-      <div className="pkg-bag-face pkg-bag-face-front" style={{ width:w, height:h, left:0, top:0, transform:`translateZ(${d/2}px)`, ...sideStyle(sides.front) }}>
+      <div className="pkg-bag-face" style={{ width:w, height:h, left:0, top:0, transform:`translateZ(${d/2}px)`, ...sideStyle(sides.front) }}>
         <BagFaceInner variant={v} artwork={sides.front} faceId="front" />
       </div>
       {/* задняя */}
-      <div className="pkg-bag-face pkg-bag-face-back" style={{ width:w, height:h, left:0, top:0, transform:`rotateY(180deg) translateZ(${d/2}px)`, ...sideStyle(sides.back) }}>
+      <div className="pkg-bag-face" style={{ width:w, height:h, left:0, top:0, transform:`rotateY(180deg) translateZ(${d/2}px)`, ...sideStyle(sides.back) }}>
         <BagFaceInner variant={v} artwork={sides.back} faceId="back" />
       </div>
       {/* боковые гассеты */}
-      <div className={`pkg-bag-face ${isDoy ? 'pkg-bag-side-doy' : ''}`} style={{
+      <div className="pkg-bag-face" style={{
         width:d, height:h, left:(w-d)/2, top:0,
         transform:`rotateY(90deg) translateZ(${w/2}px)`,
         background: sideBg(sides.right),
         ['--pkg-color']: sideBg(sides.right),
         ['--pkg-art-color']: pktContrast(sideBg(sides.right)),
       }}>
-        {isDoy ? <DoyPackSideGusset color={sideBg(sides.right)} /> : <BagSideGusset variant={v} />}
+        <BagSideGusset variant={v} />
         {sides.right?.visible !== false && <PkgArt artwork={sides.right} side="left" />}
       </div>
-      <div className={`pkg-bag-face ${isDoy ? 'pkg-bag-side-doy' : ''}`} style={{
+      <div className="pkg-bag-face" style={{
         width:d, height:h, left:(w-d)/2, top:0,
         transform:`rotateY(-90deg) translateZ(${w/2}px)`,
         background: sideBg(sides.left),
         ['--pkg-color']: sideBg(sides.left),
         ['--pkg-art-color']: pktContrast(sideBg(sides.left)),
       }}>
-        {isDoy ? <DoyPackSideGusset color={sideBg(sides.left)} /> : <BagSideGusset variant={v} />}
+        <BagSideGusset variant={v} />
         {sides.left?.visible !== false && <PkgArt artwork={sides.left} side="left" />}
       </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────
+// DOY-PACK 2.5D MOCKUP
+// Single coherent stand-up pouch — NO separated side panels.
+// Side depth is suggested by shadow strips, not 3D faces.
+// Rotation is converted to subtle perspective tilt.
+// ─────────────────────────────────────────────────────────
+function DoyPack2D({ sides, rotation, idle }){
+  const frontSide = sides.front || {};
+  const color = frontSide.backgroundColor || '#B08A5B';
+  const darkEdge = shade(color, -0.22);
+  const w = 210, h = 300;
+
+  // Convert drag rotation to gentle perspective tilt (no full 3D spin)
+  const tiltY = Math.max(-12, Math.min(12, rotation.y * 0.15));
+  const tiltX = Math.max(-6, Math.min(6, rotation.x * 0.1));
+
+  const wrapStyle = {
+    width: w, height: h,
+    position: 'absolute', left: '50%', top: '50%',
+    transform: `translate3d(-50%, -50%, 0) perspective(800px) rotateY(${tiltY}deg) rotateX(${tiltX}deg)`,
+    transition: 'transform .35s cubic-bezier(.4,.1,.2,1)',
+    ['--pkg-color']: color,
+    ['--pkg-art-color']: pktContrast(color),
+    ['--pkg-dark-edge']: darkEdge,
+  };
+
+  return (
+    <div className={`pkg-doy-mockup ${idle ? 'pkg-doy-idle' : ''}`} style={wrapStyle}>
+      {/* ── Main pouch body ── */}
+      <div className="pkg-doy-body">
+        {/* Kraft paper texture overlay */}
+        <div className="pkg-doy-texture" />
+        {/* Side fold shadows (left) */}
+        <div className="pkg-doy-side-shadow left" />
+        {/* Side fold shadows (right) */}
+        <div className="pkg-doy-side-shadow right" />
+        {/* Top seal band */}
+        <div className="pkg-doy-seal" />
+        {/* Zipper / closure lines */}
+        <div className="pkg-doy-zipper" />
+        {/* Tear notch left */}
+        <div className="pkg-doy-notch left" />
+        {/* Tear notch right */}
+        <div className="pkg-doy-notch right" />
+        {/* Bottom gusset */}
+        <div className="pkg-doy-bottom-gusset" />
+        {/* Central branding area */}
+        <div className="pkg-doy-art-area">
+          <PkgArt artwork={frontSide} />
+        </div>
+      </div>
+      {/* ── Thin side edge strip (right) — suggests depth ── */}
+      <div className="pkg-doy-edge right" />
+      {/* ── Floor contact shadow ── */}
+      <div className="pkg-doy-floor-shadow" />
     </div>
   );
 }
@@ -395,20 +456,6 @@ function BagFaceInner({ variant, artwork, faceId }){
   const v = variant;
   return (
     <>
-      {/* DOY-PACK: realistic seal band, zipper, tear notches, bottom gusset */}
-      {v === 'doy-pack' && (
-        <>
-          {/* Top seal band — thin heat-sealed strip */}
-          <div className="pkg-doy-seal" />
-          {/* Zipper/closure track below seal */}
-          <div className="pkg-doy-zipper" />
-          {/* Tear notches on both sides */}
-          <div className="pkg-doy-notch left" />
-          <div className="pkg-doy-notch right" />
-          {/* Bottom gusset fold line */}
-          <div className="pkg-doy-bottom-gusset" />
-        </>
-      )}
       {/* верхний шов и зиппер для zip-lock */}
       {v === 'zip-lock-bag' && (
         <>
@@ -453,23 +500,7 @@ function BagSideGusset({ variant }){
   );
 }
 
-// Doy-pack side gusset with realistic diamond-fold profile
-// Matches the reference image's side view: triangular top tapering to a point,
-// expanding into a bottom gusset fold
-function DoyPackSideGusset({ color }){
-  return (
-    <div className="pkg-doy-side-gusset">
-      {/* Upper folded triangle — converges to a point near center */}
-      <div className="pkg-doy-side-upper" />
-      {/* Central fold crease — the sharp fold line */}
-      <div className="pkg-doy-side-crease" />
-      {/* Lower bottom gusset — the expanding triangle at bottom */}
-      <div className="pkg-doy-side-lower" />
-      {/* Subtle vertical fold shadow */}
-      <div className="pkg-doy-side-fold-shadow" />
-    </div>
-  );
-}
+// (DoyPackSideGusset removed — doy-pack now uses 2.5D mockup, no separate side faces)
 
 // ─────────────────────────────────────────────────────────
 // CUP

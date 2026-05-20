@@ -462,246 +462,289 @@ export const PKG_STYLE = `
 `;
 
 export const PKG_STYLE_PART2 = `
-/* ─── DOY-PACK (стенд-ап пакет) ────────────────────
-   Realistic stand-up pouch / doy-pack silhouette.
-   Based on reference kraft pouch image:
-   - Slightly rounded upper shoulders
-   - Wider toward the bottom (standing gusset)
-   - Slightly curved lower edge
-   - Soft flexible material feel
+/* ─── DOY-PACK 2.5D MOCKUP ─────────────────────────
+   Single coherent stand-up pouch.
+   No separated 3D side panels.
+   Side depth suggested by shadows, not geometry.
    ───────────────────────────────────────────────── */
-.pkg-bag-doy .pkg-bag-face{
-  /* Realistic doy-pack silhouette using SVG-like polygon.
-     Top: narrow seal area with slightly rounded shoulders.
-     Body: gently widens downward.
-     Bottom: slightly curved standing base. */
-  clip-path: polygon(
-    /* top seal edge — straight */
-    12% 0%, 88% 0%,
-    /* upper right shoulder — gentle curve */
-    93% 0.5%, 96% 1.8%, 98% 4%, 99% 7%,
-    /* right side — very slight outward bow toward bottom */
-    99.5% 14%, 100% 28%, 100% 50%,
-    100% 70%, 99.5% 82%,
-    /* lower right — widening to base */
-    99% 88%, 98% 92%, 96% 95%,
-    /* bottom — subtle upward curve (standing gusset shape) */
-    92% 97%, 82% 99%, 68% 100%,
-    50% 100.5%,
-    32% 100%, 18% 99%, 8% 97%,
-    /* lower left */
-    4% 95%, 2% 92%, 1% 88%,
-    /* left side */
-    0.5% 82%, 0% 70%, 0% 50%,
-    0% 28%, 0.5% 14%,
-    /* upper left shoulder */
-    1% 7%, 2% 4%, 4% 1.8%, 7% 0.5%
-  );
-  background: var(--pkg-color);
-  box-shadow:
-    0 18px 32px rgba(0,0,0,.16),
-    inset 0 0 0 1px rgba(0,0,0,.06);
+
+/* Wrapper — positions the pouch, handles tilt */
+.pkg-doy-mockup{
+  pointer-events: auto;
+}
+.pkg-stage.dragging .pkg-doy-mockup{
+  transition: none;
 }
 
-/* Kraft paper texture + flexible body shading */
-.pkg-bag-doy .pkg-bag-face::before{
-  content:"";
+/* Idle gentle rocking */
+@keyframes pkg-doy-rock{
+  0%   { transform: translate3d(-50%,-50%,0) perspective(800px) rotateY(-3deg) rotateX(-1deg); }
+  50%  { transform: translate3d(-50%,-50%,0) perspective(800px) rotateY(3deg)  rotateX(-1deg); }
+  100% { transform: translate3d(-50%,-50%,0) perspective(800px) rotateY(-3deg) rotateX(-1deg); }
+}
+.pkg-doy-idle{
+  animation: pkg-doy-rock 10s ease-in-out infinite;
+}
+
+/* ── Main pouch body ────────────────────────────── */
+.pkg-doy-body{
+  position: absolute;
+  inset: 0;
+  background: var(--pkg-color, #B08A5B);
+  overflow: hidden;
+
+  /* Realistic doy-pack silhouette:
+     - slightly inset top (seal area narrower than body)
+     - gently rounded shoulders
+     - near-straight sides with very slight outward bow
+     - bottom with subtle upward curve (standing gusset) */
+  clip-path: polygon(
+    /* top seal — narrower than body */
+    14% 0%, 86% 0%,
+    /* right shoulder — smooth curve outward */
+    91% 0.6%, 94% 1.6%, 96.5% 3.5%, 98% 6%,
+    /* right side — very slight outward bow */
+    99% 10%, 99.5% 18%, 100% 30%,
+    100% 50%, 100% 70%,
+    99.5% 80%, 99% 87%,
+    /* lower right — gentle curve to base */
+    98% 91%, 96% 94.5%, 93% 96.5%,
+    /* bottom — subtle upward curve for standing gusset */
+    88% 98%, 78% 99.4%, 65% 100%,
+    50% 100.3%,
+    35% 100%, 22% 99.4%, 12% 98%,
+    /* lower left */
+    7% 96.5%, 4% 94.5%, 2% 91%,
+    /* left side */
+    1% 87%, 0.5% 80%, 0% 70%,
+    0% 50%, 0% 30%,
+    0.5% 18%, 1% 10%,
+    /* left shoulder */
+    2% 6%, 3.5% 3.5%, 6% 1.6%, 9% 0.6%
+  );
+
+  box-shadow:
+    0 2px 16px rgba(0,0,0,.10),
+    inset 0 0 0 1px rgba(0,0,0,.04);
+}
+
+/* ── Kraft paper texture + body shading ─────────── */
+.pkg-doy-texture{
   position:absolute; inset:0;
-  background:
-    /* Central soft highlight — convex body feel */
-    radial-gradient(ellipse 60% 70% at 48% 48%,
-      rgba(255,255,255,.14) 0%,
-      rgba(255,255,255,.04) 50%,
-      rgba(255,255,255,0) 70%),
-    /* Side shadows — flexible pouch depth */
-    linear-gradient(90deg,
-      rgba(0,0,0,.22) 0%,
-      rgba(0,0,0,.08) 6%,
-      rgba(0,0,0,.0) 14%,
-      rgba(255,255,255,.04) 40%,
-      rgba(255,255,255,.06) 50%,
-      rgba(255,255,255,.04) 60%,
-      rgba(0,0,0,.0) 86%,
-      rgba(0,0,0,.08) 94%,
-      rgba(0,0,0,.22) 100%),
-    /* Subtle kraft paper micro-texture */
-    repeating-linear-gradient(87deg,
-      rgba(0,0,0,.015) 0 1px,
-      transparent 1px 3px),
-    repeating-linear-gradient(1deg,
-      rgba(0,0,0,.01) 0 1px,
-      transparent 1px 5px);
-  mix-blend-mode: multiply;
   pointer-events:none;
   z-index: 1;
+  background:
+    /* Central soft convex highlight */
+    radial-gradient(ellipse 55% 65% at 50% 45%,
+      rgba(255,255,255,.13) 0%,
+      rgba(255,255,255,.03) 55%,
+      rgba(255,255,255,0) 75%),
+    /* Side edge darkening */
+    linear-gradient(90deg,
+      rgba(0,0,0,.18) 0%,
+      rgba(0,0,0,.06) 5%,
+      rgba(0,0,0,0) 12%,
+      transparent 40%,
+      transparent 60%,
+      rgba(0,0,0,0) 88%,
+      rgba(0,0,0,.06) 95%,
+      rgba(0,0,0,.18) 100%),
+    /* Very subtle kraft paper grain */
+    repeating-linear-gradient(92deg,
+      rgba(0,0,0,.012) 0 1px,
+      transparent 1px 3px),
+    repeating-linear-gradient(2deg,
+      rgba(0,0,0,.008) 0 1px,
+      transparent 1px 4px);
 }
 
-/* Bottom gusset standing base */
-.pkg-bag-doy .pkg-bag-face::after{
-  content:"";
+/* ── Side fold shadows (gusset suggestion) ─────── */
+.pkg-doy-side-shadow{
   position:absolute;
-  left: 0; right: 0; bottom: 0;
-  height: 15%;
-  background:
-    /* Gentle fold shadow at the gusset crease */
-    linear-gradient(180deg,
-      rgba(0,0,0,.0) 0%,
-      rgba(0,0,0,.04) 20%,
-      rgba(0,0,0,.10) 60%,
-      rgba(0,0,0,.20) 100%);
+  top: 9%; bottom: 13%;
+  width: 8%;
   z-index: 2;
   pointer-events:none;
 }
+.pkg-doy-side-shadow.left{
+  left: 0;
+  background:
+    linear-gradient(90deg,
+      rgba(0,0,0,.16) 0%,
+      rgba(0,0,0,.06) 40%,
+      rgba(0,0,0,0) 100%);
+}
+.pkg-doy-side-shadow.right{
+  right: 0;
+  background:
+    linear-gradient(-90deg,
+      rgba(0,0,0,.16) 0%,
+      rgba(0,0,0,.06) 40%,
+      rgba(0,0,0,0) 100%);
+}
 
-/* ── DOY-PACK SEAL: thin heat-sealed band at top ── */
+/* ── Top seal band ─────────────────────────────── */
 .pkg-doy-seal{
   position:absolute;
-  left: 11%; right: 11%; top: 0;
-  height: 18px;
-  background:
-    /* Subtle pressed/sealed texture — NOT stripes */
-    linear-gradient(180deg,
-      rgba(0,0,0,.06) 0%,
-      rgba(255,255,255,.10) 30%,
-      rgba(0,0,0,.04) 50%,
-      rgba(255,255,255,.08) 70%,
-      rgba(0,0,0,.12) 100%);
-  border-bottom: 1px solid rgba(0,0,0,.14);
-  box-shadow:
-    0 1px 0 rgba(255,255,255,.12);
-  z-index: 6;
-  pointer-events:none;
-}
-
-/* ── DOY-PACK ZIPPER: subtle horizontal closure line ── */
-.pkg-doy-zipper{
-  position:absolute;
-  left: 8%; right: 8%; top: 19px;
-  height: 7px;
-  background:
-    linear-gradient(180deg,
-      rgba(0,0,0,.06) 0%,
-      rgba(0,0,0,.12) 35%,
-      rgba(0,0,0,.14) 50%,
-      rgba(0,0,0,.10) 65%,
-      rgba(0,0,0,.04) 100%);
-  box-shadow:
-    0 1px 0 rgba(255,255,255,.10),
-    inset 0 0 0 0.5px rgba(0,0,0,.08);
-  z-index: 6;
-  pointer-events:none;
-}
-/* Double-track lines inside zipper */
-.pkg-doy-zipper::before{
-  content:"";
-  position:absolute;
-  left: 4%; right: 4%;
-  top: 2px;
-  height: 0;
-  border-top: 0.5px solid rgba(0,0,0,.12);
-  box-shadow: 0 2px 0 rgba(0,0,0,.08);
-}
-
-/* ── DOY-PACK TEAR NOTCHES ── */
-.pkg-doy-notch{
-  position:absolute;
-  top: 18px;
-  width: 5px;
-  height: 8px;
-  z-index: 7;
-  pointer-events:none;
-}
-.pkg-doy-notch.left{
-  left: 0;
-  background: linear-gradient(90deg, rgba(0,0,0,.35), rgba(0,0,0,.08));
-  clip-path: polygon(0 30%, 100% 0, 100% 100%, 0 70%);
-}
-.pkg-doy-notch.right{
-  right: 0;
-  background: linear-gradient(-90deg, rgba(0,0,0,.35), rgba(0,0,0,.08));
-  clip-path: polygon(0 0, 100% 30%, 100% 70%, 0 100%);
-}
-
-/* ── DOY-PACK BOTTOM GUSSET FOLD ── */
-.pkg-doy-bottom-gusset{
-  position:absolute;
-  left: 4%; right: 4%;
-  bottom: 14%;
-  height: 0;
-  border-top: 1px solid rgba(0,0,0,.10);
-  box-shadow:
-    0 -1px 0 rgba(255,255,255,.06),
-    0 1px 2px rgba(0,0,0,.06);
-  z-index: 3;
-  pointer-events:none;
-}
-
-/* ── DOY-PACK SIDE GUSSET (diamond-fold profile) ── */
-.pkg-bag-side-doy{
-  overflow: visible !important;
-}
-.pkg-doy-side-gusset{
-  position:absolute;
-  inset: 0;
-  pointer-events:none;
-  overflow: hidden;
-}
-/* Upper part: triangular fold converging from top */
-.pkg-doy-side-upper{
-  position:absolute;
-  left:0; right:0;
-  top: 0;
-  height: 55%;
-  background:
-    linear-gradient(180deg,
-      rgba(0,0,0,.08) 0%,
-      rgba(0,0,0,.0) 6%,
-      rgba(0,0,0,.0) 40%,
-      rgba(0,0,0,.06) 100%);
-  clip-path: polygon(0 0, 100% 0, 50% 100%);
-}
-/* Central fold crease — the sharp line */
-.pkg-doy-side-crease{
-  position:absolute;
-  left: 50%;
-  top: 8%;
-  bottom: 18%;
-  width: 0;
-  border-left: 1px solid rgba(0,0,0,.18);
-  box-shadow:
-    -1px 0 0 rgba(255,255,255,.08),
-    1px 0 0 rgba(0,0,0,.06);
-  z-index: 2;
-}
-/* Lower part: expanding triangle for bottom gusset */
-.pkg-doy-side-lower{
-  position:absolute;
-  left: 0; right: 0;
-  bottom: 0;
-  height: 28%;
+  left: 13%; right: 13%; top: 0;
+  height: 10%;
   background:
     linear-gradient(180deg,
       rgba(0,0,0,.04) 0%,
-      rgba(0,0,0,.14) 60%,
-      rgba(0,0,0,.22) 100%);
-  clip-path: polygon(50% 0, 100% 100%, 0 100%);
-}
-/* Overall fold shadow overlay */
-.pkg-doy-side-fold-shadow{
-  position:absolute;
-  inset: 0;
-  background:
-    linear-gradient(90deg,
-      rgba(255,255,255,.12) 0%,
-      rgba(0,0,0,.10) 46%,
-      rgba(0,0,0,.16) 50%,
-      rgba(0,0,0,.10) 54%,
-      rgba(255,255,255,.12) 100%);
-  mix-blend-mode: multiply;
+      rgba(255,255,255,.08) 25%,
+      rgba(0,0,0,.02) 50%,
+      rgba(255,255,255,.06) 75%,
+      rgba(0,0,0,.08) 100%);
+  border-bottom: 1px solid rgba(0,0,0,.12);
+  box-shadow: 0 1px 0 rgba(255,255,255,.08);
+  z-index: 5;
+  pointer-events:none;
 }
 
-.pkg-bag-doy .pkg-art{
-  inset: 14% 14% 20%;
+/* ── Zipper / closure lines ────────────────────── */
+.pkg-doy-zipper{
+  position:absolute;
+  left: 10%; right: 10%;
+  top: 10%;
+  height: 2.2%;
+  background:
+    linear-gradient(180deg,
+      rgba(0,0,0,.05) 0%,
+      rgba(0,0,0,.12) 40%,
+      rgba(0,0,0,.10) 60%,
+      rgba(0,0,0,.04) 100%);
+  box-shadow:
+    0 1px 0 rgba(255,255,255,.06);
+  z-index: 5;
+  pointer-events:none;
+}
+/* Double track inside zipper */
+.pkg-doy-zipper::after{
+  content:"";
+  position:absolute;
+  left: 3%; right: 3%;
+  top: 35%;
+  height: 0;
+  border-top: 0.5px solid rgba(0,0,0,.10);
+  box-shadow: 0 1.5px 0 rgba(0,0,0,.06);
+}
+
+/* ── Tear notches ──────────────────────────────── */
+.pkg-doy-notch{
+  position:absolute;
+  top: 9.5%;
+  width: 4px;
+  height: 6px;
+  z-index: 6;
+  pointer-events:none;
+}
+.pkg-doy-notch.left{
+  left: 13%;
+  background: rgba(0,0,0,.22);
+  clip-path: polygon(0 20%, 100% 0, 100% 100%, 0 80%);
+}
+.pkg-doy-notch.right{
+  right: 13%;
+  background: rgba(0,0,0,.22);
+  clip-path: polygon(0 0, 100% 20%, 100% 80%, 0 100%);
+}
+
+/* ── Bottom gusset ─────────────────────────────── */
+.pkg-doy-bottom-gusset{
+  position:absolute;
+  left: 0; right: 0;
+  bottom: 0;
+  height: 13%;
+  z-index: 3;
+  pointer-events:none;
+  background:
+    linear-gradient(180deg,
+      rgba(0,0,0,0) 0%,
+      rgba(0,0,0,.03) 25%,
+      rgba(0,0,0,.08) 55%,
+      rgba(0,0,0,.16) 100%);
+}
+/* Fold crease line */
+.pkg-doy-bottom-gusset::before{
+  content:"";
+  position:absolute;
+  left: 5%; right: 5%; top: 0;
+  height: 0;
+  border-top: 1px solid rgba(0,0,0,.08);
+  box-shadow: 0 -1px 0 rgba(255,255,255,.05);
+}
+/* Curved bottom edge shadow */
+.pkg-doy-bottom-gusset::after{
+  content:"";
+  position:absolute;
+  left: 10%; right: 10%; bottom: 0;
+  height: 35%;
+  border-radius: 0 0 50% 50% / 0 0 100% 100%;
+  background:
+    linear-gradient(180deg,
+      rgba(0,0,0,.06),
+      rgba(0,0,0,.14));
+}
+
+/* ── Branding area (centered on pouch) ─────────── */
+.pkg-doy-art-area{
+  position:absolute;
+  left: 14%; right: 14%;
+  top: 16%; bottom: 18%;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+.pkg-doy-art-area .pkg-art{
+  position: relative;
+  inset: auto;
+  width: 100%; height: 100%;
+  padding: 8% 6%;
+}
+
+/* ── Side edge strip (subtle depth indicator) ──── */
+.pkg-doy-edge{
+  position:absolute;
+  top: 6%; bottom: 5%;
+  width: 6px;
+  z-index: -1;
+  pointer-events:none;
+  border-radius: 0 2px 2px 0;
+}
+.pkg-doy-edge.right{
+  right: -5px;
+  background:
+    linear-gradient(90deg,
+      var(--pkg-dark-edge, #8a6d47),
+      rgba(0,0,0,.22));
+  clip-path: polygon(
+    0 2%, 100% 4%,
+    100% 96%, 0 98%
+  );
+  box-shadow: 1px 0 3px rgba(0,0,0,.12);
+}
+
+/* ── Floor contact shadow ──────────────────────── */
+.pkg-doy-floor-shadow{
+  position:absolute;
+  left: 8%; right: 8%;
+  bottom: -8px;
+  height: 16px;
+  background:
+    radial-gradient(ellipse at 50% 20%,
+      rgba(0,0,0,.22) 0%,
+      rgba(0,0,0,.08) 50%,
+      rgba(0,0,0,0) 80%);
+  filter: blur(4px);
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* ── Keep old class names that other bag types use ── */
+.pkg-bag-doy .pkg-bag-face{
+  /* no longer used — doy-pack renders via .pkg-doy-mockup */
 }
 
 /* ─── ZIP-LOCK ─────────────────────────────────────
