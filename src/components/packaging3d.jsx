@@ -286,7 +286,7 @@ function Box3D({ sides, rotation, idle, size, variant }){
 // BAG
 // ─────────────────────────────────────────────────────────
 const BAG_GEOMETRY = {
-  'doy-pack':              { w: 220, h: 290, d: 64 },
+  'doy-pack':              { w: 210, h: 300, d: 58 },
   'zip-lock-bag':          { w: 220, h: 270, d: 56 },
   'flat-bottom-bag':       { w: 200, h: 280, d: 86 },
   'paper-bag-with-handles':{ w: 220, h: 280, d: 110 },
@@ -353,35 +353,38 @@ function Bag3D({ sides, rotation, idle, variant }){
     return shade(c, -0.20);
   };
 
+  // For doy-pack, use a dedicated side gusset with diamond profile
+  const isDoy = v === 'doy-pack';
+
   return (
     <div className={`pkg-bag-wrap pkg-3d ${klass} ${idle?'idle':''}`} style={style}>
       {/* передняя */}
-      <div className="pkg-bag-face" style={{ width:w, height:h, left:0, top:0, transform:`translateZ(${d/2}px)`, ...sideStyle(sides.front) }}>
+      <div className="pkg-bag-face pkg-bag-face-front" style={{ width:w, height:h, left:0, top:0, transform:`translateZ(${d/2}px)`, ...sideStyle(sides.front) }}>
         <BagFaceInner variant={v} artwork={sides.front} faceId="front" />
       </div>
       {/* задняя */}
-      <div className="pkg-bag-face" style={{ width:w, height:h, left:0, top:0, transform:`rotateY(180deg) translateZ(${d/2}px)`, ...sideStyle(sides.back) }}>
+      <div className="pkg-bag-face pkg-bag-face-back" style={{ width:w, height:h, left:0, top:0, transform:`rotateY(180deg) translateZ(${d/2}px)`, ...sideStyle(sides.back) }}>
         <BagFaceInner variant={v} artwork={sides.back} faceId="back" />
       </div>
       {/* боковые гассеты */}
-      <div className="pkg-bag-face" style={{
+      <div className={`pkg-bag-face ${isDoy ? 'pkg-bag-side-doy' : ''}`} style={{
         width:d, height:h, left:(w-d)/2, top:0,
         transform:`rotateY(90deg) translateZ(${w/2}px)`,
         background: sideBg(sides.right),
         ['--pkg-color']: sideBg(sides.right),
         ['--pkg-art-color']: pktContrast(sideBg(sides.right)),
       }}>
-        <BagSideGusset variant={v} />
+        {isDoy ? <DoyPackSideGusset color={sideBg(sides.right)} /> : <BagSideGusset variant={v} />}
         {sides.right?.visible !== false && <PkgArt artwork={sides.right} side="left" />}
       </div>
-      <div className="pkg-bag-face" style={{
+      <div className={`pkg-bag-face ${isDoy ? 'pkg-bag-side-doy' : ''}`} style={{
         width:d, height:h, left:(w-d)/2, top:0,
         transform:`rotateY(-90deg) translateZ(${w/2}px)`,
         background: sideBg(sides.left),
         ['--pkg-color']: sideBg(sides.left),
         ['--pkg-art-color']: pktContrast(sideBg(sides.left)),
       }}>
-        <BagSideGusset variant={v} />
+        {isDoy ? <DoyPackSideGusset color={sideBg(sides.left)} /> : <BagSideGusset variant={v} />}
         {sides.left?.visible !== false && <PkgArt artwork={sides.left} side="left" />}
       </div>
     </div>
@@ -392,6 +395,20 @@ function BagFaceInner({ variant, artwork, faceId }){
   const v = variant;
   return (
     <>
+      {/* DOY-PACK: realistic seal band, zipper, tear notches, bottom gusset */}
+      {v === 'doy-pack' && (
+        <>
+          {/* Top seal band — thin heat-sealed strip */}
+          <div className="pkg-doy-seal" />
+          {/* Zipper/closure track below seal */}
+          <div className="pkg-doy-zipper" />
+          {/* Tear notches on both sides */}
+          <div className="pkg-doy-notch left" />
+          <div className="pkg-doy-notch right" />
+          {/* Bottom gusset fold line */}
+          <div className="pkg-doy-bottom-gusset" />
+        </>
+      )}
       {/* верхний шов и зиппер для zip-lock */}
       {v === 'zip-lock-bag' && (
         <>
@@ -433,6 +450,24 @@ function BagSideGusset({ variant }){
       mixBlendMode:'multiply',
       pointerEvents:'none',
     }}/>
+  );
+}
+
+// Doy-pack side gusset with realistic diamond-fold profile
+// Matches the reference image's side view: triangular top tapering to a point,
+// expanding into a bottom gusset fold
+function DoyPackSideGusset({ color }){
+  return (
+    <div className="pkg-doy-side-gusset">
+      {/* Upper folded triangle — converges to a point near center */}
+      <div className="pkg-doy-side-upper" />
+      {/* Central fold crease — the sharp fold line */}
+      <div className="pkg-doy-side-crease" />
+      {/* Lower bottom gusset — the expanding triangle at bottom */}
+      <div className="pkg-doy-side-lower" />
+      {/* Subtle vertical fold shadow */}
+      <div className="pkg-doy-side-fold-shadow" />
+    </div>
   );
 }
 
