@@ -1,1105 +1,39 @@
 import React from 'react';
+import { PKG_STYLE, PKG_STYLE_PART2 } from './packaging3d-styles.js';
+
 // ─────────────────────────────────────────────────────────
-// 3D-превью упаковки на чистом CSS-transform.
-// Поддерживает: box, bag, cup, sticker.
-// Также рендерит плоскую развёртку (flat unfold).
+// ПАКЕТЕАМ 3D Packaging Preview
+// Каждая категория — со своей собственной 3D-структурой,
+// а не наклеенные линии поверх одинаковой коробки.
 // ─────────────────────────────────────────────────────────
 
-const PKG_STYLE = `
-.pkg-stage{
-  position: relative;
-  width: 100%;
-  aspect-ratio: 4 / 3;
-  display: flex; align-items: center; justify-content: center;
-  perspective: 1400px;
-  perspective-origin: 50% 45%;
-  user-select: none;
-  overflow: hidden;
-}
-.pkg-stage.tall{ aspect-ratio: 5/4; }
+const STYLE_BLOCK = PKG_STYLE + PKG_STYLE_PART2;
 
-.pkg-floor{
-  position: absolute; left: 8%; right: 8%; bottom: 12%;
-  height: 18%;
-  background: radial-gradient(ellipse at center,
-    rgba(15,22,38,.18) 0%,
-    rgba(15,22,38,.10) 35%,
-    rgba(15,22,38,0) 70%);
-  filter: blur(2px);
-  z-index: 0;
-  pointer-events: none;
-}
-
-.pkg-stage svg.tex-defs{ position:absolute; width:0; height:0; }
-
-.pkg-3d{
-  position: relative;
-  transform-style: preserve-3d;
-  transition: transform .35s cubic-bezier(.4,.1,.2,1);
-}
-.pkg-stage.dragging .pkg-3d{ transition: none; }
-
-/* ── BOX ── */
-.pkg-box{ width: 240px; height: 220px; }
-.pkg-box .face{
-  position: absolute; inset: 0;
-  background: var(--pkg-color, #B08A5B);
-  border: 1px solid rgba(0,0,0,.08);
-  backface-visibility: hidden;
-  display: flex; align-items: center; justify-content: center;
-  overflow: hidden;
-}
-.pkg-box .face::after{
-  content: ""; position: absolute; inset: 0;
-  background:
-    repeating-linear-gradient(0deg,
-      rgba(255,255,255,.04) 0 1px,
-      transparent 1px 3px),
-    linear-gradient(135deg, rgba(255,255,255,.18), rgba(0,0,0,.12));
-  pointer-events: none;
-}
-.pkg-box .face-front::before,
-.pkg-box .face-back::before,
-.pkg-box .face-left::before,
-.pkg-box .face-right::before,
-.pkg-box .face-top::before,
-.pkg-box .face-bottom::before{
-  content:"";
-  position:absolute;
-  inset:0;
-  background:
-    repeating-linear-gradient(90deg,
-      rgba(255,255,255,.035) 0 1px,
-      transparent 1px 5px),
-    repeating-linear-gradient(0deg,
-      rgba(0,0,0,.025) 0 1px,
-      transparent 1px 7px);
-  mix-blend-mode: soft-light;
-  pointer-events:none;
-}
-.pkg-box-detail{
-  position:absolute;
-  z-index:1;
-  pointer-events:none;
-}
-.pkg-box-line{
-  background: rgba(0,0,0,.24);
-  box-shadow: 0 1px 0 rgba(255,255,255,.24);
-}
-.pkg-box-dash{
-  border-top: 1px dashed rgba(0,0,0,.34);
-}
-.pkg-box .pkg-art{ z-index:3; }
-.pkg-box-mailer-box .face-front::before{
-  background:
-    repeating-linear-gradient(0deg,
-      rgba(255,255,255,.045) 0 1px,
-      rgba(0,0,0,.05) 1px 3px,
-      transparent 3px 8px),
-    repeating-linear-gradient(90deg,
-      rgba(0,0,0,.03) 0 1px,
-      transparent 1px 10px),
-    linear-gradient(135deg, rgba(255,255,255,.16), rgba(0,0,0,.10));
-}
-.pkg-box-mailer-box .face-top::after{
-  background:
-    repeating-linear-gradient(90deg,
-      rgba(0,0,0,.08) 0 2px,
-      transparent 2px 8px),
-    linear-gradient(135deg, rgba(255,255,255,.22), rgba(0,0,0,.10));
-}
-.pkg-mailer-lid-panel{
-  left:-3%;
-  right:-3%;
-  top:-3%;
-  height:40%;
-  background:linear-gradient(180deg, rgba(255,255,255,.30), rgba(255,255,255,.08));
-  border:1px solid rgba(255,255,255,.24);
-  border-bottom:4px solid rgba(0,0,0,.28);
-  box-shadow:0 14px 22px rgba(0,0,0,.15);
-}
-.pkg-mailer-lid-lip{
-  left:-4%;
-  right:-4%;
-  top:35%;
-  height:10%;
-  background:linear-gradient(180deg, rgba(255,255,255,.16), rgba(0,0,0,.16));
-  border-top:1px solid rgba(255,255,255,.28);
-  border-bottom:2px solid rgba(0,0,0,.26);
-  box-shadow:0 8px 14px rgba(0,0,0,.16);
-}
-.pkg-mailer-base-panel{
-  left:0;
-  right:0;
-  bottom:0;
-  height:30%;
-  background:linear-gradient(180deg, transparent, rgba(0,0,0,.16));
-  border-top:1px solid rgba(255,255,255,.20);
-}
-.pkg-mailer-top-seam{ left:8%; right:8%; top:39%; height:0; border-top-width:2px; opacity:.75; }
-.pkg-mailer-lock{
-  left:50%;
-  bottom:5%;
-  width:26%;
-  height:30px;
-  transform:translateX(-50%);
-  border:2px solid rgba(0,0,0,.24);
-  border-top:0;
-  border-radius:0 0 15px 15px;
-  background:linear-gradient(180deg, rgba(255,255,255,.28), rgba(0,0,0,.10));
-  clip-path:polygon(13% 0, 87% 0, 100% 58%, 76% 100%, 24% 100%, 0 58%);
-  box-shadow:0 7px 11px rgba(0,0,0,.14);
-}
-.pkg-mailer-lock::before{
-  content:"";
-  position:absolute;
-  left:20%;
-  right:20%;
-  top:4px;
-  height:6px;
-  border-top:2px solid rgba(0,0,0,.22);
-  border-bottom:1px solid rgba(255,255,255,.22);
-}
-.pkg-mailer-lock::after{
-  content:"";
-  position:absolute;
-  left:36%;
-  right:36%;
-  bottom:8px;
-  border-top:3px solid rgba(0,0,0,.24);
-}
-.pkg-mailer-front-slot{
-  left:33%;
-  right:33%;
-  bottom:26%;
-  height:0;
-  border-top:4px solid rgba(0,0,0,.28);
-  box-shadow:
-    0 2px 0 rgba(255,255,255,.22),
-    0 6px 10px rgba(0,0,0,.12);
-}
-.pkg-mailer-front-corner{
-  top:1%;
-  width:18%;
-  height:39%;
-  border-bottom:2px solid rgba(0,0,0,.20);
-  background:linear-gradient(180deg, rgba(255,255,255,.12), rgba(0,0,0,.04));
-}
-.pkg-mailer-front-corner.left{
-  left:0;
-  border-right:2px dashed rgba(0,0,0,.18);
-  transform:skewY(-10deg);
-}
-.pkg-mailer-front-corner.right{
-  right:0;
-  border-left:2px dashed rgba(0,0,0,.18);
-  transform:skewY(10deg);
-}
-.pkg-mailer-top-flap{
-  left:5%;
-  right:5%;
-  top:12%;
-  height:74%;
-  border:2px solid rgba(0,0,0,.20);
-  border-top:4px solid rgba(0,0,0,.24);
-  border-radius:10px;
-  background:
-    linear-gradient(180deg, rgba(255,255,255,.22), rgba(0,0,0,.05)),
-    repeating-linear-gradient(90deg, rgba(0,0,0,.035) 0 1px, transparent 1px 8px);
-  clip-path:polygon(5% 0, 95% 0, 87% 100%, 13% 100%);
-  box-shadow:0 12px 18px rgba(0,0,0,.10);
-}
-.pkg-mailer-hinge-line{
-  left:4%;
-  right:4%;
-  top:11%;
-  height:0;
-  border-top:4px solid rgba(0,0,0,.28);
-  box-shadow:0 2px 0 rgba(255,255,255,.24);
-}
-.pkg-mailer-top-wing{
-  top:28%;
-  height:52%;
-  width:24%;
-  background:linear-gradient(180deg, rgba(255,255,255,.18), rgba(0,0,0,.06));
-  border:2px solid rgba(0,0,0,.18);
-  border-top-style:dashed;
-  box-shadow:inset 0 8px 16px rgba(0,0,0,.08);
-}
-.pkg-mailer-top-wing.left{
-  left:0;
-  clip-path:polygon(0 18%, 100% 0, 80% 100%, 7% 82%);
-}
-.pkg-mailer-top-wing.right{
-  right:0;
-  clip-path:polygon(0 0, 100% 18%, 93% 82%, 20% 100%);
-}
-.pkg-mailer-side-ear{
-  top:-1%;
-  height:46%;
-  width:76%;
-  border:2px solid rgba(0,0,0,.22);
-  border-bottom-style:dashed;
-  background:
-    linear-gradient(180deg, rgba(255,255,255,.20), rgba(0,0,0,.05)),
-    repeating-linear-gradient(0deg, rgba(255,255,255,.035) 0 1px, transparent 1px 7px);
-  box-shadow:0 11px 18px rgba(0,0,0,.12);
-  clip-path:polygon(0 0, 100% 0, 84% 100%, 12% 84%);
-}
-.pkg-mailer-side-ear.left{ left:4%; transform:skewY(-6deg); }
-.pkg-mailer-side-ear.right{ right:4%; transform:skewY(6deg) scaleX(-1); }
-.pkg-mailer-side-ear::after{
-  content:"";
-  position:absolute;
-  left:18%;
-  right:18%;
-  top:58%;
-  border-top:2px dashed rgba(0,0,0,.20);
-}
-.pkg-mailer-side-seam{
-  left:8%;
-  right:8%;
-  top:45%;
-  height:0;
-  border-top:3px solid rgba(0,0,0,.24);
-  box-shadow:0 2px 0 rgba(255,255,255,.22);
-}
-.pkg-mailer-back-hinge{
-  left:3%;
-  right:3%;
-  top:34%;
-  height:0;
-  border-top:4px solid rgba(0,0,0,.30);
-  box-shadow:0 3px 0 rgba(255,255,255,.22);
-}
-.pkg-tuck-lid{
-  left:0;
-  right:0;
-  top:0;
-  height:22%;
-  background:linear-gradient(180deg, rgba(255,255,255,.30), rgba(255,255,255,.08));
-  border-bottom:2px solid rgba(0,0,0,.24);
-}
-.pkg-tuck-lid::after{
-  content:"";
-  position:absolute;
-  left:34%;
-  right:34%;
-  bottom:-16px;
-  height:16px;
-  border:2px solid rgba(0,0,0,.22);
-  border-top:0;
-  border-radius:0 0 12px 12px;
-  background:rgba(255,255,255,.14);
-}
-.pkg-tuck-front-seam{ left:11%; right:11%; top:22%; height:0; border-top-width:2px; }
-.pkg-tuck-bottom-seam{
-  left:10%;
-  right:10%;
-  bottom:12%;
-  height:0;
-  border-top:2px dashed rgba(0,0,0,.28);
-}
-.pkg-tuck-vertical-seam{
-  top:22%;
-  bottom:12%;
-  left:50%;
-  width:0;
-  border-left:1px dashed rgba(0,0,0,.24);
-}
-.pkg-tuck-side-hint{
-  top:7%;
-  bottom:7%;
-  width:22px;
-  border-top:2px dashed rgba(0,0,0,.22);
-  border-bottom:2px dashed rgba(0,0,0,.22);
-  opacity:.85;
-}
-.pkg-tuck-side-hint.left{ left:0; border-right:2px dashed rgba(0,0,0,.22); }
-.pkg-tuck-side-hint.right{ right:0; border-left:2px dashed rgba(0,0,0,.22); }
-.pkg-tuck-side-crease{
-  top:10%;
-  bottom:10%;
-  left:50%;
-  width:0;
-  border-left:2px dashed rgba(0,0,0,.22);
-}
-.pkg-tuck-top-flap{
-  left:18%;
-  right:18%;
-  top:18%;
-  height:58%;
-  border:2px solid rgba(0,0,0,.24);
-  border-radius:12px 12px 8px 8px;
-  background:linear-gradient(180deg, rgba(255,255,255,.20), rgba(0,0,0,.05));
-}
-.pkg-sleeve-band{
-  inset:0;
-  background:
-    linear-gradient(90deg, transparent 0 72%, rgba(0,0,0,.16) 72% 76%, rgba(255,255,255,.14) 76% 100%),
-    linear-gradient(180deg, rgba(255,255,255,.18), transparent 30%, transparent 70%, rgba(0,0,0,.12));
-  border-top:4px solid rgba(255,255,255,.38);
-  border-bottom:4px solid rgba(0,0,0,.22);
-  box-shadow:
-    inset -18px 0 0 rgba(255,255,255,.12),
-    inset -22px 0 0 rgba(0,0,0,.08);
-}
-.pkg-sleeve-tray{
-  right:-1px;
-  top:14%;
-  width:21%;
-  height:72%;
-  border-left:4px solid rgba(0,0,0,.26);
-  border-top:2px solid rgba(255,255,255,.26);
-  border-bottom:2px solid rgba(0,0,0,.20);
-  background:linear-gradient(90deg, rgba(0,0,0,.18), rgba(255,255,255,.10));
-  box-shadow:inset 10px 0 16px rgba(0,0,0,.16);
-}
-.pkg-sleeve-pull{
-  right:4%;
-  top:50%;
-  width:18px;
-  height:36px;
-  transform:translateY(-50%);
-  border-radius:18px 0 0 18px;
-  border:2px solid rgba(0,0,0,.24);
-  border-right:0;
-  background:rgba(255,255,255,.16);
-  box-shadow:inset 4px 0 8px rgba(0,0,0,.12);
-}
-.pkg-sleeve-top-band{
-  inset:0;
-  border-left:3px solid rgba(255,255,255,.26);
-  border-right:18px solid rgba(0,0,0,.16);
-  border-top:3px solid rgba(255,255,255,.34);
-  border-bottom:3px solid rgba(0,0,0,.18);
-  background:
-    linear-gradient(90deg, rgba(255,255,255,.12), transparent 68%, rgba(0,0,0,.12)),
-    rgba(255,255,255,.08);
-}
-.pkg-sleeve-tray-3d{
-  position:absolute;
-  left:calc(100% - var(--sleeve-tray-overlap));
-  top:14%;
-  width:var(--sleeve-tray-extension);
-  height:72%;
-  transform-style:preserve-3d;
-  transform:translateZ(0);
-  pointer-events:none;
-}
-.pkg-sleeve-tray-face{
-  position:absolute;
-  background:
-    linear-gradient(135deg, rgba(255,255,255,.26), rgba(0,0,0,.10)),
-    var(--pkg-color);
-  background-blend-mode:screen, normal;
-  border:1px solid rgba(0,0,0,.18);
-  box-shadow:0 8px 18px rgba(0,0,0,.12);
-  overflow:hidden;
-}
-.pkg-sleeve-tray-face::before{
-  content:"";
-  position:absolute;
-  inset:0;
-  background:linear-gradient(135deg, rgba(255,255,255,.16), transparent 55%);
-  pointer-events:none;
-}
-.pkg-sleeve-tray-front{
-  inset:0;
-  transform:translateZ(calc(var(--sleeve-tray-depth) / 2));
-}
-.pkg-sleeve-tray-back{
-  inset:0;
-  transform:rotateY(180deg) translateZ(calc(var(--sleeve-tray-depth) / 2));
-  filter:brightness(.82);
-}
-.pkg-sleeve-tray-top{
-  left:0;
-  width:var(--sleeve-tray-extension);
-  height:var(--sleeve-tray-depth);
-  top:calc((100% - var(--sleeve-tray-depth)) / 2);
-  transform:rotateX(90deg) translateZ(calc(var(--sleeve-tray-height) / 2));
-  filter:brightness(1.08);
-}
-.pkg-sleeve-tray-bottom{
-  left:0;
-  width:var(--sleeve-tray-extension);
-  height:var(--sleeve-tray-depth);
-  top:calc((100% - var(--sleeve-tray-depth)) / 2);
-  transform:rotateX(-90deg) translateZ(calc(var(--sleeve-tray-height) / 2));
-  filter:brightness(.72);
-}
-.pkg-sleeve-tray-end{
-  width:var(--sleeve-tray-depth);
-  height:100%;
-  left:calc((var(--sleeve-tray-extension) - var(--sleeve-tray-depth)) / 2);
-  transform:rotateY(90deg) translateZ(calc(var(--sleeve-tray-extension) / 2));
-  background:
-    linear-gradient(90deg, rgba(255,255,255,.28), rgba(0,0,0,.12)),
-    var(--pkg-color);
-  background-blend-mode:screen, normal;
-  border-left:4px solid rgba(255,255,255,.26);
-  box-shadow:
-    10px 10px 22px rgba(0,0,0,.16),
-    inset 8px 0 14px rgba(255,255,255,.12);
-}
-.pkg-sleeve-tray-end::after{
-  content:"";
-  position:absolute;
-  left:50%;
-  top:50%;
-  width:22px;
-  height:42px;
-  transform:translate(-50%, -50%);
-  border-radius:999px 0 0 999px;
-  border:2px solid rgba(0,0,0,.24);
-  border-right:0;
-  background:rgba(255,255,255,.18);
-  box-shadow:inset 5px 0 9px rgba(0,0,0,.14);
-}
-.pkg-box-window-box .face-front{
-  box-shadow:
-    inset 0 0 0 3px rgba(255,255,255,.18),
-    inset 0 -22px 32px rgba(0,0,0,.10);
-}
-.pkg-box-window-box .face-front::before{
-  background:
-    repeating-linear-gradient(0deg,
-      rgba(255,255,255,.026) 0 1px,
-      transparent 1px 7px),
-    linear-gradient(180deg, rgba(255,255,255,.12), rgba(0,0,0,.06));
-}
-.pkg-box-window-box .face-front .pkg-art{
-  top:66%;
-  bottom:4%;
-  padding:5% 14% 7%;
-  justify-content:flex-start;
-}
-.pkg-box-window-box .face-front .pkg-logo{
-  font-size:20px;
-}
-.pkg-box-window-box .face-front .pkg-tag{
-  margin-top:6px;
-}
-.pkg-window-panel-frame{
-  inset:6% 8%;
-  border:2px solid rgba(255,255,255,.24);
-  border-radius:16px;
-  box-shadow:
-    inset 0 0 0 1px rgba(0,0,0,.08),
-    inset 0 10px 18px rgba(255,255,255,.09);
-}
-.pkg-window{
-  left:16%;
-  right:16%;
-  top:13%;
-  height:48%;
-  border-radius:24px;
-  overflow:hidden;
-  background:
-    linear-gradient(145deg, rgba(5,12,24,.26), rgba(5,12,24,.10)),
-    rgba(255,255,255,.12);
-  border:8px solid rgba(255,255,255,.58);
-  box-shadow:
-    0 0 0 2px rgba(0,0,0,.18),
-    0 0 0 7px rgba(0,0,0,.08) inset,
-    inset 0 14px 22px rgba(0,0,0,.30),
-    inset 0 -10px 16px rgba(255,255,255,.14),
-    0 16px 24px rgba(0,0,0,.18);
-}
-.pkg-window::before{
-  content:"";
-  position:absolute;
-  inset:0;
-  background:
-    linear-gradient(135deg, rgba(255,255,255,.46) 0 12%, transparent 13% 58%, rgba(255,255,255,.20) 59% 70%, transparent 71%),
-    linear-gradient(180deg, rgba(255,255,255,.12), rgba(255,255,255,.02));
-  opacity:.84;
-  pointer-events:none;
-}
-.pkg-window::after{
-  content:"";
-  position:absolute;
-  inset:6px;
-  border-radius:18px;
-  border:1px solid rgba(255,255,255,.46);
-  box-shadow:
-    inset 0 0 18px rgba(255,255,255,.24),
-    inset 0 0 0 1px rgba(0,0,0,.10);
-  pointer-events:none;
-}
-.pkg-window-backing{
-  position:absolute;
-  inset:7% 9%;
-  border-radius:18px;
-  background:
-    radial-gradient(circle at 50% 42%, rgba(255,255,255,.26), transparent 38%),
-    linear-gradient(180deg, rgba(18,28,46,.18), rgba(18,28,46,.06));
-  box-shadow:inset 0 10px 20px rgba(0,0,0,.14);
-}
-.pkg-window-product{
-  position:absolute;
-  left:50%;
-  bottom:12%;
-  width:36%;
-  height:58%;
-  transform:translateX(-50%);
-  border-radius:18px 18px 8px 8px;
-  background:
-    linear-gradient(180deg, rgba(255,255,255,.34), rgba(255,255,255,.10)),
-    linear-gradient(90deg, rgba(15,22,38,.10), rgba(15,22,38,.03));
-  border:1px solid rgba(15,22,38,.10);
-  box-shadow:
-    0 10px 16px rgba(0,0,0,.12),
-    inset 0 8px 10px rgba(255,255,255,.12);
-}
-.pkg-window-product::before{
-  content:"";
-  position:absolute;
-  left:28%;
-  right:28%;
-  top:-10%;
-  height:18%;
-  border-radius:12px 12px 4px 4px;
-  background:rgba(255,255,255,.22);
-  border:1px solid rgba(15,22,38,.08);
-}
-.pkg-window-bottom-rail{
-  left:12%;
-  right:12%;
-  top:63%;
-  height:0;
-  border-top:3px solid rgba(0,0,0,.20);
-  box-shadow:0 2px 0 rgba(255,255,255,.24);
-}
-.pkg-window-retail-top{
-  left:12%;
-  right:12%;
-  top:8%;
-  height:0;
-  border-top:2px solid rgba(0,0,0,.17);
-  box-shadow:0 1px 0 rgba(255,255,255,.24);
-}
-.pkg-box-lid-bottom-box .face-front{
-  box-shadow:
-    inset 0 0 0 2px rgba(255,255,255,.16),
-    inset 0 -24px 34px rgba(0,0,0,.12);
-}
-.pkg-box-lid-bottom-box .face-front .pkg-art{
-  top:9%;
-  bottom:47%;
-  padding:6% 15%;
-}
-.pkg-box-lid-bottom-box .face-front .pkg-logo{
-  font-size:21px;
-}
-.pkg-lid-cap{
-  left:-8%;
-  right:-8%;
-  top:-4%;
-  height:59%;
-  border-radius:10px 10px 4px 4px;
-  background:
-    linear-gradient(180deg, rgba(255,255,255,.36), rgba(255,255,255,.12) 50%, rgba(0,0,0,.04)),
-    linear-gradient(90deg, rgba(255,255,255,.12), transparent 18% 82%, rgba(0,0,0,.10));
-  border:2px solid rgba(255,255,255,.34);
-  border-bottom:0;
-  box-shadow:
-    0 18px 28px rgba(0,0,0,.18),
-    inset 0 1px 0 rgba(255,255,255,.38),
-    inset 0 -12px 18px rgba(0,0,0,.08);
-}
-.pkg-lid-cap::before{
-  content:"";
-  position:absolute;
-  left:5%;
-  right:5%;
-  top:9%;
-  height:34%;
-  border-radius:12px;
-  border:2px solid rgba(255,255,255,.20);
-  box-shadow:inset 0 0 0 2px rgba(0,0,0,.05);
-}
-.pkg-lid-lip{
-  left:-10%;
-  right:-10%;
-  top:50%;
-  height:13%;
-  border-radius:0 0 8px 8px;
-  background:linear-gradient(180deg, rgba(255,255,255,.20), rgba(0,0,0,.18));
-  border-top:1px solid rgba(255,255,255,.28);
-  border-bottom:4px solid rgba(0,0,0,.34);
-  box-shadow:
-    0 10px 18px rgba(0,0,0,.18),
-    inset 0 -1px 0 rgba(255,255,255,.18);
-}
-.pkg-lid-base{
-  left:3%;
-  right:3%;
-  bottom:-2%;
-  height:43%;
-  border-radius:0 0 9px 9px;
-  background:
-    linear-gradient(180deg, rgba(0,0,0,.04), rgba(0,0,0,.24)),
-    linear-gradient(90deg, rgba(0,0,0,.10), transparent 18% 82%, rgba(0,0,0,.16));
-  border:1px solid rgba(0,0,0,.14);
-  border-top:0;
-  box-shadow:
-    inset 0 10px 18px rgba(255,255,255,.08),
-    inset 0 -10px 20px rgba(0,0,0,.14);
-}
-.pkg-lid-base-rim{
-  left:3%;
-  right:3%;
-  top:61%;
-  height:7%;
-  background:linear-gradient(180deg, rgba(255,255,255,.18), rgba(0,0,0,.14));
-  border-top:1px solid rgba(255,255,255,.28);
-  border-bottom:2px solid rgba(0,0,0,.24);
-  box-shadow:0 5px 12px rgba(0,0,0,.10);
-}
-.pkg-lid-seam{
-  left:-10%;
-  right:-10%;
-  top:60%;
-  height:0;
-  border-top:4px solid rgba(0,0,0,.34);
-  box-shadow:
-    0 3px 0 rgba(255,255,255,.18),
-    0 9px 14px rgba(0,0,0,.16);
-}
-.pkg-lid-top-rim{
-  inset:8% 7%;
-  border:5px solid rgba(255,255,255,.34);
-  box-shadow:
-    0 0 0 2px rgba(0,0,0,.10) inset,
-    0 10px 22px rgba(0,0,0,.12) inset,
-    0 1px 0 rgba(255,255,255,.30);
-  border-radius:18px;
-  background:
-    radial-gradient(ellipse at 50% 35%, rgba(255,255,255,.18), transparent 52%),
-    rgba(255,255,255,.09);
-}
-.pkg-lid-top-rim::after{
-  content:"";
-  position:absolute;
-  inset:9%;
-  border-radius:12px;
-  border:1px solid rgba(255,255,255,.22);
-  box-shadow:inset 0 0 0 2px rgba(0,0,0,.05);
-}
-.pkg-lid-top-overhang{
-  inset:0;
-  border:3px solid rgba(255,255,255,.22);
-  border-radius:16px;
-  box-shadow:
-    inset 0 0 0 4px rgba(0,0,0,.07),
-    inset 0 -16px 22px rgba(0,0,0,.08);
-}
-.pkg-lid-side-overhang{
-  left:-3%;
-  right:-3%;
-  top:-3%;
-  height:60%;
-  border-radius:8px 8px 2px 2px;
-  border-bottom:4px solid rgba(0,0,0,.32);
-  background:
-    linear-gradient(180deg, rgba(255,255,255,.24), rgba(255,255,255,.08) 55%, rgba(0,0,0,.12)),
-    linear-gradient(90deg, rgba(255,255,255,.10), transparent);
-  box-shadow:0 12px 20px rgba(0,0,0,.16);
-}
-.pkg-lid-side-base{
-  left:3%;
-  right:3%;
-  bottom:-1%;
-  height:41%;
-  border-radius:0 0 7px 7px;
-  background:linear-gradient(180deg, rgba(0,0,0,.06), rgba(0,0,0,.26));
-  box-shadow:inset 0 9px 14px rgba(255,255,255,.08);
-}
-.pkg-lid-side-seam{
-  left:-3%;
-  right:-3%;
-  top:60%;
-  height:0;
-  border-top:4px solid rgba(0,0,0,.32);
-  box-shadow:0 3px 0 rgba(255,255,255,.18);
-}
-
-/* ── BAG (Doypack/Mailer) ── */
-.pkg-bag{ width: 200px; height: 260px; }
-.pkg-bag .face{
-  position: absolute; inset: 0;
-  background: var(--pkg-color, #B08A5B);
-  border-radius: 10px 10px 6px 6px;
-  border: 1px solid rgba(0,0,0,.1);
-  overflow: hidden;
-}
-.pkg-bag .face::before{
-  content:""; position:absolute; inset:0;
-  background:
-    linear-gradient(180deg, rgba(255,255,255,.18) 0%, rgba(0,0,0,0) 25%),
-    linear-gradient(90deg, rgba(0,0,0,.12) 0%, rgba(255,255,255,.06) 50%, rgba(0,0,0,.12) 100%);
-  pointer-events:none;
-}
-.pkg-bag .seal{
-  position:absolute; top:0; left:0; right:0; height: 22px;
-  background: linear-gradient(180deg, rgba(0,0,0,.22), rgba(0,0,0,.05));
-  border-bottom: 1px dashed rgba(255,255,255,.45);
-  z-index: 3;
-}
-.pkg-bag-doy-pack .face{
-  border:0;
-  border-radius:34px 34px 18px 18px / 42px 42px 20px 20px;
-  clip-path:polygon(14% 0, 86% 0, 96% 13%, 100% 84%, 92% 100%, 8% 100%, 0 84%, 4% 13%);
-  box-shadow:
-    inset 0 0 0 1px rgba(255,255,255,.18),
-    inset 0 -22px 28px rgba(0,0,0,.15),
-    0 16px 26px rgba(15,22,38,.14);
-}
-.pkg-bag-doy-pack .face::before{
-  background:
-    radial-gradient(ellipse at 50% 11%, rgba(255,255,255,.22), transparent 34%),
-    linear-gradient(90deg,
-      rgba(0,0,0,.24) 0%,
-      rgba(0,0,0,.08) 10%,
-      rgba(255,255,255,.20) 42%,
-      rgba(255,255,255,.16) 58%,
-      rgba(0,0,0,.10) 90%,
-      rgba(0,0,0,.26) 100%),
-    linear-gradient(180deg, rgba(255,255,255,.13), rgba(0,0,0,.10));
-}
-.pkg-bag-doy-pack .face-front .pkg-art,
-.pkg-bag-doy-pack .face-back .pkg-art{
-  padding:24% 18% 27%;
-}
-.pkg-bag-doy-pack .face-front .seal,
-.pkg-bag-doy-pack .face-back .seal{
-  top:9px;
-  left:11%;
-  right:11%;
-  height:31px;
-  border-radius:18px 18px 9px 9px;
-  background:
-    linear-gradient(180deg, rgba(255,255,255,.20), rgba(0,0,0,.18)),
-    repeating-linear-gradient(90deg, rgba(255,255,255,.08) 0 2px, transparent 2px 8px);
-  border-bottom:2px solid rgba(0,0,0,.22);
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,.35),
-    0 6px 12px rgba(0,0,0,.10);
-}
-.pkg-bag-doy-pack .seal::after{
-  content:"";
-  position:absolute;
-  left:8%;
-  right:8%;
-  bottom:7px;
-  border-top:1px dashed rgba(255,255,255,.54);
-  box-shadow:0 1px 0 rgba(0,0,0,.16);
-}
-.pkg-doy-detail{
-  position:absolute;
-  pointer-events:none;
-  z-index:1;
-}
-.pkg-doy-shoulder{
-  top:0;
-  width:30%;
-  height:22%;
-  background:linear-gradient(180deg, rgba(255,255,255,.16), rgba(0,0,0,.06));
-  border-top:1px solid rgba(255,255,255,.22);
-}
-.pkg-doy-shoulder.left{
-  left:0;
-  border-radius:34px 0 26px 0;
-  border-right:1px solid rgba(0,0,0,.08);
-  transform:skewY(-9deg);
-}
-.pkg-doy-shoulder.right{
-  right:0;
-  border-radius:0 34px 0 26px;
-  border-left:1px solid rgba(0,0,0,.08);
-  transform:skewY(9deg);
-}
-.pkg-doy-side-fold{
-  top:15%;
-  bottom:18%;
-  width:24%;
-  background:
-    linear-gradient(90deg, rgba(0,0,0,.20), rgba(255,255,255,.06) 55%, transparent),
-    repeating-linear-gradient(180deg, rgba(255,255,255,.025) 0 1px, transparent 1px 9px);
-  opacity:.88;
-}
-.pkg-doy-side-fold.left{
-  left:0;
-  clip-path:polygon(0 0, 100% 5%, 70% 100%, 0 94%);
-}
-.pkg-doy-side-fold.right{
-  right:0;
-  transform:scaleX(-1);
-  clip-path:polygon(0 0, 100% 5%, 70% 100%, 0 94%);
-}
-.pkg-doy-side-fold::after{
-  content:"";
-  position:absolute;
-  top:6%;
-  bottom:7%;
-  left:55%;
-  border-left:2px solid rgba(0,0,0,.15);
-  box-shadow:1px 0 0 rgba(255,255,255,.18);
-}
-.pkg-doy-center-highlight{
-  left:27%;
-  right:27%;
-  top:17%;
-  bottom:25%;
-  border-radius:999px;
-  background:linear-gradient(90deg, transparent, rgba(255,255,255,.18), transparent);
-  opacity:.72;
-}
-.pkg-doy-bottom-gusset{
-  left:8%;
-  right:8%;
-  bottom:-2%;
-  height:26%;
-  border-radius:50% 50% 18px 18px / 38% 38% 18px 18px;
-  background:
-    radial-gradient(ellipse at 50% 8%, rgba(255,255,255,.18), transparent 44%),
-    linear-gradient(180deg, rgba(255,255,255,.06), rgba(0,0,0,.27));
-  border-top:2px solid rgba(0,0,0,.20);
-  box-shadow:
-    inset 0 10px 18px rgba(255,255,255,.08),
-    0 -4px 12px rgba(0,0,0,.10);
-}
-.pkg-doy-bottom-crease{
-  left:18%;
-  right:18%;
-  bottom:14%;
-  height:16px;
-  border-radius:50%;
-  border-top:2px solid rgba(0,0,0,.20);
-  box-shadow:0 1px 0 rgba(255,255,255,.20);
-}
-.pkg-bag-doy-pack .face-side{
-  border-radius:24px 24px 15px 15px / 38px 38px 18px 18px;
-  clip-path:polygon(22% 0, 78% 0, 98% 13%, 100% 84%, 78% 100%, 22% 100%, 0 84%, 2% 13%);
-}
-.pkg-bag-doy-pack .face-side .seal{
-  left:14%;
-  right:14%;
-  top:10px;
-  height:29px;
-  border-radius:14px 14px 7px 7px;
-}
-.pkg-bag-doy-pack .face-side .pkg-art{
-  padding:28% 8% 30%;
-}
-.pkg-doy-side-panel{
-  inset:0;
-  background:
-    linear-gradient(90deg, rgba(0,0,0,.24), rgba(255,255,255,.10) 48%, rgba(0,0,0,.18)),
-    linear-gradient(180deg, rgba(255,255,255,.10), rgba(0,0,0,.10));
-}
-.pkg-doy-side-crease{
-  top:16%;
-  bottom:19%;
-  left:50%;
-  border-left:2px solid rgba(0,0,0,.20);
-  box-shadow:1px 0 0 rgba(255,255,255,.20);
-}
-.pkg-doy-side-bottom{
-  left:10%;
-  right:10%;
-  bottom:-2%;
-  height:25%;
-  border-radius:50% 50% 12px 12px / 35% 35% 12px 12px;
-  background:linear-gradient(180deg, rgba(255,255,255,.08), rgba(0,0,0,.28));
-  border-top:2px solid rgba(0,0,0,.18);
-}
-
-/* ── CUP ── */
-.pkg-cup-wrap{ width: 220px; height: 250px; }
-.pkg-cup{
-  position: absolute; inset: 12% 22% 8%;
-  background: var(--pkg-color, #B08A5B);
-  clip-path: polygon(8% 0%, 92% 0%, 100% 100%, 0% 100%);
-  border-radius: 4px 4px 12px 12px;
-  overflow: hidden;
-}
-.pkg-cup::before{
-  content:""; position:absolute; inset:0;
-  background:
-    linear-gradient(90deg,
-      rgba(0,0,0,.18) 0%,
-      rgba(255,255,255,.18) 35%,
-      rgba(255,255,255,.22) 65%,
-      rgba(0,0,0,.18) 100%);
-  pointer-events:none;
-}
-.pkg-cup-rim{
-  position:absolute; top: 10%; left: 18%; right: 18%; height: 14px;
-  border-radius: 50%;
-  background: linear-gradient(180deg, #ffffff 0%, rgba(255,255,255,.7) 60%, rgba(0,0,0,.12) 100%);
-  box-shadow: 0 1px 2px rgba(0,0,0,.15);
-}
-.pkg-cup-bottom{
-  position:absolute; bottom: 6%; left: 28%; right: 28%; height: 8px;
-  border-radius: 50%;
-  background: rgba(0,0,0,.2);
-  filter: blur(1px);
-}
-
-/* ── STICKER ── */
-.pkg-sticker-wrap{ width: 240px; height: 240px; }
-.pkg-sticker{
-  position: absolute; inset: 8%;
-  background: var(--pkg-color, #B08A5B);
-  border-radius: var(--pkg-radius, 50%);
-  box-shadow:
-    0 1px 0 rgba(255,255,255,.5) inset,
-    0 -1px 0 rgba(0,0,0,.15) inset,
-    0 8px 24px rgba(15,23,42,.18);
-  overflow: hidden;
-}
-.pkg-sticker::after{
-  content:""; position:absolute; inset:0;
-  background: radial-gradient(circle at 30% 25%,
-    rgba(255,255,255,.5) 0%, rgba(255,255,255,0) 35%);
-  pointer-events:none;
-}
-
-/* ── Контент-слой (лого/текст) на каждой грани ── */
-.pkg-art{
-  position: absolute; inset: 0;
-  display: flex; flex-direction: column;
-  align-items: center; justify-content: center;
-  padding: 14% 14%;
-  z-index: 2;
-  text-align: center;
-  color: var(--pkg-art-color, #FFFFFF);
-  pointer-events: none;
-}
-.pkg-art.left  { padding: 14% 8%; }
-.pkg-art .pkg-logo{
-  font-weight: 800;
-  font-size: 22px;
-  letter-spacing: .02em;
-  line-height: 1.05;
-  text-shadow: 0 1px 0 rgba(0,0,0,.12);
-}
-.pkg-art .pkg-logo.img{ font-size: 0; }
-.pkg-art .pkg-logo img{
-  max-width: 100%; max-height: 80px;
-  object-fit: contain;
-  filter: drop-shadow(0 1px 1px rgba(0,0,0,.15));
-}
-.pkg-art .pkg-tag{
-  margin-top: 8px;
-  font-family: var(--font-mono);
-  font-size: 10px;
-  letter-spacing: .14em;
-  text-transform: uppercase;
-  opacity: .82;
-}
-
-/* Развёртка */
-.pkg-unfold-wrap{
-  width: 100%;
-  display: flex; align-items: center; justify-content: center;
-  padding: 8% 4%;
-}
-.pkg-unfold{
-  display: grid;
-  gap: 4px;
-  background: var(--pkt-bg);
-  filter: drop-shadow(0 8px 24px rgba(15,23,42,.06));
-}
-.pkg-unfold .panel{
-  background: var(--pkg-color, #B08A5B);
-  border: 1px dashed rgba(255,255,255,.5);
-  outline: 1px dashed rgba(126,95,56,.4);
-  outline-offset: -1px;
-  position: relative;
-  display: flex; align-items: center; justify-content: center;
-  overflow: hidden;
-}
-.pkg-unfold .panel.empty{
-  background: transparent;
-  border: none;
-  outline: none;
-}
-.pkg-unfold .panel.muted{
-  background:
-    repeating-linear-gradient(135deg,
-      rgba(15,22,38,.04) 0 8px,
-      rgba(15,22,38,.08) 8px 16px);
-  border-color: rgba(15,22,38,.12);
-  outline-color: rgba(15,22,38,.12);
-}
-.pkg-unfold .panel.muted::after{
-  content:"";
-  position:absolute;
-  inset:0;
-  background: rgba(255,255,255,.45);
-  pointer-events:none;
-}
-.pkg-unfold .panel-label{
-  position:absolute; top:6px; left:6px;
-  font-family: var(--font-mono);
-  font-size: 9px; letter-spacing: .12em;
-  text-transform: uppercase;
-  color: rgba(0,0,0,.45);
-  background: rgba(255,255,255,.55);
-  padding: 2px 5px; border-radius: 4px;
-  z-index: 4;
-}
-
-/* Бесконечный нежный сдвиг для idle-вращения */
-.pkg-handles{position:absolute;top:7px;left:50%;width:92px;height:38px;transform:translateX(-50%);z-index:4}
-.pkg-handles i{position:absolute;top:0;width:30px;height:36px;border:4px solid rgba(255,255,255,.55);border-bottom:0;border-radius:999px 999px 0 0}
-.pkg-handles i:first-child{left:10px}.pkg-handles i:last-child{right:10px}
-.pkg-flat-bottom{position:absolute;left:10%;right:10%;bottom:0;height:28px;background:rgba(0,0,0,.12);border-top:1px dashed rgba(255,255,255,.35);z-index:2}
-.pkg-courier-flap{position:absolute;left:0;right:0;top:20px;height:34px;background:rgba(255,255,255,.16);border-bottom:1px dashed rgba(255,255,255,.5);z-index:2}
-.pkg-ripple{position:absolute;inset:17% 10% 12%;background:repeating-linear-gradient(180deg,rgba(255,255,255,.14) 0 7px,rgba(0,0,0,.06) 7px 12px);pointer-events:none}
-.pkg-double-wall{position:absolute;inset:8% 8% 7%;border:5px solid rgba(255,255,255,.18);border-radius:5px 5px 12px 12px;pointer-events:none}
-.pkg-cold-rim{position:absolute;top:2%;left:12%;right:12%;height:22px;border-radius:50%;background:rgba(255,255,255,.45);pointer-events:none}
-
-@keyframes pkt-idle-rotate{
-  0%   { transform: translate3d(-50%,-50%,0) rotateX(-12deg) rotateY(-22deg); }
-  50%  { transform: translate3d(-50%,-50%,0) rotateX(-12deg) rotateY(22deg); }
-  100% { transform: translate3d(-50%,-50%,0) rotateX(-12deg) rotateY(-22deg); }
-}
-.pkg-3d.idle{ animation: pkt-idle-rotate 14s ease-in-out infinite; }
-`;
-
-// Возвращает контрастный цвет для текста на фоне
+// ── helpers ─────────────────────────────────────────────
 function pktContrast(hex){
-  const h = String(hex).replace('#','');
+  const h = String(hex || '').replace('#','');
   const x = h.length === 3 ? h.replace(/./g, c=>c+c) : h.padEnd(6,'0');
-  const n = parseInt(x.slice(0,6),16);
+  const n = parseInt(x.slice(0,6), 16) || 0;
   const r=(n>>16)&255, g=(n>>8)&255, b=n&255;
   return (r*299 + g*587 + b*114) > 145000 ? '#0F1626' : '#FFFFFF';
 }
-
-function PkgArt({ artwork, logo, text, side }) {
-  const data = artwork || { logo, text, visible: true };
-  if (data.visible === false) return null;
-  logo = data.logo;
-  text = data.text;
-  const alignment = data.alignment || 'center';
-  const alignItems = alignment === 'left' ? 'flex-start' : alignment === 'right' ? 'flex-end' : 'center';
-  return (
-    <div className={`pkg-art ${side||''}`} style={{ alignItems, textAlign: alignment, transform: `scale(${data.scale || 1})`, transformOrigin: 'center' }}>
-      <div className={`pkg-logo ${logo ? 'img' : ''}`}>
-        {logo ? <img src={logo} alt="" /> : 'ПАКЕТЕАМ'}
-      </div>
-      {text && <div className="pkg-tag">{text}</div>}
-    </div>
-  );
+// смешать с белым/чёрным — для крышки и подноса оттенков
+function shade(hex, amount){
+  const h = String(hex || '#b08a5b').replace('#','');
+  const x = h.length === 3 ? h.replace(/./g, c=>c+c) : h.padEnd(6,'0');
+  const n = parseInt(x.slice(0,6), 16) || 0;
+  let r=(n>>16)&255, g=(n>>8)&255, b=n&255;
+  const target = amount > 0 ? 255 : 0;
+  const t = Math.abs(amount);
+  r = Math.round(r + (target - r) * t);
+  g = Math.round(g + (target - g) * t);
+  b = Math.round(b + (target - b) * t);
+  return '#' + [r,g,b].map(v => v.toString(16).padStart(2,'0')).join('');
 }
 
 const SIDE_IDS = ['front', 'back', 'left', 'right', 'top', 'bottom'];
-function buildSides({ sides, color, logo, text }) {
+
+function buildSides({ sides, color, logo, text }){
   const fallback = { logo, text, backgroundColor: color, visible: true };
   return SIDE_IDS.reduce((acc, id) => {
     acc[id] = { ...fallback, text: id === 'front' ? text : '', ...(sides?.[id] || {}) };
@@ -1108,304 +42,458 @@ function buildSides({ sides, color, logo, text }) {
     return acc;
   }, {});
 }
-function sideStyle(side, extra = {}) {
+function sideStyle(side, extra = {}){
   const bg = side?.backgroundColor || '#B08A5B';
   return { ...extra, backgroundColor: bg, ['--pkg-color']: bg, ['--pkg-art-color']: pktContrast(bg) };
 }
-function stickerRadius(variant) {
-  if (variant === 'square') return '14px';
-  if (variant === 'rectangle') return '12px';
-  if (variant === 'oval') return '50%';
-  if (variant === 'custom-shape') return '38% 62% 46% 54% / 45% 40% 60% 55%';
-  return '50%';
-}
-function stickerDims(variant) {
-  if (variant === 'rectangle') return { width: 280, height: 180 };
-  if (variant === 'oval') return { width: 270, height: 190 };
-  return { width: 240, height: 240 };
-}
-function getBoxVariantGeometry(variant, size) {
-  const geometry = {
-    'mailer-box': { w: 345, h: 112, d: 238 },
-    'tuck-top-box': { w: 160, h: 285, d: 105 },
-    'sleeve-box': { w: 305, h: 130, d: 135 },
-    'window-box': { w: 205, h: 265, d: 120 },
-    'lid-bottom-box': { w: 285, h: 150, d: 205 },
-  }[variant || 'mailer-box'] || { w: 240, h: 200, d: 160 };
 
-  if (!size?.w) return geometry;
-  const scale = Math.max(0.82, Math.min(1.22, size.w / 240));
-  return {
-    w: Math.round(geometry.w * scale),
-    h: Math.round(geometry.h * scale),
-    d: Math.round(geometry.d * scale),
-  };
-}
-function BoxVariantDetails({ variant, face }) {
-  if (variant === 'mailer-box') {
-    if (face === 'front') {
-      return (
-        <>
-          <div className="pkg-box-detail pkg-mailer-lid-panel" />
-          <div className="pkg-box-detail pkg-mailer-lid-lip" />
-          <div className="pkg-box-detail pkg-mailer-base-panel" />
-          <div className="pkg-box-detail pkg-box-dash pkg-mailer-top-seam" />
-          <div className="pkg-box-detail pkg-mailer-front-corner left" />
-          <div className="pkg-box-detail pkg-mailer-front-corner right" />
-          <div className="pkg-box-detail pkg-mailer-front-slot" />
-          <div className="pkg-box-detail pkg-mailer-lock" />
-        </>
-      );
-    }
-    if (face === 'top') {
-      return (
-        <>
-          <div className="pkg-box-detail pkg-mailer-top-flap" />
-          <div className="pkg-box-detail pkg-mailer-hinge-line" />
-          <div className="pkg-box-detail pkg-mailer-top-wing left" />
-          <div className="pkg-box-detail pkg-mailer-top-wing right" />
-        </>
-      );
-    }
-    if (face === 'left' || face === 'right') {
-      return (
-        <>
-          <div className={`pkg-box-detail pkg-mailer-side-ear ${face}`} />
-          <div className="pkg-box-detail pkg-mailer-side-seam" />
-        </>
-      );
-    }
-    if (face === 'back') return <div className="pkg-box-detail pkg-mailer-back-hinge" />;
-  }
-  if (variant === 'tuck-top-box') {
-    if (face === 'front') {
-      return (
-        <>
-          <div className="pkg-box-detail pkg-tuck-lid" />
-          <div className="pkg-box-detail pkg-box-dash pkg-tuck-front-seam" />
-          <div className="pkg-box-detail pkg-tuck-bottom-seam" />
-          <div className="pkg-box-detail pkg-tuck-vertical-seam" />
-          <div className="pkg-box-detail pkg-tuck-side-hint left" />
-          <div className="pkg-box-detail pkg-tuck-side-hint right" />
-        </>
-      );
-    }
-    if (face === 'top') return <div className="pkg-box-detail pkg-tuck-top-flap" />;
-    if (face === 'left' || face === 'right') return <div className="pkg-box-detail pkg-tuck-side-crease" />;
-  }
-  if (variant === 'sleeve-box') {
-    if (face === 'front') {
-      return (
-        <>
-          <div className="pkg-box-detail pkg-sleeve-band" />
-          <div className="pkg-box-detail pkg-sleeve-tray" />
-          <div className="pkg-box-detail pkg-sleeve-pull" />
-        </>
-      );
-    }
-    if (face === 'top') return <div className="pkg-box-detail pkg-sleeve-top-band" />;
-  }
-  if (variant === 'window-box' && face === 'front') {
-    return (
-      <>
-        <div className="pkg-box-detail pkg-window-panel-frame" />
-        <div className="pkg-box-detail pkg-window">
-          <div className="pkg-window-backing" />
-          <div className="pkg-window-product" />
-        </div>
-        <div className="pkg-box-detail pkg-window-bottom-rail" />
-        <div className="pkg-box-detail pkg-window-retail-top" />
-      </>
-    );
-  }
-  if (variant === 'lid-bottom-box') {
-    if (face === 'front') {
-      return (
-        <>
-          <div className="pkg-box-detail pkg-lid-cap" />
-          <div className="pkg-box-detail pkg-lid-lip" />
-          <div className="pkg-box-detail pkg-lid-seam" />
-          <div className="pkg-box-detail pkg-lid-base-rim" />
-          <div className="pkg-box-detail pkg-lid-base" />
-        </>
-      );
-    }
-    if (face === 'top') {
-      return (
-        <>
-          <div className="pkg-box-detail pkg-lid-top-overhang" />
-          <div className="pkg-box-detail pkg-lid-top-rim" />
-        </>
-      );
-    }
-    if (face === 'left' || face === 'right') {
-      return (
-        <>
-          <div className="pkg-box-detail pkg-lid-side-overhang" />
-          <div className="pkg-box-detail pkg-lid-side-seam" />
-          <div className="pkg-box-detail pkg-lid-side-base" />
-        </>
-      );
-    }
-  }
-  return null;
-}
-function BoxVariantShell({ variant }) {
-  if (variant === 'sleeve-box') {
-    return (
-      <div className="pkg-sleeve-tray-3d" aria-hidden="true">
-        <div className="pkg-sleeve-tray-face pkg-sleeve-tray-front" />
-        <div className="pkg-sleeve-tray-face pkg-sleeve-tray-back" />
-        <div className="pkg-sleeve-tray-face pkg-sleeve-tray-top" />
-        <div className="pkg-sleeve-tray-face pkg-sleeve-tray-bottom" />
-        <div className="pkg-sleeve-tray-face pkg-sleeve-tray-end" />
+function PkgArt({ artwork, logo, text, side }){
+  const data = artwork || { logo, text, visible: true };
+  if (data.visible === false) return null;
+  logo = data.logo;
+  text = data.text;
+  const alignment = data.alignment || 'center';
+  const alignItems = alignment === 'left' ? 'flex-start' : alignment === 'right' ? 'flex-end' : 'center';
+  return (
+    <div
+      className={`pkg-art ${side === 'left' || side === 'right' ? 'side' : ''}`}
+      style={{ alignItems, textAlign: alignment, transform: `scale(${data.scale || 1})`, transformOrigin: 'center' }}
+    >
+      <div className={`pkg-logo ${logo ? 'img' : ''}`}>
+        {logo ? <img src={logo} alt="" /> : 'ПАКЕТЕАМ'}
       </div>
-    );
-  }
-  return null;
-}
-function BagVariantDetails({ variant, face = 'front' }) {
-  if (variant === 'doy-pack') {
-    if (face === 'left' || face === 'right') {
-      return (
-        <>
-          <div className="pkg-doy-detail pkg-doy-side-panel" />
-          <div className="pkg-doy-detail pkg-doy-side-crease" />
-          <div className="pkg-doy-detail pkg-doy-side-bottom" />
-        </>
-      );
-    }
-    return (
-      <>
-        <div className="pkg-doy-detail pkg-doy-shoulder left" />
-        <div className="pkg-doy-detail pkg-doy-shoulder right" />
-        <div className="pkg-doy-detail pkg-doy-side-fold left" />
-        <div className="pkg-doy-detail pkg-doy-side-fold right" />
-        <div className="pkg-doy-detail pkg-doy-center-highlight" />
-        <div className="pkg-doy-detail pkg-doy-bottom-gusset" />
-        <div className="pkg-doy-detail pkg-doy-bottom-crease" />
-      </>
-    );
-  }
-  if (face !== 'front') return null;
-  if (variant === 'paper-bag-with-handles') return <div className="pkg-handles"><i/><i/></div>;
-  if (variant === 'flat-bottom-bag') return <div className="pkg-flat-bottom" />;
-  if (variant === 'courier-bag') return <div className="pkg-courier-flap" />;
-  return null;
-}
-function CupVariantDetails({ variant }) {
-  if (variant === 'ripple-cup') return <div className="pkg-ripple" />;
-  if (variant === 'double-wall') return <div className="pkg-double-wall" />;
-  if (variant === 'cold-cup') return <div className="pkg-cold-rim" />;
-  return null;
+      {text && <div className="pkg-tag">{text}</div>}
+    </div>
+  );
 }
 
-// ── BOX 3D ─────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────
+// BOX
+// ─────────────────────────────────────────────────────────
+
+const BOX_GEOMETRY = {
+  'mailer-box':     { w: 360, h: 150, d: 240 },
+  'tuck-top-box':   { w: 170, h: 300, d: 110 },
+  'sleeve-box':     { w: 290, h: 130, d: 150 },
+  'window-box':     { w: 215, h: 280, d: 130 },
+  'lid-bottom-box': { w: 280, h: 175, d: 215 },
+};
+function getBoxGeometry(variant, size){
+  const g = BOX_GEOMETRY[variant] || BOX_GEOMETRY['mailer-box'];
+  if (!size?.w) return g;
+  const scale = Math.max(0.82, Math.min(1.22, size.w / 240));
+  return { w: Math.round(g.w*scale), h: Math.round(g.h*scale), d: Math.round(g.d*scale) };
+}
+
+// 6 граней произвольной коробки в собственном transform-style контейнере.
+// Используется и для основной коробки, и для подноса/крышки.
+function Cuboid({ w, h, d, sides, faceClass = 'face', sideRender = null, faceExtras = {}, faceBgOverride = null }){
+  const cls = (id) => `${faceClass} face-${id}`;
+  const bg = (id) => faceBgOverride?.[id] ?? sides[id]?.backgroundColor;
+  const fStyle = (id, extra) => {
+    const color = bg(id) || '#B08A5B';
+    return { ...extra, backgroundColor: color, ['--pkg-color']: color, ['--pkg-art-color']: pktContrast(color) };
+  };
+  return (
+    <>
+      <div className={cls('front')}
+           style={fStyle('front', { width:w, height:h, left:0, top:0, transform:`translateZ(${d/2}px)` })}>
+        {sideRender?.('front')}
+        {faceExtras.front}
+      </div>
+      <div className={cls('back')}
+           style={fStyle('back', { width:w, height:h, left:0, top:0, transform:`rotateY(180deg) translateZ(${d/2}px)` })}>
+        {sideRender?.('back')}
+        {faceExtras.back}
+      </div>
+      <div className={cls('right')}
+           style={fStyle('right', { width:d, height:h, left:(w-d)/2, top:0, transform:`rotateY(90deg) translateZ(${w/2}px)` })}>
+        {sideRender?.('right')}
+        {faceExtras.right}
+      </div>
+      <div className={cls('left')}
+           style={fStyle('left', { width:d, height:h, left:(w-d)/2, top:0, transform:`rotateY(-90deg) translateZ(${w/2}px)` })}>
+        {sideRender?.('left')}
+        {faceExtras.left}
+      </div>
+      <div className={cls('top')}
+           style={fStyle('top', { width:w, height:d, left:0, top:(h-d)/2, transform:`rotateX(90deg) translateZ(${h/2}px)` })}>
+        {sideRender?.('top')}
+        {faceExtras.top}
+      </div>
+      <div className={cls('bottom')}
+           style={fStyle('bottom', { width:w, height:d, left:0, top:(h-d)/2, transform:`rotateX(-90deg) translateZ(${h/2}px)` })}>
+        {sideRender?.('bottom')}
+        {faceExtras.bottom}
+      </div>
+    </>
+  );
+}
+
+// Дополнительные элементы для лица/верха по варианту
+function boxFaceExtras(variant, sides){
+  if (variant === 'mailer-box'){
+    return {
+      front: <>
+        <div className="pkg-mailer-tab" />
+        <div className="pkg-mailer-slot" />
+      </>,
+      top: <>
+        <div className="pkg-mailer-top-ears" />
+        <div className="pkg-mailer-top-tab" />
+      </>,
+    };
+  }
+  if (variant === 'tuck-top-box'){
+    return {
+      front: <div className="pkg-tuck-center-seam" />,
+      top:   <div className="pkg-tuck-flap" />,
+    };
+  }
+  if (variant === 'sleeve-box'){
+    return {
+      right: <div className="pkg-sleeve-cave" />,
+      left:  <div className="pkg-sleeve-cave" />,
+    };
+  }
+  // window-box: окно теперь рендерится как 3D-сосед фасада, см. Box3D
+  return {};
+}
+
 function Box3D({ sides, rotation, idle, size, variant }){
-  const { w, h, d } = getBoxVariantGeometry(variant, size);
+  const { w, h, d } = getBoxGeometry(variant, size);
   const tx = `translate3d(-50%, -50%, 0) rotateX(${rotation.x}deg) rotateY(${rotation.y}deg)`;
-  const half = { x:w/2, y:h/2, z:d/2 };
   const frontColor = sides.front?.backgroundColor || '#B08A5B';
   const style = {
     width: w, height: h,
     transform: tx,
-    position: 'absolute', left: '50%', top: '50%',
-    ['--box-half-z']: `${half.z}px`,
-    ['--sleeve-tray-extension']: `${Math.round(w * 0.20)}px`,
-    ['--sleeve-tray-overlap']: `${Math.round(w * 0.085)}px`,
-    ['--sleeve-tray-depth']: `${Math.round(d * 0.76)}px`,
-    ['--sleeve-tray-height']: `${Math.round(h * 0.72)}px`,
+    position: 'absolute', left:'50%', top:'50%',
     ['--pkg-color']: frontColor,
     ['--pkg-art-color']: pktContrast(frontColor),
   };
+
+  // --- LID-BOTTOM: ДВА сложенных тела — основание снизу + крышка сверху ---
+  if (variant === 'lid-bottom-box'){
+    const baseH  = Math.round(h * 0.62);
+    const lidH   = h - baseH;
+    const overhang = 12;          // выступ крышки по периметру
+    const lidW   = w + overhang*2;
+    const lidD   = d + overhang*2;
+    const lidColor  = shade(frontColor, 0.18);
+    const baseColor = shade(frontColor, -0.10);
+
+    const lidSides  = SIDE_IDS.reduce((a,id)=>{ a[id] = { ...sides[id], backgroundColor: lidColor }; return a; }, {});
+    const baseSides = SIDE_IDS.reduce((a,id)=>{ a[id] = { ...sides[id], backgroundColor: baseColor }; return a; }, {});
+    const renderArt = (faceSides) => (id) => {
+      const s = faceSides[id];
+      return <>{s?.visible !== false && <PkgArt artwork={s} side={id === 'left' || id === 'right' ? 'left' : undefined} />}</>;
+    };
+
+    // Внутри pkg-3d (w×h) размещаем два контейнера, каждый со своим Cuboid.
+    // Cuboid центрирует своё тело по width/height собственного контейнера.
+    // База: контейнер (w, baseH) в позиции (0, lidH).
+    // Крышка: контейнер (lidW, lidH) в позиции (-overhang, 0).
+    return (
+      <div className={`pkg-3d pkg-box pkg-box-lid-bottom-box ${idle?'idle':''}`} style={style}>
+        {/* крышка (сверху, чуть шире/глубже) */}
+        <div className="pkg-lidbottom" style={{ width:lidW, height:lidH, left:-overhang, top:0 }}>
+          <Cuboid w={lidW} h={lidH} d={lidD} sides={lidSides}
+            faceClass="lface"
+            sideRender={renderArt(lidSides)}
+            faceExtras={{
+              front: <div className="pkg-lid-skirt" />,
+              back:  <div className="pkg-lid-skirt" />,
+              left:  <div className="pkg-lid-skirt" />,
+              right: <div className="pkg-lid-skirt" />,
+            }}/>
+        </div>
+        {/* основание (снизу) */}
+        <div className="pkg-lidbottom" style={{ width:w, height:baseH, left:0, top:lidH }}>
+          <Cuboid w={w} h={baseH} d={d} sides={baseSides}
+            faceClass="lface"
+            sideRender={renderArt(baseSides)}/>
+        </div>
+      </div>
+    );
+  }
+
+  // --- остальные коробки: одно тело + опциональные декорации ---
+  const extras = boxFaceExtras(variant, sides);
+  const renderArt = (id) => {
+    const s = sides[id];
+    return <>{s?.visible !== false && <PkgArt artwork={s} side={id === 'left' || id === 'right' ? 'left' : undefined} />}</>;
+  };
+
   return (
     <div className={`pkg-3d pkg-box pkg-box-${variant || 'mailer-box'} ${idle?'idle':''}`} style={style}>
-      <BoxVariantShell variant={variant} />
-      <div className="face face-front" style={sideStyle(sides.front, {transform:`translateZ(${half.z}px)`})}>
-        <BoxVariantDetails variant={variant} face="front" />
-        <PkgArt artwork={sides.front} />
-      </div>
-      <div className="face face-back" style={sideStyle(sides.back, {transform:`rotateY(180deg) translateZ(${half.z}px)`, backgroundBlendMode: 'multiply'})}><BoxVariantDetails variant={variant} face="back" /><PkgArt artwork={sides.back} /></div>
-      <div className="face face-right" style={sideStyle(sides.right, {width:d, left:(w-d)/2, transform:`rotateY(90deg) translateZ(${w/2}px)`, backgroundBlendMode: 'multiply'})}><BoxVariantDetails variant={variant} face="right" /><PkgArt artwork={sides.right} side="left" /></div>
-      <div className="face face-left" style={sideStyle(sides.left, {width:d, left:(w-d)/2, transform:`rotateY(-90deg) translateZ(${w/2}px)`, backgroundBlendMode: 'multiply'})}><BoxVariantDetails variant={variant} face="left" /><PkgArt artwork={sides.left} side="left" /></div>
-      <div className="face face-top" style={sideStyle(sides.top, {height:d, top:(h-d)/2, transform:`rotateX(90deg) translateZ(${h/2}px)`, backgroundBlendMode: 'screen'})}><BoxVariantDetails variant={variant} face="top" /><PkgArt artwork={sides.top} /></div>
-      <div className="face face-bottom" style={sideStyle(sides.bottom, {height:d, top:(h-d)/2, transform:`rotateX(-90deg) translateZ(${h/2}px)`, backgroundBlendMode: 'multiply'})}><BoxVariantDetails variant={variant} face="bottom" /><PkgArt artwork={sides.bottom} /></div>
+      <Cuboid w={w} h={h} d={d} sides={sides}
+        sideRender={renderArt}
+        faceExtras={extras}/>
+
+      {/* WINDOW-BOX: окно и рамка как отдельные 3D-слои перед фасадом.
+         Делается это потому, что элементы с positive z-index внутри грани
+         с transform-style:flat могут не отрисовываться поверх pseudo-overlay'ев. */}
+      {variant === 'window-box' && (
+        <>
+          <div className="pkg-window-cutout"
+               style={{ position:'absolute', left:'14%', right:'14%', top:'12%', height:'44%',
+                        transform:`translateZ(${d/2 + 0.5}px)`, pointerEvents:'none' }} />
+          <div className="pkg-window-frame"
+               style={{ position:'absolute', left:'13%', right:'13%', top:'11%', height:'46%',
+                        transform:`translateZ(${d/2 + 0.8}px)`, pointerEvents:'none' }} />
+        </>
+      )}
+
+      {/* MAILER: язычок-замок и прорезь в отдельном 3D-слое перед фасадом */}
+      {variant === 'mailer-box' && (
+        <>
+          <div className="pkg-mailer-tab"
+               style={{ position:'absolute', transform:`translateZ(${d/2 + 0.6}px)` }} />
+          <div className="pkg-mailer-slot"
+               style={{ position:'absolute', transform:`translateZ(${d/2 + 0.8}px)` }} />
+        </>
+      )}
+
+      {/* SLEEVE: поднос, торчащий вправо. Сидит в одном 3D-слое со сборкой
+         рукава, частично перекрываясь его правой "пещерой". */}
+      {variant === 'sleeve-box' && (() => {
+        const trayW = Math.round(w * 0.55);
+        const trayH = h - 16;
+        const trayD = d - 22;
+        const trayLeft = Math.round(w * 0.65);   // левый край подноса — внутри рукава
+        const trayTop  = Math.round((h - trayH) / 2);
+        const trayColor = shade(frontColor, 0.16);
+        const traySides = SIDE_IDS.reduce((a,id)=>{
+          a[id] = { ...sides[id], backgroundColor: trayColor };
+          return a;
+        }, {});
+        return (
+          <div className="pkg-sleeve-tray"
+               style={{ width:trayW, height:trayH, left:trayLeft, top:trayTop }}>
+            <Cuboid w={trayW} h={trayH} d={trayD} sides={traySides}
+              faceClass="tface"
+              sideRender={(id) => <>{traySides[id]?.visible !== false && <PkgArt artwork={traySides[id]} side={id === 'left' || id === 'right' ? 'left' : undefined} />}</>}
+              faceExtras={{ front: <div className="pkg-tray-pull" /> }}
+              />
+          </div>
+        );
+      })()}
     </div>
   );
 }
 
-// ── BAG 3D ─────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────
+// BAG
+// ─────────────────────────────────────────────────────────
+const BAG_GEOMETRY = {
+  'doy-pack':              { w: 220, h: 290, d: 64 },
+  'zip-lock-bag':          { w: 220, h: 270, d: 56 },
+  'flat-bottom-bag':       { w: 200, h: 280, d: 86 },
+  'paper-bag-with-handles':{ w: 220, h: 280, d: 110 },
+  'courier-bag':           { w: 280, h: 200, d: 26 },
+};
+
+function BagFace({ variant, artwork, faceId }){
+  return (
+    <div className="pkg-bag-face" style={sideStyle(artwork, { width:'100%', height:'100%', left:0, top:0 })}>
+      {variant === 'zip-lock-bag' && (
+        <>
+          <div className="pkg-zip-track" />
+          <div className="pkg-zip-notch left" />
+          <div className="pkg-zip-notch right" />
+        </>
+      )}
+      {variant === 'flat-bottom-bag' && (
+        <>
+          <div className="pkg-flat-gusset-line left" />
+          <div className="pkg-flat-gusset-line right" />
+        </>
+      )}
+      {variant === 'paper-bag-with-handles' && (
+        <>
+          <div className="pkg-paper-top-fold" />
+          <div className="pkg-paper-crease left" />
+          <div className="pkg-paper-crease right" />
+          <div className="pkg-paper-handle left" />
+          <div className="pkg-paper-handle right" />
+        </>
+      )}
+      {variant === 'courier-bag' && (
+        <div className="pkg-courier-flap" />
+      )}
+      <PkgArt artwork={artwork} side={faceId === 'left' || faceId === 'right' ? 'left' : undefined} />
+    </div>
+  );
+}
+
 function Bag3D({ sides, rotation, idle, variant }){
-  const bagVariant = variant || 'doy-pack';
-  const isDoyPack = bagVariant === 'doy-pack';
-  const w = isDoyPack ? 214 : 200;
-  const h = isDoyPack ? 282 : 260;
-  const d = isDoyPack ? 72 : 60;
+  const v = variant || 'doy-pack';
+  const { w, h, d } = BAG_GEOMETRY[v] || BAG_GEOMETRY['doy-pack'];
   const tx = `translate3d(-50%, -50%, 0) rotateX(${rotation.x}deg) rotateY(${rotation.y}deg)`;
+  const frontColor = sides.front?.backgroundColor || '#B08A5B';
+  const klass =
+    v === 'doy-pack' ? 'pkg-bag-doy' :
+    v === 'zip-lock-bag' ? 'pkg-bag-zip' :
+    v === 'flat-bottom-bag' ? 'pkg-bag-flat' :
+    v === 'paper-bag-with-handles' ? 'pkg-bag-paper' :
+    v === 'courier-bag' ? 'pkg-bag-courier' : 'pkg-bag-doy';
+
   const style = {
     width: w, height: h,
     transform: tx,
     position:'absolute', left:'50%', top:'50%',
+    ['--pkg-color']: frontColor,
+    ['--pkg-art-color']: pktContrast(frontColor),
+    ['--pkg-handle-color']: shade(frontColor, -0.35),
   };
+
+  // боковые "гассеты" — тонкие, тёмные, дают объём
+  const sideBg = (s) => {
+    const c = s?.backgroundColor || frontColor;
+    return shade(c, -0.20);
+  };
+
   return (
-    <div className={`pkg-3d pkg-bag pkg-bag-${bagVariant} ${idle?'idle':''}`} style={style}>
-      <div className="face face-front" style={sideStyle(sides.front, {transform:`translateZ(${d/2}px)`})}>
-        <div className="seal" />
-        <BagVariantDetails variant={bagVariant} face="front" />
-        <PkgArt artwork={sides.front} />
+    <div className={`pkg-bag-wrap pkg-3d ${klass} ${idle?'idle':''}`} style={style}>
+      {/* передняя */}
+      <div className="pkg-bag-face" style={{ width:w, height:h, left:0, top:0, transform:`translateZ(${d/2}px)`, ...sideStyle(sides.front) }}>
+        <BagFaceInner variant={v} artwork={sides.front} faceId="front" />
       </div>
-      <div className="face face-back" style={sideStyle(sides.back, {transform:`rotateY(180deg) translateZ(${d/2}px)`})}>
-        <div className="seal" />
-        <BagVariantDetails variant={bagVariant} face="back" />
-        <PkgArt artwork={sides.back} />
+      {/* задняя */}
+      <div className="pkg-bag-face" style={{ width:w, height:h, left:0, top:0, transform:`rotateY(180deg) translateZ(${d/2}px)`, ...sideStyle(sides.back) }}>
+        <BagFaceInner variant={v} artwork={sides.back} faceId="back" />
       </div>
-      <div className="face face-right face-side" style={sideStyle(sides.right, {width:d, left:(w-d)/2, transform:`rotateY(90deg) translateZ(${w/2}px)`})}>
-        <div className="seal" />
-        <BagVariantDetails variant={bagVariant} face="right" />
-        <PkgArt artwork={sides.right} side="left" />
+      {/* боковые гассеты */}
+      <div className="pkg-bag-face" style={{
+        width:d, height:h, left:(w-d)/2, top:0,
+        transform:`rotateY(90deg) translateZ(${w/2}px)`,
+        background: sideBg(sides.right),
+        ['--pkg-color']: sideBg(sides.right),
+        ['--pkg-art-color']: pktContrast(sideBg(sides.right)),
+      }}>
+        <BagSideGusset variant={v} />
+        {sides.right?.visible !== false && <PkgArt artwork={sides.right} side="left" />}
       </div>
-      <div className="face face-left face-side" style={sideStyle(sides.left, {width:d, left:(w-d)/2, transform:`rotateY(-90deg) translateZ(${w/2}px)`})}>
-        <div className="seal" />
-        <BagVariantDetails variant={bagVariant} face="left" />
-        <PkgArt artwork={sides.left} side="left" />
+      <div className="pkg-bag-face" style={{
+        width:d, height:h, left:(w-d)/2, top:0,
+        transform:`rotateY(-90deg) translateZ(${w/2}px)`,
+        background: sideBg(sides.left),
+        ['--pkg-color']: sideBg(sides.left),
+        ['--pkg-art-color']: pktContrast(sideBg(sides.left)),
+      }}>
+        <BagSideGusset variant={v} />
+        {sides.left?.visible !== false && <PkgArt artwork={sides.left} side="left" />}
       </div>
     </div>
   );
 }
 
-// ── CUP 3D ─────────────────────────────────────────────────
+function BagFaceInner({ variant, artwork, faceId }){
+  const v = variant;
+  return (
+    <>
+      {/* верхний шов и зиппер для zip-lock */}
+      {v === 'zip-lock-bag' && (
+        <>
+          <div className="pkg-zip-track" />
+          <div className="pkg-zip-notch left" />
+          <div className="pkg-zip-notch right" />
+        </>
+      )}
+      {v === 'flat-bottom-bag' && (
+        <>
+          <div className="pkg-flat-gusset-line left" />
+          <div className="pkg-flat-gusset-line right" />
+        </>
+      )}
+      {v === 'paper-bag-with-handles' && (
+        <>
+          <div className="pkg-paper-top-fold" />
+          <div className="pkg-paper-crease left" />
+          <div className="pkg-paper-crease right" />
+          <div className="pkg-paper-handle left" />
+          <div className="pkg-paper-handle right" />
+        </>
+      )}
+      {v === 'courier-bag' && (
+        <div className="pkg-courier-flap" />
+      )}
+      <PkgArt artwork={artwork} side={faceId === 'left' || faceId === 'right' ? 'left' : undefined} />
+    </>
+  );
+}
+
+function BagSideGusset({ variant }){
+  // тонкая боковина — гассет — с продольной складкой по центру
+  return (
+    <div style={{
+      position:'absolute', inset:0,
+      background:
+        'linear-gradient(90deg, rgba(255,255,255,.18) 0%, rgba(0,0,0,.16) 48%, rgba(0,0,0,.22) 52%, rgba(255,255,255,.10) 100%)',
+      mixBlendMode:'multiply',
+      pointerEvents:'none',
+    }}/>
+  );
+}
+
+// ─────────────────────────────────────────────────────────
+// CUP
+// ─────────────────────────────────────────────────────────
 function Cup3D({ sides, activeSide, rotation, idle, variant }){
   const artwork = sides[activeSide] || sides.front;
   const tx = `translate3d(-50%, -50%, 0) rotateX(${rotation.x}deg) rotateY(${rotation.y}deg)`;
+  const w = 230, h = 270;
   const style = {
-    width: 220, height: 250,
+    width: w, height: h,
     transform: tx,
     position:'absolute', left:'50%', top:'50%',
-    ['--pkg-color']: artwork.backgroundColor, ['--pkg-art-color']: pktContrast(artwork.backgroundColor),
+    ['--pkg-color']: artwork.backgroundColor,
+    ['--pkg-art-color']: pktContrast(artwork.backgroundColor),
   };
+  const v = variant || 'single-wall';
   return (
-    <div className={`pkg-3d pkg-cup-wrap pkg-cup-${variant || 'single-wall'} ${idle?'idle':''}`} style={style}>
-      <div className="pkg-cup">
-        <div className="pkg-cup-rim" />
-        <CupVariantDetails variant={variant} />
+    <div className={`pkg-cup-wrap pkg-3d pkg-cup-${v} ${idle?'idle':''}`} style={style}>
+      <div className="pkg-cup-body">
         <PkgArt artwork={artwork} />
-        <div className="pkg-cup-bottom" />
+        {v === 'ripple-cup' && <div className="pkg-cup-ripple-sleeve" />}
       </div>
+      <div className="pkg-cup-rim" />
+      <div className="pkg-cup-base" />
+      {v === 'cold-cup' && (
+        <>
+          <div className="pkg-cup-cold-straw" />
+          <div className="pkg-cup-cold-dome" />
+        </>
+      )}
     </div>
   );
 }
 
-// ── STICKER 3D ─────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────
+// STICKER
+// ─────────────────────────────────────────────────────────
+function stickerRadius(variant){
+  if (variant === 'square')       return '14px';
+  if (variant === 'rectangle')    return '12px';
+  if (variant === 'oval')         return '50%';
+  if (variant === 'custom-shape') return '38% 62% 46% 54% / 45% 40% 60% 55%';
+  return '50%';
+}
+function stickerDims(variant){
+  if (variant === 'rectangle') return { width: 280, height: 180 };
+  if (variant === 'oval')      return { width: 270, height: 190 };
+  return { width: 240, height: 240 };
+}
 function Sticker3D({ sides, rotation, idle, variant }){
   const artwork = sides.front;
   const tx = `translate3d(-50%, -50%, 0) rotateX(${rotation.x}deg) rotateY(${rotation.y}deg)`;
   const radius = stickerRadius(variant);
   const dims = stickerDims(variant);
   const style = {
-    ...dims,
-    transform: tx,
+    ...dims, transform: tx,
     position:'absolute', left:'50%', top:'50%',
-    ['--pkg-color']: artwork.backgroundColor, ['--pkg-art-color']: pktContrast(artwork.backgroundColor),
+    ['--pkg-color']: artwork.backgroundColor,
+    ['--pkg-art-color']: pktContrast(artwork.backgroundColor),
     ['--pkg-radius']: radius,
   };
   return (
@@ -1417,23 +505,21 @@ function Sticker3D({ sides, rotation, idle, variant }){
   );
 }
 
-// ── UNFOLD (плоская развёртка) ─────────────────────────────
+// ─────────────────────────────────────────────────────────
+// UNFOLD (плоская развёртка) — без изменений по структуре
+// ─────────────────────────────────────────────────────────
 const UNFOLD_LABELS = {
-  front: 'Лицо',
-  back: 'Задняя сторона',
-  left: 'Левый бок',
-  right: 'Правый бок',
-  top: 'Верх',
-  bottom: 'Низ',
+  front: 'Лицо', back: 'Задняя сторона',
+  left: 'Левый бок', right: 'Правый бок',
+  top: 'Верх', bottom: 'Низ',
 };
-
 function Unfold({ type, variant, sides, size }){
   const panel = (sideId, w, h, key, extra = {}) => {
     const artwork = sides[sideId];
     const visible = artwork?.visible !== false;
     const style = visible
-      ? sideStyle(artwork, { width: w, height: h, ...extra })
-      : { width: w, height: h, ...extra };
+      ? sideStyle(artwork, { width:w, height:h, ...extra })
+      : { width:w, height:h, ...extra };
     return (
       <div key={key} className={`panel ${visible ? '' : 'muted'}`} style={style}>
         <span className="panel-label">{UNFOLD_LABELS[sideId]}</span>
@@ -1442,20 +528,15 @@ function Unfold({ type, variant, sides, size }){
     );
   };
   const empty = (w,h,key) => <div key={key} className="panel empty" style={{width:w,height:h}}/>;
-
   if (type === 'box'){
-    const W = size?.w || 180;
-    const H = size?.h || 130;
-    const D = size?.d || 90;
+    const { w, h, d } = getBoxGeometry(variant, size);
+    const W = Math.round(w*0.55), H = Math.round(h*0.55), D = Math.round(d*0.55);
     return (
       <div className="pkg-unfold-wrap">
-        <div className="pkg-unfold" style={{
-          gridTemplateColumns: `${D}px ${W}px ${D}px ${W}px`,
-          gridTemplateRows: `${D}px ${H}px ${D}px`,
-        }}>
-          {empty(D,D,'a1')} {panel('top', W, D, 'a2')} {empty(D,D,'a3')} {empty(W,D,'a4')}
-          {panel('left', D, H, 'b1')} {panel('front', W, H, 'b2')} {panel('right', D, H, 'b3')} {panel('back', W, H, 'b4')}
-          {empty(D,D,'c1')} {panel('bottom', W, D, 'c2')} {empty(D,D,'c3')} {empty(W,D,'c4')}
+        <div className="pkg-unfold" style={{ gridTemplateColumns:`${D}px ${W}px ${D}px ${W}px`, gridTemplateRows:`${D}px ${H}px ${D}px` }}>
+          {empty(D,D,'a1')}{panel('top', W, D, 'a2')}{empty(D,D,'a3')}{empty(W,D,'a4')}
+          {panel('left', D, H, 'b1')}{panel('front', W, H, 'b2')}{panel('right', D, H, 'b3')}{panel('back', W, H, 'b4')}
+          {empty(D,D,'c1')}{panel('bottom', W, D, 'c2')}{empty(D,D,'c3')}{empty(W,D,'c4')}
         </div>
       </div>
     );
@@ -1463,10 +544,7 @@ function Unfold({ type, variant, sides, size }){
   if (type === 'bag'){
     return (
       <div className="pkg-unfold-wrap">
-        <div className="pkg-unfold" style={{
-          gridTemplateColumns: `40px 180px 40px 180px`,
-          gridTemplateRows: `230px`,
-        }}>
+        <div className="pkg-unfold" style={{ gridTemplateColumns:'40px 180px 40px 180px', gridTemplateRows:'230px' }}>
           {panel('left', 40, 230, 'a')}
           {panel('front', 180, 230, 'b')}
           {panel('right', 40, 230, 'c')}
@@ -1478,12 +556,9 @@ function Unfold({ type, variant, sides, size }){
   if (type === 'cup'){
     return (
       <div className="pkg-unfold-wrap">
-        <div className="pkg-unfold" style={{
-          gridTemplateColumns: `210px 210px`,
-          gridTemplateRows: `200px`,
-        }}>
-          {panel('front', 210, 200, 'front', { clipPath: 'polygon(8% 0%, 92% 0%, 100% 100%, 0% 100%)' })}
-          {panel('back', 210, 200, 'back', { clipPath: 'polygon(0% 0%, 92% 0%, 100% 100%, 8% 100%)' })}
+        <div className="pkg-unfold" style={{ gridTemplateColumns:'210px 210px', gridTemplateRows:'200px' }}>
+          {panel('front', 210, 200, 'front', { clipPath:'polygon(8% 0%, 92% 0%, 100% 100%, 0% 100%)' })}
+          {panel('back', 210, 200, 'back', { clipPath:'polygon(0% 0%, 92% 0%, 100% 100%, 8% 100%)' })}
         </div>
       </div>
     );
@@ -1491,15 +566,10 @@ function Unfold({ type, variant, sides, size }){
   const dims = stickerDims(variant);
   const flatDims = variant === 'rectangle'
     ? { width: 260, height: 170 }
-    : variant === 'oval'
-      ? { width: 250, height: 180 }
-      : { width: 220, height: 220 };
+    : variant === 'oval' ? { width: 250, height: 180 } : { width: 220, height: 220 };
   return (
     <div className="pkg-unfold-wrap">
-      <div className="pkg-unfold" style={{
-        gridTemplateColumns: `${flatDims.width}px`,
-        gridTemplateRows: `${flatDims.height}px`,
-      }}>
+      <div className="pkg-unfold" style={{ gridTemplateColumns:`${flatDims.width}px`, gridTemplateRows:`${flatDims.height}px` }}>
         {panel('front', flatDims.width, flatDims.height, 'front', {
           borderRadius: stickerRadius(variant),
           width: Math.min(dims.width, flatDims.width),
@@ -1510,9 +580,16 @@ function Unfold({ type, variant, sides, size }){
   );
 }
 
-// ── PackagingPreview (главный экспорт) ─────────────────────
-export function PackagingPreview({ type='box', variant='', color='#B08A5B', logo=null, text='', sides=null, activeSide='front', view='3d', interactive=true, idle=true, size }){
-  const [rot, setRot] = React.useState({ x: -12, y: -22 });
+// ─────────────────────────────────────────────────────────
+// PackagingPreview — главный экспорт
+// API совместимо со старым файлом.
+// ─────────────────────────────────────────────────────────
+export function PackagingPreview({
+  type='box', variant='', color='#B08A5B', logo=null, text='',
+  sides=null, activeSide='front', view='3d',
+  interactive=true, idle=true, size
+}){
+  const [rot, setRot] = React.useState({ x: -14, y: -24 });
   const [dragging, setDragging] = React.useState(false);
   const startRef = React.useRef(null);
   const userInteracted = React.useRef(false);
@@ -1543,18 +620,18 @@ export function PackagingPreview({ type='box', variant='', color='#B08A5B', logo
   if (view === 'flat'){
     return (
       <div className="pkg-stage">
-        <style>{PKG_STYLE}</style>
-        <Unfold type={type} variant={variant} sides={allSides} size={size}/>
+        <style>{STYLE_BLOCK}</style>
+        <Unfold type={type} variant={variant} sides={allSides} size={size} />
       </div>
     );
   }
 
   const props = { sides: allSides, activeSide, rotation: rot, idle: idle && !userInteracted.current, variant };
   let Body;
-  if (type === 'box') Body = <Box3D {...props} size={size}/>;
-  else if (type === 'bag') Body = <Bag3D {...props}/>;
-  else if (type === 'cup') Body = <Cup3D {...props}/>;
-  else Body = <Sticker3D {...props}/>;
+  if (type === 'box')      Body = <Box3D {...props} size={size} />;
+  else if (type === 'bag') Body = <Bag3D {...props} />;
+  else if (type === 'cup') Body = <Cup3D {...props} />;
+  else                     Body = <Sticker3D {...props} />;
 
   return (
     <div
@@ -1562,10 +639,11 @@ export function PackagingPreview({ type='box', variant='', color='#B08A5B', logo
       onPointerDown={onDown}
       style={{ cursor: interactive ? (dragging?'grabbing':'grab') : 'default' }}
     >
-      <style>{PKG_STYLE}</style>
+      <style>{STYLE_BLOCK}</style>
       <div className="pkg-floor" />
       {Body}
     </div>
   );
 }
 
+export default PackagingPreview;
