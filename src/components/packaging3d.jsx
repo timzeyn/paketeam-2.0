@@ -748,6 +748,174 @@ const PKG_STYLE = `
   border-bottom: 1px dashed rgba(255,255,255,.45);
   z-index: 3;
 }
+.pkg-bag-doy-pack .face{
+  border:0;
+  border-radius:34px 34px 18px 18px / 42px 42px 20px 20px;
+  clip-path:polygon(14% 0, 86% 0, 96% 13%, 100% 84%, 92% 100%, 8% 100%, 0 84%, 4% 13%);
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,.18),
+    inset 0 -22px 28px rgba(0,0,0,.15),
+    0 16px 26px rgba(15,22,38,.14);
+}
+.pkg-bag-doy-pack .face::before{
+  background:
+    radial-gradient(ellipse at 50% 11%, rgba(255,255,255,.22), transparent 34%),
+    linear-gradient(90deg,
+      rgba(0,0,0,.24) 0%,
+      rgba(0,0,0,.08) 10%,
+      rgba(255,255,255,.20) 42%,
+      rgba(255,255,255,.16) 58%,
+      rgba(0,0,0,.10) 90%,
+      rgba(0,0,0,.26) 100%),
+    linear-gradient(180deg, rgba(255,255,255,.13), rgba(0,0,0,.10));
+}
+.pkg-bag-doy-pack .face-front .pkg-art,
+.pkg-bag-doy-pack .face-back .pkg-art{
+  padding:24% 18% 27%;
+}
+.pkg-bag-doy-pack .face-front .seal,
+.pkg-bag-doy-pack .face-back .seal{
+  top:9px;
+  left:11%;
+  right:11%;
+  height:31px;
+  border-radius:18px 18px 9px 9px;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.20), rgba(0,0,0,.18)),
+    repeating-linear-gradient(90deg, rgba(255,255,255,.08) 0 2px, transparent 2px 8px);
+  border-bottom:2px solid rgba(0,0,0,.22);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.35),
+    0 6px 12px rgba(0,0,0,.10);
+}
+.pkg-bag-doy-pack .seal::after{
+  content:"";
+  position:absolute;
+  left:8%;
+  right:8%;
+  bottom:7px;
+  border-top:1px dashed rgba(255,255,255,.54);
+  box-shadow:0 1px 0 rgba(0,0,0,.16);
+}
+.pkg-doy-detail{
+  position:absolute;
+  pointer-events:none;
+  z-index:1;
+}
+.pkg-doy-shoulder{
+  top:0;
+  width:30%;
+  height:22%;
+  background:linear-gradient(180deg, rgba(255,255,255,.16), rgba(0,0,0,.06));
+  border-top:1px solid rgba(255,255,255,.22);
+}
+.pkg-doy-shoulder.left{
+  left:0;
+  border-radius:34px 0 26px 0;
+  border-right:1px solid rgba(0,0,0,.08);
+  transform:skewY(-9deg);
+}
+.pkg-doy-shoulder.right{
+  right:0;
+  border-radius:0 34px 0 26px;
+  border-left:1px solid rgba(0,0,0,.08);
+  transform:skewY(9deg);
+}
+.pkg-doy-side-fold{
+  top:15%;
+  bottom:18%;
+  width:24%;
+  background:
+    linear-gradient(90deg, rgba(0,0,0,.20), rgba(255,255,255,.06) 55%, transparent),
+    repeating-linear-gradient(180deg, rgba(255,255,255,.025) 0 1px, transparent 1px 9px);
+  opacity:.88;
+}
+.pkg-doy-side-fold.left{
+  left:0;
+  clip-path:polygon(0 0, 100% 5%, 70% 100%, 0 94%);
+}
+.pkg-doy-side-fold.right{
+  right:0;
+  transform:scaleX(-1);
+  clip-path:polygon(0 0, 100% 5%, 70% 100%, 0 94%);
+}
+.pkg-doy-side-fold::after{
+  content:"";
+  position:absolute;
+  top:6%;
+  bottom:7%;
+  left:55%;
+  border-left:2px solid rgba(0,0,0,.15);
+  box-shadow:1px 0 0 rgba(255,255,255,.18);
+}
+.pkg-doy-center-highlight{
+  left:27%;
+  right:27%;
+  top:17%;
+  bottom:25%;
+  border-radius:999px;
+  background:linear-gradient(90deg, transparent, rgba(255,255,255,.18), transparent);
+  opacity:.72;
+}
+.pkg-doy-bottom-gusset{
+  left:8%;
+  right:8%;
+  bottom:-2%;
+  height:26%;
+  border-radius:50% 50% 18px 18px / 38% 38% 18px 18px;
+  background:
+    radial-gradient(ellipse at 50% 8%, rgba(255,255,255,.18), transparent 44%),
+    linear-gradient(180deg, rgba(255,255,255,.06), rgba(0,0,0,.27));
+  border-top:2px solid rgba(0,0,0,.20);
+  box-shadow:
+    inset 0 10px 18px rgba(255,255,255,.08),
+    0 -4px 12px rgba(0,0,0,.10);
+}
+.pkg-doy-bottom-crease{
+  left:18%;
+  right:18%;
+  bottom:14%;
+  height:16px;
+  border-radius:50%;
+  border-top:2px solid rgba(0,0,0,.20);
+  box-shadow:0 1px 0 rgba(255,255,255,.20);
+}
+.pkg-bag-doy-pack .face-side{
+  border-radius:24px 24px 15px 15px / 38px 38px 18px 18px;
+  clip-path:polygon(22% 0, 78% 0, 98% 13%, 100% 84%, 78% 100%, 22% 100%, 0 84%, 2% 13%);
+}
+.pkg-bag-doy-pack .face-side .seal{
+  left:14%;
+  right:14%;
+  top:10px;
+  height:29px;
+  border-radius:14px 14px 7px 7px;
+}
+.pkg-bag-doy-pack .face-side .pkg-art{
+  padding:28% 8% 30%;
+}
+.pkg-doy-side-panel{
+  inset:0;
+  background:
+    linear-gradient(90deg, rgba(0,0,0,.24), rgba(255,255,255,.10) 48%, rgba(0,0,0,.18)),
+    linear-gradient(180deg, rgba(255,255,255,.10), rgba(0,0,0,.10));
+}
+.pkg-doy-side-crease{
+  top:16%;
+  bottom:19%;
+  left:50%;
+  border-left:2px solid rgba(0,0,0,.20);
+  box-shadow:1px 0 0 rgba(255,255,255,.20);
+}
+.pkg-doy-side-bottom{
+  left:10%;
+  right:10%;
+  bottom:-2%;
+  height:25%;
+  border-radius:50% 50% 12px 12px / 35% 35% 12px 12px;
+  background:linear-gradient(180deg, rgba(255,255,255,.08), rgba(0,0,0,.28));
+  border-top:2px solid rgba(0,0,0,.18);
+}
 
 /* ── CUP ── */
 .pkg-cup-wrap{ width: 220px; height: 250px; }
@@ -1096,7 +1264,30 @@ function BoxVariantShell({ variant }) {
   }
   return null;
 }
-function BagVariantDetails({ variant }) {
+function BagVariantDetails({ variant, face = 'front' }) {
+  if (variant === 'doy-pack') {
+    if (face === 'left' || face === 'right') {
+      return (
+        <>
+          <div className="pkg-doy-detail pkg-doy-side-panel" />
+          <div className="pkg-doy-detail pkg-doy-side-crease" />
+          <div className="pkg-doy-detail pkg-doy-side-bottom" />
+        </>
+      );
+    }
+    return (
+      <>
+        <div className="pkg-doy-detail pkg-doy-shoulder left" />
+        <div className="pkg-doy-detail pkg-doy-shoulder right" />
+        <div className="pkg-doy-detail pkg-doy-side-fold left" />
+        <div className="pkg-doy-detail pkg-doy-side-fold right" />
+        <div className="pkg-doy-detail pkg-doy-center-highlight" />
+        <div className="pkg-doy-detail pkg-doy-bottom-gusset" />
+        <div className="pkg-doy-detail pkg-doy-bottom-crease" />
+      </>
+    );
+  }
+  if (face !== 'front') return null;
   if (variant === 'paper-bag-with-handles') return <div className="pkg-handles"><i/><i/></div>;
   if (variant === 'flat-bottom-bag') return <div className="pkg-flat-bottom" />;
   if (variant === 'courier-bag') return <div className="pkg-courier-flap" />;
@@ -1145,7 +1336,11 @@ function Box3D({ sides, rotation, idle, size, variant }){
 
 // ── BAG 3D ─────────────────────────────────────────────────
 function Bag3D({ sides, rotation, idle, variant }){
-  const w = 200, h = 260, d = 60;
+  const bagVariant = variant || 'doy-pack';
+  const isDoyPack = bagVariant === 'doy-pack';
+  const w = isDoyPack ? 214 : 200;
+  const h = isDoyPack ? 282 : 260;
+  const d = isDoyPack ? 72 : 60;
   const tx = `translate3d(-50%, -50%, 0) rotateX(${rotation.x}deg) rotateY(${rotation.y}deg)`;
   const style = {
     width: w, height: h,
@@ -1153,22 +1348,25 @@ function Bag3D({ sides, rotation, idle, variant }){
     position:'absolute', left:'50%', top:'50%',
   };
   return (
-    <div className={`pkg-3d pkg-bag pkg-bag-${variant || 'doy-pack'} ${idle?'idle':''}`} style={style}>
-      <div className="face" style={sideStyle(sides.front, {transform:`translateZ(${d/2}px)`})}>
+    <div className={`pkg-3d pkg-bag pkg-bag-${bagVariant} ${idle?'idle':''}`} style={style}>
+      <div className="face face-front" style={sideStyle(sides.front, {transform:`translateZ(${d/2}px)`})}>
         <div className="seal" />
-        <BagVariantDetails variant={variant} />
+        <BagVariantDetails variant={bagVariant} face="front" />
         <PkgArt artwork={sides.front} />
       </div>
-      <div className="face" style={sideStyle(sides.back, {transform:`rotateY(180deg) translateZ(${d/2}px)`})}>
+      <div className="face face-back" style={sideStyle(sides.back, {transform:`rotateY(180deg) translateZ(${d/2}px)`})}>
         <div className="seal" />
+        <BagVariantDetails variant={bagVariant} face="back" />
         <PkgArt artwork={sides.back} />
       </div>
-      <div className="face" style={sideStyle(sides.right, {width:d, left:(w-d)/2, transform:`rotateY(90deg) translateZ(${w/2}px)`})}>
+      <div className="face face-right face-side" style={sideStyle(sides.right, {width:d, left:(w-d)/2, transform:`rotateY(90deg) translateZ(${w/2}px)`})}>
         <div className="seal" />
+        <BagVariantDetails variant={bagVariant} face="right" />
         <PkgArt artwork={sides.right} side="left" />
       </div>
-      <div className="face" style={sideStyle(sides.left, {width:d, left:(w-d)/2, transform:`rotateY(-90deg) translateZ(${w/2}px)`})}>
+      <div className="face face-left face-side" style={sideStyle(sides.left, {width:d, left:(w-d)/2, transform:`rotateY(-90deg) translateZ(${w/2}px)`})}>
         <div className="seal" />
+        <BagVariantDetails variant={bagVariant} face="left" />
         <PkgArt artwork={sides.left} side="left" />
       </div>
     </div>
