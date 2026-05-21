@@ -339,14 +339,18 @@ function Bag3D({ sides, rotation, idle, variant }){
     return <ZipLock2D sides={sides} rotation={rotation} idle={idle} />;
   }
 
+  // ── COURIER BAG: flat poly mailer mockup ──
+  if (v === 'courier-bag') {
+    return <CourierBag2D sides={sides} rotation={rotation} idle={idle} />;
+  }
+
   // ── All other bag variants: keep the existing 4-face 3D cube ──
   const { w, h, d } = BAG_GEOMETRY[v] || BAG_GEOMETRY['doy-pack'];
   const tx = `translate3d(-50%, -50%, 0) rotateX(${rotation.x}deg) rotateY(${rotation.y}deg)`;
   const frontColor = sides.front?.backgroundColor || '#B08A5B';
   const klass =
     v === 'flat-bottom-bag' ? 'pkg-bag-flat' :
-    v === 'paper-bag-with-handles' ? 'pkg-bag-paper' :
-    v === 'courier-bag' ? 'pkg-bag-courier' : 'pkg-bag-doy';
+    v === 'paper-bag-with-handles' ? 'pkg-bag-paper' : 'pkg-bag-doy';
 
   const style = {
     width: w, height: h,
@@ -508,6 +512,63 @@ function ZipLock2D({ sides, rotation, idle }){
   );
 }
 
+// ─────────────────────────────────────────────────────────
+// COURIER BAG 2.5D FLAT POLY MAILER MOCKUP
+// Flat rectangular mailing envelope — NO side walls.
+// Fold-over adhesive flap at top. Welded side seams.
+// ─────────────────────────────────────────────────────────
+function CourierBag2D({ sides, rotation, idle }){
+  const frontSide = sides.front || {};
+  const color = frontSide.backgroundColor || '#B08A5B';
+  const w = 260, h = 220;
+
+  // Subtle tilt — flat mailer should barely rotate
+  const tiltY = Math.max(-10, Math.min(10, rotation.y * 0.12));
+  const tiltX = Math.max(-5, Math.min(5, rotation.x * 0.08));
+
+  const wrapStyle = {
+    width: w, height: h,
+    position: 'absolute', left: '50%', top: '50%',
+    transform: `translate3d(-50%, -50%, 0) perspective(900px) rotateY(${tiltY}deg) rotateX(${tiltX}deg)`,
+    transition: 'transform .35s cubic-bezier(.4,.1,.2,1)',
+    ['--pkg-color']: color,
+    ['--pkg-art-color']: pktContrast(color),
+  };
+
+  return (
+    <div className={`pkg-courier-mockup ${idle ? 'pkg-courier-idle' : ''}`} style={wrapStyle}>
+      {/* ── Fold-over flap (behind body, visible at top) ── */}
+      <div className="pkg-courier-flap-back" />
+      {/* ── Main flat mailer body ── */}
+      <div className="pkg-courier-body">
+        {/* Plastic material highlights */}
+        <div className="pkg-courier-plastic" />
+        {/* Left welded seam */}
+        <div className="pkg-courier-weld left" />
+        {/* Right welded seam */}
+        <div className="pkg-courier-weld right" />
+        {/* Bottom welded seam */}
+        <div className="pkg-courier-weld-bottom" />
+        {/* Fold-over flap (front, folds down) */}
+        <div className="pkg-courier-flap-front">
+          {/* Adhesive strip */}
+          <div className="pkg-courier-adhesive" />
+          {/* Peel strip text */}
+          <div className="pkg-courier-peel-text" />
+          {/* Flap fold line */}
+          <div className="pkg-courier-fold-line" />
+        </div>
+        {/* Central branding area */}
+        <div className="pkg-courier-art-area">
+          <PkgArt artwork={frontSide} />
+        </div>
+      </div>
+      {/* ── Floor shadow ── */}
+      <div className="pkg-courier-floor-shadow" />
+    </div>
+  );
+}
+
 function BagFaceInner({ variant, artwork, faceId }){
   const v = variant;
   return (
@@ -528,9 +589,7 @@ function BagFaceInner({ variant, artwork, faceId }){
           <div className="pkg-paper-handle right" />
         </>
       )}
-      {v === 'courier-bag' && (
-        <div className="pkg-courier-flap" />
-      )}
+      {/* courier-bag now has its own dedicated component */}
       <PkgArt artwork={artwork} side={faceId === 'left' || faceId === 'right' ? 'left' : undefined} />
     </>
   );

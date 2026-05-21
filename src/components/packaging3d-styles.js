@@ -1097,66 +1097,246 @@ export const PKG_STYLE_PART2 = `
   inset: 22% 24% 14%;
 }
 
-/* ─── COURIER BAG ─────────────────────────────────
-   более широкий и плоский почтовый пакет с клейкой полоской.
+/* ─── COURIER BAG 2.5D FLAT POLY MAILER ────────────
+   Flat rectangular mailing envelope — no side walls.
+   Fold-over adhesive flap at top.
    ───────────────────────────────────────────────── */
-.pkg-bag-courier .pkg-bag-face{
+
+/* Wrapper */
+.pkg-courier-mockup{
+  pointer-events: auto;
+}
+.pkg-stage.dragging .pkg-courier-mockup{
+  transition: none;
+}
+
+/* Idle gentle rocking */
+@keyframes pkg-courier-rock{
+  0%   { transform: translate3d(-50%,-50%,0) perspective(900px) rotateY(-2.5deg) rotateX(-0.8deg); }
+  50%  { transform: translate3d(-50%,-50%,0) perspective(900px) rotateY(2.5deg)  rotateX(-0.8deg); }
+  100% { transform: translate3d(-50%,-50%,0) perspective(900px) rotateY(-2.5deg) rotateX(-0.8deg); }
+}
+.pkg-courier-idle{
+  animation: pkg-courier-rock 10s ease-in-out infinite;
+}
+
+/* ── Fold-over flap (behind body — the back portion) ── */
+.pkg-courier-flap-back{
+  position: absolute;
+  left: 1.5%; right: 1.5%;
+  top: -11%;
+  height: 18%;
+  background: var(--pkg-color, #B08A5B);
+  filter: brightness(.88);
+  border-radius: 2px 2px 0 0;
   clip-path: polygon(
-    3% 0, 97% 0,
-    100% 4%, 99% 96%,
-    96% 100%, 4% 100%,
-    1% 96%, 0 4%
+    0.5% 12%, 99.5% 12%,
+    100% 14%, 100% 100%,
+    0% 100%, 0% 14%
   );
+  z-index: 0;
+  pointer-events: none;
+}
+/* Subtle shading on the flap back */
+.pkg-courier-flap-back::after{
+  content:"";
+  position:absolute; inset:0;
   background:
-    linear-gradient(90deg,
-      rgba(0,0,0,.22) 0%,
-      rgba(255,255,255,.06) 18%,
-      rgba(255,255,255,.10) 50%,
-      rgba(255,255,255,.06) 82%,
-      rgba(0,0,0,.22) 100%),
-    radial-gradient(ellipse at 50% 60%, rgba(255,255,255,.16), transparent 55%),
-    var(--pkg-color);
-  background-blend-mode: multiply, screen, normal;
+    linear-gradient(180deg,
+      rgba(0,0,0,.10) 0%,
+      rgba(0,0,0,.03) 40%,
+      rgba(0,0,0,.06) 100%);
+  pointer-events:none;
+}
+
+/* ── Main flat mailer body ─────────────────────── */
+.pkg-courier-body{
+  position: absolute;
+  inset: 0;
+  background: var(--pkg-color, #B08A5B);
+  overflow: hidden;
+  border-radius: 2px;
+
   box-shadow:
-    0 16px 22px rgba(0,0,0,.16),
-    inset 0 0 0 1px rgba(0,0,0,.08);
+    0 2px 14px rgba(0,0,0,.12),
+    inset 0 0 0 1px rgba(0,0,0,.05);
 }
-/* верхняя клейкая полоса-флэп */
-.pkg-courier-flap{
-  position:absolute;
-  left: 0; right: 0; top: 12%;
-  height: 9%;
-  background:
-    repeating-linear-gradient(45deg,
-      rgba(255,255,255,.20) 0 4px,
-      rgba(0,0,0,.06) 4px 8px),
-    rgba(255,255,255,.06);
-  border-top: 1px dashed rgba(0,0,0,.30);
-  border-bottom: 1px solid rgba(0,0,0,.26);
-  box-shadow: 0 2px 4px rgba(0,0,0,.10);
-  z-index: 3;
-}
-.pkg-courier-flap::after{
-  content:"PEEL";
-  position:absolute;
-  right: 8px; top: 50%;
-  transform: translateY(-50%);
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 8px;
-  letter-spacing: .2em;
-  color: rgba(0,0,0,.4);
-}
-/* мягкие морщины */
-.pkg-courier-wrinkle{
-  position:absolute;
+
+/* ── Polymer material highlights ───────────────── */
+.pkg-courier-plastic{
+  position:absolute; inset:0;
   pointer-events:none;
   z-index: 1;
-  background: radial-gradient(ellipse, rgba(0,0,0,.10), transparent 70%);
+  background:
+    /* Soft central gloss */
+    radial-gradient(ellipse 55% 60% at 50% 48%,
+      rgba(255,255,255,.12) 0%,
+      rgba(255,255,255,.03) 50%,
+      rgba(255,255,255,0) 72%),
+    /* Side edge darkening */
+    linear-gradient(90deg,
+      rgba(0,0,0,.12) 0%,
+      rgba(0,0,0,.04) 3.5%,
+      transparent 10%,
+      transparent 90%,
+      rgba(0,0,0,.04) 96.5%,
+      rgba(0,0,0,.12) 100%),
+    /* Vertical sheen */
+    linear-gradient(180deg,
+      rgba(255,255,255,.04) 0%,
+      transparent 20%,
+      transparent 80%,
+      rgba(0,0,0,.03) 100%),
+    /* Subtle diagonal plastic streak */
+    linear-gradient(118deg,
+      transparent 0%,
+      transparent 35%,
+      rgba(255,255,255,.05) 40%,
+      rgba(255,255,255,.08) 44%,
+      transparent 48%,
+      transparent 100%);
+}
+
+/* ── Welded side seams ─────────────────────────── */
+.pkg-courier-weld{
+  position:absolute;
+  top: 0; bottom: 0;
+  width: 2.5%;
+  z-index: 3;
+  pointer-events:none;
+}
+.pkg-courier-weld.left{
+  left: 0;
+  background:
+    linear-gradient(90deg,
+      rgba(0,0,0,.12) 0%,
+      rgba(0,0,0,.05) 45%,
+      transparent 100%);
+  border-right: 0.5px solid rgba(0,0,0,.06);
+}
+.pkg-courier-weld.right{
+  right: 0;
+  background:
+    linear-gradient(-90deg,
+      rgba(0,0,0,.12) 0%,
+      rgba(0,0,0,.05) 45%,
+      transparent 100%);
+  border-left: 0.5px solid rgba(0,0,0,.06);
+}
+
+/* ── Welded bottom seam ────────────────────────── */
+.pkg-courier-weld-bottom{
+  position:absolute;
+  left: 0; right: 0;
+  bottom: 0;
+  height: 2.5%;
+  z-index: 3;
+  pointer-events:none;
+  background:
+    linear-gradient(180deg,
+      transparent 0%,
+      rgba(0,0,0,.06) 40%,
+      rgba(0,0,0,.12) 100%);
+  border-top: 0.5px solid rgba(0,0,0,.05);
+}
+
+/* ── Fold-over flap (front portion) ────────────── */
+.pkg-courier-flap-front{
+  position:absolute;
+  left: 0; right: 0; top: 0;
+  height: 14%;
+  z-index: 5;
+  pointer-events:none;
+  background:
+    linear-gradient(180deg,
+      rgba(0,0,0,.02) 0%,
+      rgba(255,255,255,.04) 30%,
+      rgba(0,0,0,.04) 90%,
+      rgba(0,0,0,.08) 100%);
+}
+
+/* ── Adhesive strip (inside flap) ──────────────── */
+.pkg-courier-adhesive{
+  position:absolute;
+  left: 4%; right: 4%;
+  bottom: 15%;
+  height: 28%;
+  background:
+    linear-gradient(180deg,
+      rgba(255,255,255,.14) 0%,
+      rgba(255,255,255,.08) 40%,
+      rgba(255,255,255,.12) 80%,
+      rgba(255,255,255,.06) 100%);
+  border: 0.5px solid rgba(255,255,255,.10);
+  border-radius: 1px;
+}
+
+/* ── Peel strip indicator text ─────────────────── */
+.pkg-courier-peel-text{
+  position:absolute;
+  right: 6%; bottom: 22%;
+  width: 28px; height: 0;
+  border-top: 0.5px dashed rgba(0,0,0,.18);
+}
+.pkg-courier-peel-text::after{
+  content:"PEEL";
+  position:absolute;
+  right: 0; top: 2px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 6px;
+  letter-spacing: .15em;
+  color: rgba(0,0,0,.25);
+  white-space: nowrap;
+}
+
+/* ── Flap fold line ────────────────────────────── */
+.pkg-courier-fold-line{
+  position:absolute;
+  left: 0; right: 0; bottom: 0;
+  height: 0;
+  border-bottom: 1px solid rgba(0,0,0,.12);
+  box-shadow:
+    0 1px 0 rgba(255,255,255,.06),
+    0 -1px 0 rgba(0,0,0,.04);
+}
+
+/* ── Branding area ─────────────────────────────── */
+.pkg-courier-art-area{
+  position:absolute;
+  left: 8%; right: 8%;
+  top: 18%; bottom: 8%;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+.pkg-courier-art-area .pkg-art{
+  position: relative;
+  inset: auto;
+  width: 100%; height: 100%;
+  padding: 6% 8%;
+}
+
+/* ── Floor shadow ──────────────────────────────── */
+.pkg-courier-floor-shadow{
+  position:absolute;
+  left: 5%; right: 5%;
+  bottom: -6px;
+  height: 14px;
+  background:
+    radial-gradient(ellipse at 50% 20%,
+      rgba(0,0,0,.18) 0%,
+      rgba(0,0,0,.06) 50%,
+      rgba(0,0,0,0) 80%);
   filter: blur(3px);
+  pointer-events: none;
+  z-index: -1;
 }
-.pkg-bag-courier .pkg-art{
-  inset: 32% 22% 18%;
-}
+
+/* ── Legacy stubs (courier no longer uses generic bag faces) ── */
+.pkg-bag-courier .pkg-bag-face{ /* bypassed */ }
+.pkg-bag-courier .pkg-art{ inset: 32% 22% 18%; }
 
 /* ────────────────────────────────────────────────── */
 /* CUPS                                                */
