@@ -334,12 +334,16 @@ function Bag3D({ sides, rotation, idle, variant }){
     return <DoyPack2D sides={sides} rotation={rotation} idle={idle} />;
   }
 
+  // ── ZIP-LOCK: flat plastic pouch mockup (no side walls) ──
+  if (v === 'zip-lock-bag') {
+    return <ZipLock2D sides={sides} rotation={rotation} idle={idle} />;
+  }
+
   // ── All other bag variants: keep the existing 4-face 3D cube ──
   const { w, h, d } = BAG_GEOMETRY[v] || BAG_GEOMETRY['doy-pack'];
   const tx = `translate3d(-50%, -50%, 0) rotateX(${rotation.x}deg) rotateY(${rotation.y}deg)`;
   const frontColor = sides.front?.backgroundColor || '#B08A5B';
   const klass =
-    v === 'zip-lock-bag' ? 'pkg-bag-zip' :
     v === 'flat-bottom-bag' ? 'pkg-bag-flat' :
     v === 'paper-bag-with-handles' ? 'pkg-bag-paper' :
     v === 'courier-bag' ? 'pkg-bag-courier' : 'pkg-bag-doy';
@@ -452,18 +456,63 @@ function DoyPack2D({ sides, rotation, idle }){
   );
 }
 
+// ─────────────────────────────────────────────────────────
+// ZIP-LOCK 2.5D FLAT POUCH MOCKUP
+// Flat plastic hermetic bag — NO side walls, NO depth.
+// Only a subtle tilt for perspective feel.
+// ─────────────────────────────────────────────────────────
+function ZipLock2D({ sides, rotation, idle }){
+  const frontSide = sides.front || {};
+  const color = frontSide.backgroundColor || '#B08A5B';
+  const w = 210, h = 280;
+
+  // Very subtle tilt — flat bag should barely rotate
+  const tiltY = Math.max(-10, Math.min(10, rotation.y * 0.12));
+  const tiltX = Math.max(-5, Math.min(5, rotation.x * 0.08));
+
+  const wrapStyle = {
+    width: w, height: h,
+    position: 'absolute', left: '50%', top: '50%',
+    transform: `translate3d(-50%, -50%, 0) perspective(900px) rotateY(${tiltY}deg) rotateX(${tiltX}deg)`,
+    transition: 'transform .35s cubic-bezier(.4,.1,.2,1)',
+    ['--pkg-color']: color,
+    ['--pkg-art-color']: pktContrast(color),
+  };
+
+  return (
+    <div className={`pkg-zip-mockup ${idle ? 'pkg-zip-idle' : ''}`} style={wrapStyle}>
+      {/* ── Main flat pouch body ── */}
+      <div className="pkg-zip-body">
+        {/* Plastic material highlights */}
+        <div className="pkg-zip-plastic" />
+        {/* Left edge seam */}
+        <div className="pkg-zip-seam left" />
+        {/* Right edge seam */}
+        <div className="pkg-zip-seam right" />
+        {/* Top flap above zipper */}
+        <div className="pkg-zip-top-flap" />
+        {/* Zip-lock closure strip */}
+        <div className="pkg-zip-closure" />
+        {/* Colored closure line */}
+        <div className="pkg-zip-closure-line" />
+        {/* Bottom edge */}
+        <div className="pkg-zip-bottom-edge" />
+        {/* Central branding area */}
+        <div className="pkg-zip-art-area">
+          <PkgArt artwork={frontSide} />
+        </div>
+      </div>
+      {/* ── Floor shadow ── */}
+      <div className="pkg-zip-floor-shadow" />
+    </div>
+  );
+}
+
 function BagFaceInner({ variant, artwork, faceId }){
   const v = variant;
   return (
     <>
-      {/* верхний шов и зиппер для zip-lock */}
-      {v === 'zip-lock-bag' && (
-        <>
-          <div className="pkg-zip-track" />
-          <div className="pkg-zip-notch left" />
-          <div className="pkg-zip-notch right" />
-        </>
-      )}
+      {/* zip-lock now has its own dedicated component — BagFaceInner no longer handles it */}
       {v === 'flat-bottom-bag' && (
         <>
           <div className="pkg-flat-gusset-line left" />

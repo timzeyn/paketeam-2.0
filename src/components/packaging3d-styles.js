@@ -747,82 +747,229 @@ export const PKG_STYLE_PART2 = `
   /* no longer used — doy-pack renders via .pkg-doy-mockup */
 }
 
-/* ─── ZIP-LOCK ─────────────────────────────────────
-   как доу-пак, но более прямоугольный, с тонкой
-   двухлинейной молнией под верхним швом и зазубриной.
+/* ─── ZIP-LOCK 2.5D FLAT POUCH ─────────────────────
+   Flat hermetic plastic bag — no side walls.
+   Translucent / milky plastic look.
    ───────────────────────────────────────────────── */
-.pkg-bag-zip .pkg-bag-face{
+
+/* Wrapper */
+.pkg-zip-mockup{
+  pointer-events: auto;
+}
+.pkg-stage.dragging .pkg-zip-mockup{
+  transition: none;
+}
+
+/* Idle gentle rocking */
+@keyframes pkg-zip-rock{
+  0%   { transform: translate3d(-50%,-50%,0) perspective(900px) rotateY(-2deg) rotateX(-0.5deg); }
+  50%  { transform: translate3d(-50%,-50%,0) perspective(900px) rotateY(2deg)  rotateX(-0.5deg); }
+  100% { transform: translate3d(-50%,-50%,0) perspective(900px) rotateY(-2deg) rotateX(-0.5deg); }
+}
+.pkg-zip-idle{
+  animation: pkg-zip-rock 10s ease-in-out infinite;
+}
+
+/* ── Main flat pouch body ──────────────────────── */
+.pkg-zip-body{
+  position: absolute;
+  inset: 0;
+  background: var(--pkg-color, #B08A5B);
+  overflow: hidden;
+
+  /* Soft-rectangle silhouette — very slightly rounded corners,
+     nearly rectangular like a real plastic zip-lock bag */
+  border-radius: 3px;
   clip-path: polygon(
-    8% 0%, 92% 0%,
-    98% 5%, 100% 16%,
-    99% 90%, 95% 99%,
-    5% 99%, 1% 90%,
-    0% 16%, 2% 5%
+    1% 0%, 99% 0%,
+    100% 0.6%, 100% 99.4%,
+    99% 100%, 1% 100%,
+    0% 99.4%, 0% 0.6%
   );
-  background:
-    radial-gradient(ellipse at 50% 50%,
-      rgba(255,255,255,.18) 0%,
-      rgba(255,255,255,0) 42%),
-    linear-gradient(90deg,
-      rgba(0,0,0,.24) 0%,
-      rgba(0,0,0,.06) 10%,
-      rgba(255,255,255,.10) 45%,
-      rgba(255,255,255,.10) 55%,
-      rgba(0,0,0,.06) 90%,
-      rgba(0,0,0,.24) 100%),
-    var(--pkg-color);
-  background-blend-mode: screen, multiply, normal;
+
   box-shadow:
-    0 18px 26px rgba(0,0,0,.16),
-    inset 0 0 0 1px rgba(0,0,0,.10);
+    0 2px 12px rgba(0,0,0,.10),
+    inset 0 0 0 1px rgba(255,255,255,.08);
 }
-.pkg-bag-zip .pkg-bag-face::before{
-  /* верхний шов */
-  content:"";
-  position:absolute;
-  left: 4%; right: 4%; top: 0;
-  height: 22px;
+
+/* ── Plastic material texture + highlights ──────── */
+.pkg-zip-plastic{
+  position:absolute; inset:0;
+  pointer-events:none;
+  z-index: 1;
   background:
-    repeating-linear-gradient(90deg,
-      rgba(0,0,0,.14) 0 2px, transparent 2px 6px),
-    linear-gradient(180deg, rgba(255,255,255,.16), rgba(0,0,0,.16));
-  border-bottom: 1px solid rgba(0,0,0,.20);
-  z-index: 2;
-}
-/* двойная линия зиппера + надрезы */
-.pkg-zip-track{
-  position:absolute;
-  left: 6%; right: 6%; top: 28px;
-  height: 8px;
-  z-index: 3;
-  background:
+    /* Central soft gloss — convex plastic feel */
+    radial-gradient(ellipse 50% 55% at 48% 50%,
+      rgba(255,255,255,.16) 0%,
+      rgba(255,255,255,.04) 50%,
+      rgba(255,255,255,0) 75%),
+    /* Side edge darkening — thin seam suggestion */
+    linear-gradient(90deg,
+      rgba(0,0,0,.14) 0%,
+      rgba(0,0,0,.04) 3%,
+      transparent 8%,
+      transparent 92%,
+      rgba(0,0,0,.04) 97%,
+      rgba(0,0,0,.14) 100%),
+    /* Vertical plastic sheen (subtle) */
     linear-gradient(180deg,
-      transparent 0 2px,
-      rgba(0,0,0,.34) 2px 3px,
-      transparent 3px 5px,
-      rgba(0,0,0,.34) 5px 6px,
-      transparent 6px 8px);
+      rgba(255,255,255,.06) 0%,
+      rgba(255,255,255,.02) 15%,
+      transparent 40%,
+      transparent 75%,
+      rgba(0,0,0,.04) 100%),
+    /* Diagonal gloss streak — plastic film reflection */
+    linear-gradient(125deg,
+      transparent 0%,
+      transparent 30%,
+      rgba(255,255,255,.06) 35%,
+      rgba(255,255,255,.10) 40%,
+      transparent 45%,
+      transparent 100%);
+}
+
+/* ── Edge seams (thin heat-sealed borders) ──────── */
+.pkg-zip-seam{
+  position:absolute;
+  top: 0; bottom: 0;
+  width: 3%;
+  z-index: 2;
   pointer-events:none;
 }
-.pkg-zip-notch{
-  position:absolute;
-  top: 28px; width: 8px; height: 12px;
-  background: var(--pkg-color);
-  z-index: 4;
-}
-.pkg-zip-notch.left{
+.pkg-zip-seam.left{
   left: 0;
-  clip-path: polygon(0 50%, 100% 0, 100% 100%);
-  filter: brightness(.55);
+  background:
+    linear-gradient(90deg,
+      rgba(0,0,0,.10) 0%,
+      rgba(0,0,0,.04) 50%,
+      transparent 100%);
+  border-right: 0.5px solid rgba(0,0,0,.06);
 }
-.pkg-zip-notch.right{
+.pkg-zip-seam.right{
   right: 0;
-  clip-path: polygon(100% 50%, 0 0, 0 100%);
-  filter: brightness(.55);
+  background:
+    linear-gradient(-90deg,
+      rgba(0,0,0,.10) 0%,
+      rgba(0,0,0,.04) 50%,
+      transparent 100%);
+  border-left: 0.5px solid rgba(0,0,0,.06);
 }
-.pkg-bag-zip .pkg-art{
-  inset: 18% 14% 18%;
+
+/* ── Top flap (above zipper) ───────────────────── */
+.pkg-zip-top-flap{
+  position:absolute;
+  left: 0; right: 0; top: 0;
+  height: 8%;
+  background:
+    linear-gradient(180deg,
+      rgba(255,255,255,.06) 0%,
+      rgba(0,0,0,.03) 60%,
+      rgba(0,0,0,.06) 100%);
+  border-bottom: 0.5px solid rgba(0,0,0,.08);
+  z-index: 4;
+  pointer-events:none;
 }
+
+/* ── Zip-lock closure strip ────────────────────── */
+.pkg-zip-closure{
+  position:absolute;
+  left: 3%; right: 3%;
+  top: 8%;
+  height: 6%;
+  z-index: 5;
+  pointer-events:none;
+  background:
+    /* Multiple horizontal track lines — the zip-lock mechanism */
+    linear-gradient(180deg,
+      rgba(255,255,255,.08) 0%,
+      rgba(0,0,0,.06) 10%,
+      rgba(255,255,255,.10) 18%,
+      rgba(0,0,0,.10) 28%,
+      rgba(255,255,255,.06) 36%,
+      rgba(0,0,0,.12) 46%,
+      rgba(255,255,255,.08) 56%,
+      rgba(0,0,0,.08) 66%,
+      rgba(255,255,255,.06) 76%,
+      rgba(0,0,0,.06) 88%,
+      rgba(255,255,255,.04) 100%);
+  border-top: 0.5px solid rgba(0,0,0,.10);
+  border-bottom: 0.5px solid rgba(0,0,0,.10);
+  box-shadow:
+    0 1px 0 rgba(255,255,255,.06);
+}
+
+/* ── Colored closure line (the main zip strip) ─── */
+.pkg-zip-closure-line{
+  position:absolute;
+  left: 4%; right: 4%;
+  top: 9.5%;
+  height: 1.6%;
+  z-index: 6;
+  pointer-events:none;
+  background:
+    linear-gradient(180deg,
+      rgba(220,60,50,.75) 0%,
+      rgba(200,45,40,.85) 50%,
+      rgba(180,40,35,.70) 100%);
+  box-shadow:
+    0 0.5px 0 rgba(255,255,255,.15),
+    0 -0.5px 0 rgba(0,0,0,.10);
+  border-radius: 0.5px;
+}
+
+/* ── Bottom edge ───────────────────────────────── */
+.pkg-zip-bottom-edge{
+  position:absolute;
+  left: 0; right: 0;
+  bottom: 0;
+  height: 2%;
+  z-index: 2;
+  pointer-events:none;
+  background:
+    linear-gradient(180deg,
+      transparent 0%,
+      rgba(0,0,0,.06) 60%,
+      rgba(0,0,0,.10) 100%);
+  border-top: 0.5px solid rgba(0,0,0,.04);
+}
+
+/* ── Branding area ─────────────────────────────── */
+.pkg-zip-art-area{
+  position:absolute;
+  left: 8%; right: 8%;
+  top: 18%; bottom: 8%;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+.pkg-zip-art-area .pkg-art{
+  position: relative;
+  inset: auto;
+  width: 100%; height: 100%;
+  padding: 8% 6%;
+}
+
+/* ── Floor shadow ──────────────────────────────── */
+.pkg-zip-floor-shadow{
+  position:absolute;
+  left: 6%; right: 6%;
+  bottom: -6px;
+  height: 12px;
+  background:
+    radial-gradient(ellipse at 50% 20%,
+      rgba(0,0,0,.18) 0%,
+      rgba(0,0,0,.06) 50%,
+      rgba(0,0,0,0) 80%);
+  filter: blur(3px);
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* ── Legacy class stubs (no longer used for zip-lock) ── */
+.pkg-bag-zip .pkg-bag-face{ /* bypassed — zip-lock uses .pkg-zip-mockup */ }
+.pkg-bag-zip .pkg-art{ inset: 18% 14% 18%; }
 
 /* ─── FLAT-BOTTOM BAG ─────────────────────────────
    стенд-ап с явным плоским донцем и гассетами.
