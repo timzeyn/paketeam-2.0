@@ -344,12 +344,16 @@ function Bag3D({ sides, rotation, idle, variant }){
     return <CourierBag2D sides={sides} rotation={rotation} idle={idle} />;
   }
 
+  // ── FLAT-BOTTOM BAG: structured stand-up pouch with side gussets ──
+  if (v === 'flat-bottom-bag') {
+    return <FlatBottomBag2D sides={sides} rotation={rotation} idle={idle} />;
+  }
+
   // ── All other bag variants: keep the existing 4-face 3D cube ──
   const { w, h, d } = BAG_GEOMETRY[v] || BAG_GEOMETRY['doy-pack'];
   const tx = `translate3d(-50%, -50%, 0) rotateX(${rotation.x}deg) rotateY(${rotation.y}deg)`;
   const frontColor = sides.front?.backgroundColor || '#B08A5B';
   const klass =
-    v === 'flat-bottom-bag' ? 'pkg-bag-flat' :
     v === 'paper-bag-with-handles' ? 'pkg-bag-paper' : 'pkg-bag-doy';
 
   const style = {
@@ -569,17 +573,70 @@ function CourierBag2D({ sides, rotation, idle }){
   );
 }
 
+// ─────────────────────────────────────────────────────────
+// FLAT-BOTTOM BAG 2.5D MOCKUP
+// Structured stand-up kraft pouch with visible side gusset,
+// flat rectangular bottom base, and sealed top.
+// Uses perspective + skew for integrated 3D feel.
+// ─────────────────────────────────────────────────────────
+function FlatBottomBag2D({ sides, rotation, idle }){
+  const frontSide = sides.front || {};
+  const color = frontSide.backgroundColor || '#B08A5B';
+  const darkEdge = shade(color, -0.18);
+  const darkerEdge = shade(color, -0.30);
+  const w = 190, h = 290;
+
+  // Controlled tilt — show side gusset but don't break geometry
+  const tiltY = Math.max(-14, Math.min(14, rotation.y * 0.16));
+  const tiltX = Math.max(-6, Math.min(6, rotation.x * 0.1));
+
+  const wrapStyle = {
+    width: w + 50, height: h + 30,
+    position: 'absolute', left: '50%', top: '50%',
+    transform: `translate3d(-50%, -50%, 0) perspective(700px) rotateY(${tiltY}deg) rotateX(${tiltX}deg)`,
+    transition: 'transform .35s cubic-bezier(.4,.1,.2,1)',
+    ['--pkg-color']: color,
+    ['--pkg-art-color']: pktContrast(color),
+    ['--pkg-dark-edge']: darkEdge,
+    ['--pkg-darker-edge']: darkerEdge,
+  };
+
+  return (
+    <div className={`pkg-fb-mockup ${idle ? 'pkg-fb-idle' : ''}`} style={wrapStyle}>
+      {/* ── Side gusset (left, behind front) ── */}
+      <div className="pkg-fb-side-gusset" />
+      {/* ── Main front panel ── */}
+      <div className="pkg-fb-front">
+        {/* Kraft texture + highlights */}
+        <div className="pkg-fb-texture" />
+        {/* Top seal band */}
+        <div className="pkg-fb-seal" />
+        {/* Zipper line */}
+        <div className="pkg-fb-zipper" />
+        {/* Tear notches */}
+        <div className="pkg-fb-notch left" />
+        <div className="pkg-fb-notch right" />
+        {/* Bottom fold transition */}
+        <div className="pkg-fb-bottom-fold" />
+        {/* Central branding */}
+        <div className="pkg-fb-art-area">
+          <PkgArt artwork={frontSide} />
+        </div>
+      </div>
+      {/* ── Flat bottom base ── */}
+      <div className="pkg-fb-base" />
+      {/* ── Floor shadow ── */}
+      <div className="pkg-fb-floor-shadow" />
+    </div>
+  );
+}
+
 function BagFaceInner({ variant, artwork, faceId }){
   const v = variant;
   return (
     <>
       {/* zip-lock now has its own dedicated component — BagFaceInner no longer handles it */}
-      {v === 'flat-bottom-bag' && (
-        <>
-          <div className="pkg-flat-gusset-line left" />
-          <div className="pkg-flat-gusset-line right" />
-        </>
-      )}
+      {/* flat-bottom-bag now has its own dedicated component */}
       {v === 'paper-bag-with-handles' && (
         <>
           <div className="pkg-paper-top-fold" />
