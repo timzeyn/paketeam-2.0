@@ -971,59 +971,60 @@ export const PKG_STYLE_PART2 = `
 .pkg-bag-zip .pkg-bag-face{ /* bypassed — zip-lock uses .pkg-zip-mockup */ }
 .pkg-bag-zip .pkg-art{ inset: 18% 14% 18%; }
 
-/* ─── FLAT-BOTTOM BAG · SINGLE-BODY SOFT POUCH ─────
-   ONE coherent silhouette. Every structural cue — top
-   seal, zipper, tear notches, side fold shadows, and
-   the standing flat-bottom fold — is painted INSIDE
-   the same .pkg-fb-body element. Nothing is rendered
-   outside the body. No detached side panel. No
-   detached base slab. */
+/* ─── FLAT-BOTTOM BAG · REAL 3D POUCH ──────────────
+   Five faces (front, back, two gussets, bottom) share
+   one preserve-3d parent. Every face uses the same
+   var(--pkg-color); brightness differences come from
+   shadow overlays, so the shading at each seam lines
+   up continuously and the pouch reads as one folded
+   material, not five boards. */
 
-.pkg-fb-mockup{
-  pointer-events: auto;
+.pkg-fb-3d{ pointer-events: auto; }
+.pkg-stage.dragging .pkg-fb-3d{ transition: none; }
+
+/* Idle rock — stays close to the default 3/4 view. */
+@keyframes pkg-fb-rock-3d{
+  0%   { transform: translate3d(-50%,-50%,0) rotateX(-13deg) rotateY(-28deg); }
+  50%  { transform: translate3d(-50%,-50%,0) rotateX(-13deg) rotateY(-20deg); }
+  100% { transform: translate3d(-50%,-50%,0) rotateX(-13deg) rotateY(-28deg); }
 }
-.pkg-stage.dragging .pkg-fb-mockup{ transition: none; }
+.pkg-fb-idle{ animation: pkg-fb-rock-3d 9s ease-in-out infinite; }
 
-/* Gentle idle rock — never rotates enough to expose
-   anything that could read as a separate plane. */
-@keyframes pkg-fb-rock{
-  0%   { transform: translate3d(-50%,-50%,0) perspective(900px) rotateY(-3deg) rotateX(-1deg); }
-  50%  { transform: translate3d(-50%,-50%,0) perspective(900px) rotateY(3deg)  rotateX(-1deg); }
-  100% { transform: translate3d(-50%,-50%,0) perspective(900px) rotateY(-3deg) rotateX(-1deg); }
-}
-.pkg-fb-idle{ animation: pkg-fb-rock 11s ease-in-out infinite; }
-
-/* ── Single coherent pouch body ─────────────────── */
-.pkg-fb-body{
+/* ── Shared face base ─────────────────────────────
+   Same color on every face. Brightness is overlay only. */
+.pkg-fb-face{
   position: absolute;
-  inset: 0;
-  background: var(--pkg-color, #B08A5B);
-  /* slightly rounded top corners, flat bottom — flat-bottom pouch silhouette */
-  border-radius: 12px 12px 2px 2px;
+  top: 0; left: 0;
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
   overflow: hidden;
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,.08),
-    inset 0 0 0 1px rgba(0,0,0,.04),
-    0 18px 28px -10px rgba(0,0,0,.28),
-    0 6px 10px -6px rgba(0,0,0,.20);
+  background: var(--pkg-color, #B08A5B);
 }
 
-/* ── Kraft material highlight + micro-fiber ──────── */
+/* Slightly rounded top corners on every side face so
+   the cuboid's top doesn't read as a hard rectangle. */
+.pkg-fb-front,
+.pkg-fb-back,
+.pkg-fb-gusset{
+  border-radius: 10px 10px 2px 2px;
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,.04);
+}
+
+/* ── Front material: convex highlight + corner vignette + kraft fiber ── */
 .pkg-fb-mat{
   position: absolute; inset: 0;
   pointer-events: none;
   z-index: 1;
   background:
-    /* central soft convex highlight (pouch face catches light) */
-    radial-gradient(ellipse 58% 60% at 50% 40%,
-      rgba(255,255,255,.14) 0%,
-      rgba(255,255,255,.05) 45%,
-      rgba(255,255,255,0)   80%),
-    /* very gentle barrel shading — body slightly darker at the edges */
-    radial-gradient(ellipse 110% 90% at 50% 50%,
-      rgba(0,0,0,0)   0%,
+    /* central convex highlight — the pouch face catches light */
+    radial-gradient(ellipse 70% 70% at 50% 42%,
+      rgba(255,255,255,.16) 0%,
+      rgba(255,255,255,.05) 40%,
+      rgba(255,255,255,0)   75%),
+    /* corner vignette — softens the silhouette */
+    radial-gradient(ellipse 115% 95% at 50% 50%,
       rgba(0,0,0,0)   55%,
-      rgba(0,0,0,.06) 85%,
+      rgba(0,0,0,.05) 82%,
       rgba(0,0,0,.10) 100%),
     /* kraft fiber micro-texture */
     repeating-linear-gradient(88deg,
@@ -1033,41 +1034,91 @@ export const PKG_STYLE_PART2 = `
       rgba(0,0,0,.008) 0 1px,
       transparent 1px 4px);
 }
+.pkg-fb-mat.back{
+  background:
+    radial-gradient(ellipse 70% 70% at 50% 50%,
+      rgba(255,255,255,.05) 0%,
+      rgba(255,255,255,0) 70%),
+    linear-gradient(180deg,
+      rgba(0,0,0,.06) 0%, rgba(0,0,0,0) 22%,
+      rgba(0,0,0,0) 78%, rgba(0,0,0,.12) 100%);
+}
 
-/* ── Integrated side fold shadows ───────────────────
-   These are NOT side panels. They are thin gradients
-   painted along the inside of the body's left/right
-   edges, never extending outside the silhouette. */
-.pkg-fb-fold{
+/* ── Soft, deliberate wrinkles/dents on the front ───
+   A few asymmetric radial gradients — not random noise. */
+.pkg-fb-wrinkles{
+  position: absolute; inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  background:
+    radial-gradient(ellipse 32% 11% at 36% 62%,
+      rgba(0,0,0,.08) 0%, transparent 70%),
+    radial-gradient(ellipse 26% 10% at 68% 38%,
+      rgba(255,255,255,.06) 0%, transparent 65%),
+    radial-gradient(ellipse 22% 9% at 24% 30%,
+      rgba(0,0,0,.05) 0%, transparent 70%),
+    radial-gradient(ellipse 20% 9% at 76% 70%,
+      rgba(0,0,0,.06) 0%, transparent 70%);
+}
+
+/* ── Edge shadows on front/back ──────────────────────
+   These ALIGN with the dark edges of the gusset's mat,
+   so the fold seam reads continuously across the join. */
+.pkg-fb-edge{
   position: absolute;
-  top: 8%;
-  bottom: 16%;
-  width: 14%;
+  top: 9%; bottom: 14%;
+  width: 12%;
   pointer-events: none;
   z-index: 2;
 }
-.pkg-fb-fold.left{
+.pkg-fb-edge.left{
   left: 0;
   background:
     linear-gradient(90deg,
       rgba(0,0,0,.26) 0%,
-      rgba(0,0,0,.16) 22%,
-      rgba(0,0,0,.06) 50%,
-      rgba(255,255,255,.05) 78%,
-      rgba(0,0,0,0) 100%);
+      rgba(0,0,0,.14) 28%,
+      rgba(0,0,0,.04) 65%,
+      rgba(0,0,0,0)   100%);
 }
-.pkg-fb-fold.right{
+.pkg-fb-edge.right{
   right: 0;
   background:
     linear-gradient(90deg,
-      rgba(0,0,0,0) 0%,
-      rgba(255,255,255,.05) 22%,
-      rgba(0,0,0,.06) 50%,
-      rgba(0,0,0,.16) 78%,
+      rgba(0,0,0,0)   0%,
+      rgba(0,0,0,.04) 35%,
+      rgba(0,0,0,.14) 72%,
       rgba(0,0,0,.26) 100%);
 }
 
-/* ── Top seal band — pleated welded top ─────────── */
+/* ── Bottom fold on front/back ──────────────────────
+   Strong darkening at the bottom 12% suggests the
+   pouch curls into the flat bottom. The crease line
+   at the top of this zone is the fold itself. */
+.pkg-fb-bottom-fold{
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  height: 12%;
+  pointer-events: none;
+  z-index: 3;
+  background:
+    linear-gradient(180deg,
+      rgba(0,0,0,0)   0%,
+      rgba(0,0,0,.05) 25%,
+      rgba(0,0,0,.18) 70%,
+      rgba(0,0,0,.30) 100%);
+}
+.pkg-fb-bottom-fold::before{
+  content: "";
+  position: absolute;
+  left: 3%; right: 3%; top: 0;
+  height: 0;
+  border-top: 1px solid rgba(0,0,0,.12);
+  box-shadow: 0 -1px 0 rgba(255,255,255,.05);
+}
+
+/* ── Top seal band ─────────────────────────────────
+   Painted on every side face. The ribbed micro-stripes
+   match the welded ridges in the reference. */
 .pkg-fb-seal{
   position: absolute;
   left: 0; right: 0; top: 0;
@@ -1076,103 +1127,36 @@ export const PKG_STYLE_PART2 = `
   pointer-events: none;
   background:
     linear-gradient(180deg,
-      rgba(0,0,0,.04) 0%,
-      rgba(255,255,255,.10) 18%,
-      rgba(0,0,0,.02) 38%,
-      rgba(255,255,255,.08) 58%,
-      rgba(0,0,0,.04) 78%,
-      rgba(0,0,0,.14) 100%),
-    /* subtle pleated micro-stripes — the welded ridges in the reference */
-    repeating-linear-gradient(90deg,
-      rgba(0,0,0,0) 0 6px,
-      rgba(0,0,0,.04) 6px 7px);
-  border-bottom: 1px solid rgba(0,0,0,.14);
-  box-shadow: 0 1px 0 rgba(255,255,255,.05);
+      rgba(255,255,255,.05) 0%,
+      rgba(255,255,255,.02) 40%,
+      rgba(0,0,0,.04)       70%,
+      rgba(0,0,0,.14)      100%);
 }
-
-/* ── Zipper line directly under the seal ────────── */
-.pkg-fb-zipper{
-  position: absolute;
-  left: 7%; right: 7%; top: 9.2%;
-  height: 1.8%;
-  z-index: 5;
-  pointer-events: none;
+/* Many subtle parallel ridges */
+.pkg-fb-seal-ribs{
+  position: absolute; inset: 0;
   background:
-    linear-gradient(180deg,
-      rgba(0,0,0,.05) 0%,
-      rgba(0,0,0,.14) 45%,
-      rgba(0,0,0,.10) 62%,
-      rgba(0,0,0,.04) 100%);
-  box-shadow: 0 1px 0 rgba(255,255,255,.05);
+    repeating-linear-gradient(0deg,
+      rgba(0,0,0,.08) 0px 1px,
+      rgba(255,255,255,.10) 1px 2px,
+      rgba(0,0,0,0) 2px 3px);
+  mix-blend-mode: overlay;
+  opacity: .9;
 }
-
-/* ── Tear notches at the seal edges ─────────────── */
-.pkg-fb-notch{
-  position: absolute;
-  top: 8.4%;
-  width: 4px; height: 6px;
-  z-index: 6;
-  pointer-events: none;
-  background: rgba(0,0,0,.22);
-}
-.pkg-fb-notch.left { left: 0;  clip-path: polygon(0 20%, 100% 0, 100% 100%, 0 80%); }
-.pkg-fb-notch.right{ right: 0; clip-path: polygon(0 0, 100% 20%, 100% 80%, 0 100%); }
-
-/* ── Integrated bottom standing-base shadow ─────────
-   NOT a separate plank. This is a darker zone painted
-   inside the body, with a horizontal highlight along
-   its top to read as the fold where the pouch curls
-   into the flat bottom, plus a tiny rim shadow at the
-   very bottom for ground contact. */
-.pkg-fb-base-shadow{
+/* Subtle dark line under the seal */
+.pkg-fb-seal-shadow{
   position: absolute;
   left: 0; right: 0; bottom: 0;
-  height: 15%;
-  z-index: 3;
-  pointer-events: none;
-  background:
-    /* fold crease highlight at the very top of this zone */
-    linear-gradient(180deg,
-      rgba(255,255,255,.10) 0%,
-      rgba(255,255,255,0)    7%,
-      rgba(0,0,0,0)          9%,
-      rgba(0,0,0,.10)       38%,
-      rgba(0,0,0,.20)       78%,
-      rgba(0,0,0,.28)      100%),
-    /* slight side darkening so the corners read as folded */
-    linear-gradient(90deg,
-      rgba(0,0,0,.10) 0%,
-      rgba(0,0,0,0)   14%,
-      rgba(0,0,0,0)   86%,
-      rgba(0,0,0,.10) 100%);
-}
-.pkg-fb-base-shadow::before{
-  /* crisp fold crease line */
-  content: "";
-  position: absolute;
-  left: 4%; right: 4%; top: 0;
-  height: 0;
-  border-top: 1px solid rgba(0,0,0,.12);
-  box-shadow: 0 -1px 0 rgba(255,255,255,.04);
-}
-.pkg-fb-base-shadow::after{
-  /* ground-contact rim shadow at the very bottom */
-  content: "";
-  position: absolute;
-  left: 0; right: 0; bottom: 0;
-  height: 30%;
-  background:
-    linear-gradient(180deg,
-      rgba(0,0,0,0)   0%,
-      rgba(0,0,0,.08) 60%,
-      rgba(0,0,0,.18) 100%);
+  height: 2px;
+  background: linear-gradient(180deg, rgba(0,0,0,.18), rgba(0,0,0,0));
 }
 
-/* ── Branding area — above the bottom fold, below the seal ── */
+/* ── Branding area ─────────────────────────────────
+   Sits comfortably between the seal and the bottom fold. */
 .pkg-fb-art-area{
   position: absolute;
-  left: 13%; right: 13%;
-  top: 16%; bottom: 22%;
+  left: 14%; right: 14%;
+  top: 18%; bottom: 22%;
   z-index: 4;
   display: flex;
   align-items: center;
@@ -1184,6 +1168,84 @@ export const PKG_STYLE_PART2 = `
   inset: auto;
   width: 100%; height: 100%;
   padding: 6% 5%;
+}
+
+/* ── Side gusset ────────────────────────────────────
+   Same base color as the front. The strong dark fades
+   on its left and right edges meet the front's and
+   back's edge shadows respectively, so the fold seam
+   reads continuously instead of as two boards meeting. */
+.pkg-fb-gusset-mat{
+  position: absolute; inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  background:
+    /* horizontal shading: dark at both edges (seam fades),
+       darker again in the middle (the inward fold) */
+    linear-gradient(90deg,
+      rgba(0,0,0,.28) 0%,
+      rgba(0,0,0,.16) 18%,
+      rgba(0,0,0,.08) 38%,
+      rgba(0,0,0,.18) 50%,
+      rgba(0,0,0,.08) 62%,
+      rgba(0,0,0,.16) 82%,
+      rgba(0,0,0,.28) 100%),
+    /* slight vertical shading */
+    linear-gradient(180deg,
+      rgba(0,0,0,.04) 0%,
+      rgba(0,0,0,0)   18%,
+      rgba(0,0,0,0)   78%,
+      rgba(0,0,0,.12) 100%);
+}
+/* The inward fold crease — a thin vertical dark line down the middle */
+.pkg-fb-gusset-crease{
+  position: absolute;
+  top: 10%; bottom: 14%;
+  left: 0; right: 0;
+  pointer-events: none;
+  z-index: 2;
+  background:
+    linear-gradient(90deg,
+      rgba(0,0,0,0)  0%,
+      rgba(0,0,0,0)  46%,
+      rgba(0,0,0,.30) 49.5%,
+      rgba(0,0,0,.30) 50.5%,
+      rgba(0,0,0,0)  54%,
+      rgba(0,0,0,0)  100%);
+}
+/* Gusset narrows into the base — bottom of the gusset is darkest */
+.pkg-fb-gusset-bottom{
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  height: 14%;
+  pointer-events: none;
+  z-index: 3;
+  background:
+    linear-gradient(180deg,
+      rgba(0,0,0,0)   0%,
+      rgba(0,0,0,.14) 50%,
+      rgba(0,0,0,.30) 100%);
+}
+
+/* ── Bottom face — integrated flat base ─────────────
+   Same base color. Heavy darkening overlay (it's facing
+   the floor and in self-shadow), with slight lift along
+   the front edge where it meets the front's bottom-fold. */
+.pkg-fb-base-mat{
+  position: absolute; inset: 0;
+  pointer-events: none;
+  background:
+    /* heavy general darkening */
+    linear-gradient(180deg,
+      rgba(0,0,0,.30) 0%,
+      rgba(0,0,0,.36) 50%,
+      rgba(0,0,0,.24) 100%),
+    /* side darkening so corners read as folded */
+    linear-gradient(90deg,
+      rgba(0,0,0,.22) 0%,
+      rgba(0,0,0,0)   18%,
+      rgba(0,0,0,0)   82%,
+      rgba(0,0,0,.22) 100%);
 }
 
 /* ── Legacy stubs (kept as no-ops for any external reference) ── */
