@@ -303,7 +303,7 @@ function BagFace({ variant, artwork, faceId }){
           <div className="pkg-zip-notch right" />
         </>
       )}
-      {/* flat-bottom-bag now uses its own 3D component (FlatBottomBag3D) */}
+      {/* flat-bottom-bag now uses its own dedicated component (FlatBottomBag2D) */}
       {variant === 'paper-bag-with-handles' && (
         <>
           <div className="pkg-paper-top-fold" />
@@ -339,9 +339,9 @@ function Bag3D({ sides, rotation, idle, variant }){
     return <CourierBag2D sides={sides} rotation={rotation} idle={idle} />;
   }
 
-  // ── FLAT-BOTTOM BAG: integrated 3D stand-up pouch ──
+  // ── FLAT-BOTTOM BAG: single-body 2.5D integrated soft pouch ──
   if (v === 'flat-bottom-bag') {
-    return <FlatBottomBag3D sides={sides} rotation={rotation} idle={idle} />;
+    return <FlatBottomBag2D sides={sides} rotation={rotation} idle={idle} />;
   }
 
   // ── All other bag variants: keep the existing 4-face 3D cube ──
@@ -569,97 +569,55 @@ function CourierBag2D({ sides, rotation, idle }){
 }
 
 // ─────────────────────────────────────────────────────────
-// FLAT-BOTTOM BAG 3D MOCKUP
-// One coherent stand-up pouch: front + back + two integrated
-// side gussets + integrated flat bottom + sealed top band.
-// Real preserve-3d structure — no detached side panel and no
-// detached base slab. Rotation is clamped so the soft pouch
-// silhouette never reads like a rigid open box.
+// FLAT-BOTTOM BAG · SINGLE-BODY 2.5D MOCKUP
+// One coherent pouch silhouette. Every structural cue —
+// side fold shadows, top welded seal, zipper, tear notches,
+// the standing flat-bottom fold — is rendered as an overlay
+// INSIDE the same .pkg-fb-body element. Nothing is drawn
+// outside the body. No detached side panel. No detached
+// base slab. Rotation is gentle 2.5D tilt only.
 // ─────────────────────────────────────────────────────────
-function FlatBottomBag3D({ sides, rotation, idle }){
+function FlatBottomBag2D({ sides, rotation, idle }){
   const frontSide = sides.front || {};
   const color = frontSide.backgroundColor || '#B08A5B';
-  const edge = shade(color, -0.16);
-  const baseTone = shade(color, -0.26);
+  const W = 200, H = 290;
 
-  // Pouch geometry: tall front face, narrow gusset depth.
-  const W = 184;
-  const H = 290;
-  const D = 66;
-
-  // Controlled rotation — pouch reads as 3D from a slight angle
-  // but never spins around or breaks into separate faces.
-  const ry = Math.max(-38, Math.min(38, rotation.y * 0.55));
-  const rx = Math.max(-12, Math.min(12, rotation.x * 0.45));
+  // Subtle tilt — the pouch must read as one soft body, so
+  // we never rotate enough to break the silhouette.
+  const tiltY = Math.max(-10, Math.min(10, rotation.y * 0.12));
+  const tiltX = Math.max(-5,  Math.min(5,  rotation.x * 0.08));
 
   const wrapStyle = {
     width: W, height: H,
     position: 'absolute', left: '50%', top: '50%',
-    transform: `translate3d(-50%, -50%, 0) rotateX(${rx}deg) rotateY(${ry}deg)`,
+    transform: `translate3d(-50%, -50%, 0) perspective(900px) rotateY(${tiltY}deg) rotateX(${tiltX}deg)`,
+    transition: 'transform .35s cubic-bezier(.4,.1,.2,1)',
     ['--pkg-color']: color,
     ['--pkg-art-color']: pktContrast(color),
-    ['--pkg-edge']: edge,
-    ['--pkg-base']: baseTone,
   };
 
   return (
-    <div className={`pkg-3d pkg-fb-3d ${idle ? 'pkg-fb-idle' : ''}`} style={wrapStyle}>
-      {/* Front panel */}
-      <div className="pkg-fb-face pkg-fb-front"
-           style={{ width: W, height: H, left: 0, top: 0,
-                    transform: `translateZ(${D/2}px)` }}>
+    <div className={`pkg-fb-mockup ${idle ? 'pkg-fb-idle' : ''}`} style={wrapStyle}>
+      <div className="pkg-fb-body">
+        {/* Kraft material highlight + micro-fiber texture */}
         <div className="pkg-fb-mat" />
-        <div className="pkg-fb-crease left" />
-        <div className="pkg-fb-crease right" />
+        {/* Integrated left side fold shadow (NOT a side panel) */}
+        <div className="pkg-fb-fold left" />
+        {/* Integrated right side fold shadow */}
+        <div className="pkg-fb-fold right" />
+        {/* Integrated bottom fold + standing base shadow (NOT a separate plank) */}
+        <div className="pkg-fb-base-shadow" />
+        {/* Top sealed band */}
         <div className="pkg-fb-seal" />
+        {/* Zipper line directly under the seal */}
         <div className="pkg-fb-zipper" />
+        {/* Tear notches */}
         <div className="pkg-fb-notch left" />
         <div className="pkg-fb-notch right" />
+        {/* Front branding — sits above the bottom fold and below the seal */}
         <div className="pkg-fb-art-area">
           <PkgArt artwork={frontSide} />
         </div>
-        <div className="pkg-fb-bottom-fold" />
-      </div>
-
-      {/* Back panel */}
-      <div className="pkg-fb-face pkg-fb-back"
-           style={{ width: W, height: H, left: 0, top: 0,
-                    transform: `rotateY(180deg) translateZ(${D/2}px)` }}>
-        <div className="pkg-fb-mat back" />
-        <div className="pkg-fb-crease left" />
-        <div className="pkg-fb-crease right" />
-        <div className="pkg-fb-seal" />
-        <div className="pkg-fb-bottom-fold" />
-      </div>
-
-      {/* Left side gusset (integrated, with central inward fold) */}
-      <div className="pkg-fb-face pkg-fb-gusset left"
-           style={{ width: D, height: H,
-                    left: (W - D) / 2, top: 0,
-                    transform: `rotateY(-90deg) translateZ(${W/2}px)` }}>
-        <div className="pkg-fb-gusset-mat" />
-        <div className="pkg-fb-gusset-fold" />
-        <div className="pkg-fb-seal narrow" />
-        <div className="pkg-fb-gusset-bottom" />
-      </div>
-
-      {/* Right side gusset */}
-      <div className="pkg-fb-face pkg-fb-gusset right"
-           style={{ width: D, height: H,
-                    left: (W - D) / 2, top: 0,
-                    transform: `rotateY(90deg) translateZ(${W/2}px)` }}>
-        <div className="pkg-fb-gusset-mat" />
-        <div className="pkg-fb-gusset-fold" />
-        <div className="pkg-fb-seal narrow" />
-        <div className="pkg-fb-gusset-bottom" />
-      </div>
-
-      {/* Integrated flat bottom — the same cuboid envelope's bottom face */}
-      <div className="pkg-fb-face pkg-fb-base"
-           style={{ width: W, height: D,
-                    left: 0, top: (H - D) / 2,
-                    transform: `rotateX(-90deg) translateZ(${H/2}px)` }}>
-        <div className="pkg-fb-base-mat" />
       </div>
     </div>
   );

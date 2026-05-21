@@ -971,61 +971,61 @@ export const PKG_STYLE_PART2 = `
 .pkg-bag-zip .pkg-bag-face{ /* bypassed — zip-lock uses .pkg-zip-mockup */ }
 .pkg-bag-zip .pkg-art{ inset: 18% 14% 18%; }
 
-/* ─── FLAT-BOTTOM BAG · INTEGRATED 3D POUCH ────────
-   Single coherent object: front + back panels, two
-   integrated side gussets, integrated flat bottom and
-   sealed top. All faces share the same preserve-3d
-   parent — no detached side panel, no detached base. */
+/* ─── FLAT-BOTTOM BAG · SINGLE-BODY SOFT POUCH ─────
+   ONE coherent silhouette. Every structural cue — top
+   seal, zipper, tear notches, side fold shadows, and
+   the standing flat-bottom fold — is painted INSIDE
+   the same .pkg-fb-body element. Nothing is rendered
+   outside the body. No detached side panel. No
+   detached base slab. */
 
-.pkg-fb-3d{
+.pkg-fb-mockup{
   pointer-events: auto;
 }
-.pkg-stage.dragging .pkg-fb-3d{ transition: none; }
+.pkg-stage.dragging .pkg-fb-mockup{ transition: none; }
 
-/* Gentle idle rocking — reveals the integrated gusset */
-@keyframes pkg-fb-rock-3d{
-  0%   { transform: translate3d(-50%,-50%,0) rotateX(-2deg) rotateY(-7deg); }
-  50%  { transform: translate3d(-50%,-50%,0) rotateX(-2deg) rotateY(7deg); }
-  100% { transform: translate3d(-50%,-50%,0) rotateX(-2deg) rotateY(-7deg); }
+/* Gentle idle rock — never rotates enough to expose
+   anything that could read as a separate plane. */
+@keyframes pkg-fb-rock{
+  0%   { transform: translate3d(-50%,-50%,0) perspective(900px) rotateY(-3deg) rotateX(-1deg); }
+  50%  { transform: translate3d(-50%,-50%,0) perspective(900px) rotateY(3deg)  rotateX(-1deg); }
+  100% { transform: translate3d(-50%,-50%,0) perspective(900px) rotateY(-3deg) rotateX(-1deg); }
 }
-.pkg-fb-idle{ animation: pkg-fb-rock-3d 11s ease-in-out infinite; }
+.pkg-fb-idle{ animation: pkg-fb-rock 11s ease-in-out infinite; }
 
-/* Shared face base */
-.pkg-fb-face{
+/* ── Single coherent pouch body ─────────────────── */
+.pkg-fb-body{
   position: absolute;
-  transform-style: preserve-3d;
-  backface-visibility: hidden;
-  overflow: hidden;
+  inset: 0;
   background: var(--pkg-color, #B08A5B);
-}
-
-/* Front / back panels — soft rounded top corners */
-.pkg-fb-front,
-.pkg-fb-back{
-  border-radius: 5px 5px 1px 1px;
+  /* slightly rounded top corners, flat bottom — flat-bottom pouch silhouette */
+  border-radius: 12px 12px 2px 2px;
+  overflow: hidden;
   box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.08),
     inset 0 0 0 1px rgba(0,0,0,.04),
-    0 1px 0 rgba(255,255,255,.04);
-}
-.pkg-fb-back{
-  background: var(--pkg-edge, #8a7352);
+    0 18px 28px -10px rgba(0,0,0,.28),
+    0 6px 10px -6px rgba(0,0,0,.20);
 }
 
-/* Front material gradient — central convex highlight + edges */
+/* ── Kraft material highlight + micro-fiber ──────── */
 .pkg-fb-mat{
   position: absolute; inset: 0;
   pointer-events: none;
   z-index: 1;
   background:
-    radial-gradient(ellipse 60% 65% at 50% 42%,
-      rgba(255,255,255,.12) 0%,
-      rgba(255,255,255,.03) 48%,
-      rgba(255,255,255,0) 78%),
-    linear-gradient(180deg,
-      rgba(0,0,0,.05) 0%,
-      rgba(0,0,0,0) 18%,
-      rgba(0,0,0,0) 72%,
+    /* central soft convex highlight (pouch face catches light) */
+    radial-gradient(ellipse 58% 60% at 50% 40%,
+      rgba(255,255,255,.14) 0%,
+      rgba(255,255,255,.05) 45%,
+      rgba(255,255,255,0)   80%),
+    /* very gentle barrel shading — body slightly darker at the edges */
+    radial-gradient(ellipse 110% 90% at 50% 50%,
+      rgba(0,0,0,0)   0%,
+      rgba(0,0,0,0)   55%,
+      rgba(0,0,0,.06) 85%,
       rgba(0,0,0,.10) 100%),
+    /* kraft fiber micro-texture */
     repeating-linear-gradient(88deg,
       rgba(0,0,0,.012) 0 1px,
       transparent 1px 3px),
@@ -1033,50 +1033,45 @@ export const PKG_STYLE_PART2 = `
       rgba(0,0,0,.008) 0 1px,
       transparent 1px 4px);
 }
-.pkg-fb-mat.back{
-  background:
-    radial-gradient(ellipse 60% 65% at 50% 45%,
-      rgba(255,255,255,.06) 0%,
-      rgba(255,255,255,0) 72%),
-    linear-gradient(180deg,
-      rgba(0,0,0,.08) 0%,
-      rgba(0,0,0,0) 22%,
-      rgba(0,0,0,0) 78%,
-      rgba(0,0,0,.14) 100%);
-}
 
-/* Vertical crease lines at the gusset junctions (front + back) */
-.pkg-fb-crease{
+/* ── Integrated side fold shadows ───────────────────
+   These are NOT side panels. They are thin gradients
+   painted along the inside of the body's left/right
+   edges, never extending outside the silhouette. */
+.pkg-fb-fold{
   position: absolute;
-  top: 7%; bottom: 13%;
-  width: 14px;
+  top: 8%;
+  bottom: 16%;
+  width: 14%;
   pointer-events: none;
   z-index: 2;
 }
-.pkg-fb-crease.left{
+.pkg-fb-fold.left{
   left: 0;
   background:
     linear-gradient(90deg,
-      rgba(0,0,0,.20) 0%,
-      rgba(0,0,0,.08) 32%,
-      rgba(255,255,255,.06) 70%,
+      rgba(0,0,0,.26) 0%,
+      rgba(0,0,0,.16) 22%,
+      rgba(0,0,0,.06) 50%,
+      rgba(255,255,255,.05) 78%,
       rgba(0,0,0,0) 100%);
 }
-.pkg-fb-crease.right{
+.pkg-fb-fold.right{
   right: 0;
   background:
     linear-gradient(90deg,
       rgba(0,0,0,0) 0%,
-      rgba(255,255,255,.06) 30%,
-      rgba(0,0,0,.08) 68%,
-      rgba(0,0,0,.20) 100%);
+      rgba(255,255,255,.05) 22%,
+      rgba(0,0,0,.06) 50%,
+      rgba(0,0,0,.16) 78%,
+      rgba(0,0,0,.26) 100%);
 }
 
-/* Top seal band — runs across the front, back and gussets */
+/* ── Top seal band — pleated welded top ─────────── */
 .pkg-fb-seal{
   position: absolute;
   left: 0; right: 0; top: 0;
-  height: 8.5%;
+  height: 9%;
   z-index: 5;
   pointer-events: none;
   background:
@@ -1086,18 +1081,20 @@ export const PKG_STYLE_PART2 = `
       rgba(0,0,0,.02) 38%,
       rgba(255,255,255,.08) 58%,
       rgba(0,0,0,.04) 78%,
-      rgba(0,0,0,.12) 100%);
+      rgba(0,0,0,.14) 100%),
+    /* subtle pleated micro-stripes — the welded ridges in the reference */
+    repeating-linear-gradient(90deg,
+      rgba(0,0,0,0) 0 6px,
+      rgba(0,0,0,.04) 6px 7px);
   border-bottom: 1px solid rgba(0,0,0,.14);
   box-shadow: 0 1px 0 rgba(255,255,255,.05);
 }
-.pkg-fb-seal.narrow{ height: 8.5%; }
 
-/* Zipper line directly under the seal */
+/* ── Zipper line directly under the seal ────────── */
 .pkg-fb-zipper{
   position: absolute;
-  left: 6%; right: 6%;
-  top: 8.6%;
-  height: 2%;
+  left: 7%; right: 7%; top: 9.2%;
+  height: 1.8%;
   z-index: 5;
   pointer-events: none;
   background:
@@ -1108,55 +1105,74 @@ export const PKG_STYLE_PART2 = `
       rgba(0,0,0,.04) 100%);
   box-shadow: 0 1px 0 rgba(255,255,255,.05);
 }
-.pkg-fb-zipper::after{
-  content: "";
-  position: absolute;
-  left: 4%; right: 4%; top: 38%;
-  height: 0;
-  border-top: 0.5px solid rgba(0,0,0,.10);
-  box-shadow: 0 1.5px 0 rgba(0,0,0,.06);
-}
 
-/* Tear notches at the seal edges */
+/* ── Tear notches at the seal edges ─────────────── */
 .pkg-fb-notch{
   position: absolute;
-  top: 8%;
+  top: 8.4%;
   width: 4px; height: 6px;
   z-index: 6;
   pointer-events: none;
   background: rgba(0,0,0,.22);
 }
-.pkg-fb-notch.left { left: 0;   clip-path: polygon(0 20%, 100% 0, 100% 100%, 0 80%); }
-.pkg-fb-notch.right{ right: 0;  clip-path: polygon(0 0, 100% 20%, 100% 80%, 0 100%); }
+.pkg-fb-notch.left { left: 0;  clip-path: polygon(0 20%, 100% 0, 100% 100%, 0 80%); }
+.pkg-fb-notch.right{ right: 0; clip-path: polygon(0 0, 100% 20%, 100% 80%, 0 100%); }
 
-/* Bottom fold transition on front/back (pouch curls into the base) */
-.pkg-fb-bottom-fold{
+/* ── Integrated bottom standing-base shadow ─────────
+   NOT a separate plank. This is a darker zone painted
+   inside the body, with a horizontal highlight along
+   its top to read as the fold where the pouch curls
+   into the flat bottom, plus a tiny rim shadow at the
+   very bottom for ground contact. */
+.pkg-fb-base-shadow{
   position: absolute;
   left: 0; right: 0; bottom: 0;
-  height: 11%;
+  height: 15%;
   z-index: 3;
   pointer-events: none;
   background:
+    /* fold crease highlight at the very top of this zone */
     linear-gradient(180deg,
-      rgba(0,0,0,0) 0%,
-      rgba(0,0,0,.05) 35%,
-      rgba(0,0,0,.16) 78%,
-      rgba(0,0,0,.26) 100%);
+      rgba(255,255,255,.10) 0%,
+      rgba(255,255,255,0)    7%,
+      rgba(0,0,0,0)          9%,
+      rgba(0,0,0,.10)       38%,
+      rgba(0,0,0,.20)       78%,
+      rgba(0,0,0,.28)      100%),
+    /* slight side darkening so the corners read as folded */
+    linear-gradient(90deg,
+      rgba(0,0,0,.10) 0%,
+      rgba(0,0,0,0)   14%,
+      rgba(0,0,0,0)   86%,
+      rgba(0,0,0,.10) 100%);
 }
-.pkg-fb-bottom-fold::before{
+.pkg-fb-base-shadow::before{
+  /* crisp fold crease line */
   content: "";
   position: absolute;
   left: 4%; right: 4%; top: 0;
   height: 0;
-  border-top: 1px solid rgba(0,0,0,.10);
+  border-top: 1px solid rgba(0,0,0,.12);
   box-shadow: 0 -1px 0 rgba(255,255,255,.04);
 }
+.pkg-fb-base-shadow::after{
+  /* ground-contact rim shadow at the very bottom */
+  content: "";
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  height: 30%;
+  background:
+    linear-gradient(180deg,
+      rgba(0,0,0,0)   0%,
+      rgba(0,0,0,.08) 60%,
+      rgba(0,0,0,.18) 100%);
+}
 
-/* Branding area — sits comfortably inside the front panel */
+/* ── Branding area — above the bottom fold, below the seal ── */
 .pkg-fb-art-area{
   position: absolute;
-  left: 11%; right: 11%;
-  top: 16%; bottom: 18%;
+  left: 13%; right: 13%;
+  top: 16%; bottom: 22%;
   z-index: 4;
   display: flex;
   align-items: center;
@@ -1168,67 +1184,6 @@ export const PKG_STYLE_PART2 = `
   inset: auto;
   width: 100%; height: 100%;
   padding: 6% 5%;
-}
-
-/* Side gusset faces — integrated into the pouch body */
-.pkg-fb-gusset{
-  background: var(--pkg-edge, #8a7352);
-}
-.pkg-fb-gusset-mat{
-  position: absolute; inset: 0;
-  pointer-events: none;
-  background:
-    linear-gradient(180deg,
-      rgba(0,0,0,.06) 0%,
-      rgba(0,0,0,0) 18%,
-      rgba(0,0,0,0) 78%,
-      rgba(0,0,0,.14) 100%);
-}
-/* Central vertical inward fold of the gusset */
-.pkg-fb-gusset-fold{
-  position: absolute;
-  top: 7%; bottom: 8%; left: 0; right: 0;
-  pointer-events: none;
-  background:
-    linear-gradient(90deg,
-      rgba(255,255,255,.06) 0%,
-      rgba(0,0,0,.08) 30%,
-      rgba(0,0,0,.22) 48%,
-      rgba(0,0,0,.22) 52%,
-      rgba(0,0,0,.08) 70%,
-      rgba(255,255,255,.06) 100%);
-}
-/* Gusset narrows into the base at the bottom */
-.pkg-fb-gusset-bottom{
-  position: absolute;
-  left: 0; right: 0; bottom: 0;
-  height: 14%;
-  pointer-events: none;
-  background:
-    linear-gradient(180deg,
-      rgba(0,0,0,0) 0%,
-      rgba(0,0,0,.12) 55%,
-      rgba(0,0,0,.26) 100%);
-}
-
-/* Integrated flat bottom (the cuboid envelope's actual bottom face) */
-.pkg-fb-base{
-  background: var(--pkg-base, #7a6442);
-}
-.pkg-fb-base-mat{
-  position: absolute; inset: 0;
-  pointer-events: none;
-  background:
-    linear-gradient(180deg,
-      rgba(0,0,0,.06) 0%,
-      rgba(0,0,0,.14) 48%,
-      rgba(0,0,0,.18) 52%,
-      rgba(0,0,0,.06) 100%),
-    linear-gradient(90deg,
-      rgba(0,0,0,.16) 0%,
-      rgba(0,0,0,0) 12%,
-      rgba(0,0,0,0) 88%,
-      rgba(0,0,0,.16) 100%);
 }
 
 /* ── Legacy stubs (kept as no-ops for any external reference) ── */
