@@ -583,15 +583,18 @@ function FlatBottomBag3D({ sides, rotation, idle }){
   const frontSide = sides.front || {};
   const color = frontSide.backgroundColor || '#B08A5B';
 
-  // Pouch geometry — broad front, shallow gusset depth.
-  const W = 200;
-  const H = 290;
-  const D = 70;
+  // Pouch geometry — broad front, SLIM gusset so the side reads as a
+  // thin sliver of depth (matching the reference photo) rather than
+  // a visible panel. With D=32 and the default -24° Y rotation, the
+  // projected gusset width is sin(24°)·32 ≈ 13 px — a tiny edge hint.
+  const W = 210;
+  const H = 300;
+  const D = 32;
 
-  // Clamp rotation so the model stays believable.
-  // Default rot.y = -24 already shows front + right gusset (the reference angle).
-  const ry = Math.max(-50, Math.min(50, rotation.y));
-  const rx = Math.max(-25, Math.min(15, rotation.x));
+  // Clamp rotation. Damped multipliers keep the cuboid from ever
+  // opening enough to expose the gusset as a clear board.
+  const ry = Math.max(-26, Math.min(26, rotation.y * 0.55));
+  const rx = Math.max(-14, Math.min(8,  rotation.x * 0.45));
 
   const wrapStyle = {
     width: W, height: H,

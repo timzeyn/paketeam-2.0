@@ -982,13 +982,14 @@ export const PKG_STYLE_PART2 = `
 .pkg-fb-3d{ pointer-events: auto; }
 .pkg-stage.dragging .pkg-fb-3d{ transition: none; }
 
-/* Idle rock — stays close to the default 3/4 view. */
+/* Idle rock — kept very subtle so the gusset stays a thin sliver,
+   the way the reference photo presents it. */
 @keyframes pkg-fb-rock-3d{
-  0%   { transform: translate3d(-50%,-50%,0) rotateX(-13deg) rotateY(-28deg); }
-  50%  { transform: translate3d(-50%,-50%,0) rotateX(-13deg) rotateY(-20deg); }
-  100% { transform: translate3d(-50%,-50%,0) rotateX(-13deg) rotateY(-28deg); }
+  0%   { transform: translate3d(-50%,-50%,0) rotateX(-8deg) rotateY(-16deg); }
+  50%  { transform: translate3d(-50%,-50%,0) rotateX(-8deg) rotateY(-10deg); }
+  100% { transform: translate3d(-50%,-50%,0) rotateX(-8deg) rotateY(-16deg); }
 }
-.pkg-fb-idle{ animation: pkg-fb-rock-3d 9s ease-in-out infinite; }
+.pkg-fb-idle{ animation: pkg-fb-rock-3d 10s ease-in-out infinite; }
 
 /* ── Shared face base ─────────────────────────────
    Same color on every face. Brightness is overlay only. */
