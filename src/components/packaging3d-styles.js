@@ -40,7 +40,8 @@ export const PKG_STYLE = `
 .face{
   position: absolute;
   background: var(--pkg-color, #B08A5B);
-  backface-visibility: hidden;
+  -webkit-backface-visibility: visible;
+  backface-visibility: visible;
   overflow: hidden;
 }
 .face::after{
@@ -307,6 +308,8 @@ export const PKG_STYLE = `
   position: absolute;
   background: var(--pkg-tray-color, #ddd1bd);
   border: 1px solid rgba(0,0,0,.16);
+  -webkit-backface-visibility: visible;
+  backface-visibility: visible;
   overflow: hidden;
 }
 .pkg-sleeve-tray .tface::after{
@@ -420,6 +423,8 @@ export const PKG_STYLE = `
   position:absolute;
   background: var(--pkg-lid-color, #e6dccb);
   border: 1px solid rgba(0,0,0,.14);
+  -webkit-backface-visibility: visible;
+  backface-visibility: visible;
   overflow: hidden;
 }
 .pkg-lidbottom .lface::after{
@@ -458,7 +463,8 @@ export const PKG_STYLE = `
   position: absolute;
   top: 0; left: 0;
   background: var(--pkg-color, #B08A5B);
-  backface-visibility: hidden;
+  -webkit-backface-visibility: visible;
+  backface-visibility: visible;
   overflow: hidden;
 }
 /* Default art-area sizing (variants override the inset). */
