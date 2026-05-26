@@ -1,16 +1,18 @@
 import React from 'react';
 import { PKG_STYLE, PKG_STYLE_PART2 } from './packaging3d-styles.js';
+import { Bag3D, BagUnfold } from './packaging3d-bags.jsx';
 
 // ─────────────────────────────────────────────────────────
 // ПАКЕТЕАМ 3D Packaging Preview
-// Каждая категория — со своей собственной 3D-структурой,
-// а не наклеенные линии поверх одинаковой коробки.
+// Каждая категория — со своей собственной 3D-структурой.
+// BAG-категория вынесена в отдельный модуль (packaging3d-bags.jsx),
+// где каждая разновидность реализована честным preserve-3d-каркасом.
 // ─────────────────────────────────────────────────────────
 
 const STYLE_BLOCK = PKG_STYLE + PKG_STYLE_PART2;
 
-// ── helpers ─────────────────────────────────────────────
-function pktContrast(hex){
+// ── helpers (экспортируются для bag-модуля) ───────────────
+export function pktContrast(hex){
   const h = String(hex || '').replace('#','');
   const x = h.length === 3 ? h.replace(/./g, c=>c+c) : h.padEnd(6,'0');
   const n = parseInt(x.slice(0,6), 16) || 0;
@@ -18,7 +20,7 @@ function pktContrast(hex){
   return (r*299 + g*587 + b*114) > 145000 ? '#0F1626' : '#FFFFFF';
 }
 // смешать с белым/чёрным — для крышки и подноса оттенков
-function shade(hex, amount){
+export function shade(hex, amount){
   const h = String(hex || '#b08a5b').replace('#','');
   const x = h.length === 3 ? h.replace(/./g, c=>c+c) : h.padEnd(6,'0');
   const n = parseInt(x.slice(0,6), 16) || 0;
@@ -31,7 +33,7 @@ function shade(hex, amount){
   return '#' + [r,g,b].map(v => v.toString(16).padStart(2,'0')).join('');
 }
 
-const SIDE_IDS = ['front', 'back', 'left', 'right', 'top', 'bottom'];
+export const SIDE_IDS = ['front', 'back', 'left', 'right', 'top', 'bottom'];
 
 function buildSides({ sides, color, logo, text }){
   const fallback = { logo, text, backgroundColor: color, visible: true };
@@ -47,11 +49,17 @@ function sideStyle(side, extra = {}){
   return { ...extra, backgroundColor: bg, ['--pkg-color']: bg, ['--pkg-art-color']: pktContrast(bg) };
 }
 
-function PkgArt({ artwork, logo, text, side }){
+export function PkgArt({ artwork, logo, text, side }){
   const data = artwork || { logo, text, visible: true };
   if (data.visible === false) return null;
   logo = data.logo;
   text = data.text;
+  // Show the "ПАКЕТЕАМ" placeholder only when an explicit logo is missing
+  // AND this is the primary (front) face. Side / back / gusset faces stay
+  // clean unless the user puts something on them.
+  const isFront = !side || side === 'front';
+  const showPlaceholder = isFront && !logo && !text;
+  if (!logo && !text && !showPlaceholder) return null;
   const alignment = data.alignment || 'center';
   const alignItems = alignment === 'left' ? 'flex-start' : alignment === 'right' ? 'flex-end' : 'center';
   return (
@@ -59,9 +67,11 @@ function PkgArt({ artwork, logo, text, side }){
       className={`pkg-art ${side === 'left' || side === 'right' ? 'side' : ''}`}
       style={{ alignItems, textAlign: alignment, transform: `scale(${data.scale || 1})`, transformOrigin: 'center' }}
     >
-      <div className={`pkg-logo ${logo ? 'img' : ''}`}>
-        {logo ? <img src={logo} alt="" /> : 'ПАКЕТЕАМ'}
-      </div>
+      {(logo || showPlaceholder) && (
+        <div className={`pkg-logo ${logo ? 'img' : ''}`}>
+          {logo ? <img src={logo} alt="" /> : 'ПАКЕТЕАМ'}
+        </div>
+      )}
       {text && <div className="pkg-tag">{text}</div>}
     </div>
   );
@@ -131,7 +141,7 @@ function Cuboid({ w, h, d, sides, faceClass = 'face', sideRender = null, faceExt
 }
 
 // Дополнительные элементы для лица/верха по варианту
-function boxFaceExtras(variant, sides){
+function boxFaceExtras(variant){
   if (variant === 'mailer-box'){
     return {
       front: <>
@@ -156,7 +166,6 @@ function boxFaceExtras(variant, sides){
       left:  <div className="pkg-sleeve-cave" />,
     };
   }
-  // window-box: окно теперь рендерится как 3D-сосед фасада, см. Box3D
   return {};
 }
 
@@ -172,11 +181,10 @@ function Box3D({ sides, rotation, idle, size, variant }){
     ['--pkg-art-color']: pktContrast(frontColor),
   };
 
-  // --- LID-BOTTOM: ДВА сложенных тела — основание снизу + крышка сверху ---
   if (variant === 'lid-bottom-box'){
     const baseH  = Math.round(h * 0.62);
     const lidH   = h - baseH;
-    const overhang = 12;          // выступ крышки по периметру
+    const overhang = 12;
     const lidW   = w + overhang*2;
     const lidD   = d + overhang*2;
     const lidColor  = shade(frontColor, 0.18);
@@ -189,13 +197,8 @@ function Box3D({ sides, rotation, idle, size, variant }){
       return <>{s?.visible !== false && <PkgArt artwork={s} side={id === 'left' || id === 'right' ? 'left' : undefined} />}</>;
     };
 
-    // Внутри pkg-3d (w×h) размещаем два контейнера, каждый со своим Cuboid.
-    // Cuboid центрирует своё тело по width/height собственного контейнера.
-    // База: контейнер (w, baseH) в позиции (0, lidH).
-    // Крышка: контейнер (lidW, lidH) в позиции (-overhang, 0).
     return (
       <div className={`pkg-3d pkg-box pkg-box-lid-bottom-box ${idle?'idle':''}`} style={style}>
-        {/* крышка (сверху, чуть шире/глубже) */}
         <div className="pkg-lidbottom" style={{ width:lidW, height:lidH, left:-overhang, top:0 }}>
           <Cuboid w={lidW} h={lidH} d={lidD} sides={lidSides}
             faceClass="lface"
@@ -207,7 +210,6 @@ function Box3D({ sides, rotation, idle, size, variant }){
               right: <div className="pkg-lid-skirt" />,
             }}/>
         </div>
-        {/* основание (снизу) */}
         <div className="pkg-lidbottom" style={{ width:w, height:baseH, left:0, top:lidH }}>
           <Cuboid w={w} h={baseH} d={d} sides={baseSides}
             faceClass="lface"
@@ -217,8 +219,7 @@ function Box3D({ sides, rotation, idle, size, variant }){
     );
   }
 
-  // --- остальные коробки: одно тело + опциональные декорации ---
-  const extras = boxFaceExtras(variant, sides);
+  const extras = boxFaceExtras(variant);
   const renderArt = (id) => {
     const s = sides[id];
     return <>{s?.visible !== false && <PkgArt artwork={s} side={id === 'left' || id === 'right' ? 'left' : undefined} />}</>;
@@ -230,9 +231,6 @@ function Box3D({ sides, rotation, idle, size, variant }){
         sideRender={renderArt}
         faceExtras={extras}/>
 
-      {/* WINDOW-BOX: окно и рамка как отдельные 3D-слои перед фасадом.
-         Делается это потому, что элементы с positive z-index внутри грани
-         с transform-style:flat могут не отрисовываться поверх pseudo-overlay'ев. */}
       {variant === 'window-box' && (
         <>
           <div className="pkg-window-cutout"
@@ -244,7 +242,6 @@ function Box3D({ sides, rotation, idle, size, variant }){
         </>
       )}
 
-      {/* MAILER: язычок-замок и прорезь в отдельном 3D-слое перед фасадом */}
       {variant === 'mailer-box' && (
         <>
           <div className="pkg-mailer-tab"
@@ -254,13 +251,11 @@ function Box3D({ sides, rotation, idle, size, variant }){
         </>
       )}
 
-      {/* SLEEVE: поднос, торчащий вправо. Сидит в одном 3D-слое со сборкой
-         рукава, частично перекрываясь его правой "пещерой". */}
       {variant === 'sleeve-box' && (() => {
         const trayW = Math.round(w * 0.55);
         const trayH = h - 16;
         const trayD = d - 22;
-        const trayLeft = Math.round(w * 0.65);   // левый край подноса — внутри рукава
+        const trayLeft = Math.round(w * 0.65);
         const trayTop  = Math.round((h - trayH) / 2);
         const trayColor = shade(frontColor, 0.16);
         const traySides = SIDE_IDS.reduce((a,id)=>{
@@ -283,432 +278,8 @@ function Box3D({ sides, rotation, idle, size, variant }){
 }
 
 // ─────────────────────────────────────────────────────────
-// BAG
+// BAG — delegated to packaging3d-bags.jsx (function imported as Bag3D)
 // ─────────────────────────────────────────────────────────
-const BAG_GEOMETRY = {
-  'doy-pack':              { w: 210, h: 300, d: 58 },
-  'zip-lock-bag':          { w: 220, h: 270, d: 56 },
-  'flat-bottom-bag':       { w: 200, h: 280, d: 86 },
-  'paper-bag-with-handles':{ w: 220, h: 280, d: 110 },
-  'courier-bag':           { w: 280, h: 200, d: 26 },
-};
-
-function BagFace({ variant, artwork, faceId }){
-  return (
-    <div className="pkg-bag-face" style={sideStyle(artwork, { width:'100%', height:'100%', left:0, top:0 })}>
-      {variant === 'zip-lock-bag' && (
-        <>
-          <div className="pkg-zip-track" />
-          <div className="pkg-zip-notch left" />
-          <div className="pkg-zip-notch right" />
-        </>
-      )}
-      {/* flat-bottom-bag now uses its own dedicated component (FlatBottomBag3D) */}
-      {variant === 'paper-bag-with-handles' && (
-        <>
-          <div className="pkg-paper-top-fold" />
-          <div className="pkg-paper-crease left" />
-          <div className="pkg-paper-crease right" />
-          <div className="pkg-paper-handle left" />
-          <div className="pkg-paper-handle right" />
-        </>
-      )}
-      {variant === 'courier-bag' && (
-        <div className="pkg-courier-flap" />
-      )}
-      <PkgArt artwork={artwork} side={faceId === 'left' || faceId === 'right' ? 'left' : undefined} />
-    </div>
-  );
-}
-
-function Bag3D({ sides, rotation, idle, variant }){
-  const v = variant || 'doy-pack';
-
-  // ── DOY-PACK: dedicated 2.5D mockup (NOT the generic 4-face cube) ──
-  if (v === 'doy-pack') {
-    return <DoyPack2D sides={sides} rotation={rotation} idle={idle} />;
-  }
-
-  // ── ZIP-LOCK: flat plastic pouch mockup (no side walls) ──
-  if (v === 'zip-lock-bag') {
-    return <ZipLock2D sides={sides} rotation={rotation} idle={idle} />;
-  }
-
-  // ── COURIER BAG: flat poly mailer mockup ──
-  if (v === 'courier-bag') {
-    return <CourierBag2D sides={sides} rotation={rotation} idle={idle} />;
-  }
-
-  // ── FLAT-BOTTOM BAG: real preserve-3d pouch with continuous-shading seams ──
-  if (v === 'flat-bottom-bag') {
-    return <FlatBottomBag3D sides={sides} rotation={rotation} idle={idle} />;
-  }
-
-  // ── All other bag variants: keep the existing 4-face 3D cube ──
-  const { w, h, d } = BAG_GEOMETRY[v] || BAG_GEOMETRY['doy-pack'];
-  const tx = `translate3d(-50%, -50%, 0) rotateX(${rotation.x}deg) rotateY(${rotation.y}deg)`;
-  const frontColor = sides.front?.backgroundColor || '#B08A5B';
-  const klass =
-    v === 'paper-bag-with-handles' ? 'pkg-bag-paper' : 'pkg-bag-doy';
-
-  const style = {
-    width: w, height: h,
-    transform: tx,
-    position:'absolute', left:'50%', top:'50%',
-    ['--pkg-color']: frontColor,
-    ['--pkg-art-color']: pktContrast(frontColor),
-    ['--pkg-handle-color']: shade(frontColor, -0.35),
-  };
-
-  const sideBg = (s) => {
-    const c = s?.backgroundColor || frontColor;
-    return shade(c, -0.20);
-  };
-
-  return (
-    <div className={`pkg-bag-wrap pkg-3d ${klass} ${idle?'idle':''}`} style={style}>
-      {/* передняя */}
-      <div className="pkg-bag-face" style={{ width:w, height:h, left:0, top:0, transform:`translateZ(${d/2}px)`, ...sideStyle(sides.front) }}>
-        <BagFaceInner variant={v} artwork={sides.front} faceId="front" />
-      </div>
-      {/* задняя */}
-      <div className="pkg-bag-face" style={{ width:w, height:h, left:0, top:0, transform:`rotateY(180deg) translateZ(${d/2}px)`, ...sideStyle(sides.back) }}>
-        <BagFaceInner variant={v} artwork={sides.back} faceId="back" />
-      </div>
-      {/* боковые гассеты */}
-      <div className="pkg-bag-face" style={{
-        width:d, height:h, left:(w-d)/2, top:0,
-        transform:`rotateY(90deg) translateZ(${w/2}px)`,
-        background: sideBg(sides.right),
-        ['--pkg-color']: sideBg(sides.right),
-        ['--pkg-art-color']: pktContrast(sideBg(sides.right)),
-      }}>
-        <BagSideGusset variant={v} />
-        {sides.right?.visible !== false && <PkgArt artwork={sides.right} side="left" />}
-      </div>
-      <div className="pkg-bag-face" style={{
-        width:d, height:h, left:(w-d)/2, top:0,
-        transform:`rotateY(-90deg) translateZ(${w/2}px)`,
-        background: sideBg(sides.left),
-        ['--pkg-color']: sideBg(sides.left),
-        ['--pkg-art-color']: pktContrast(sideBg(sides.left)),
-      }}>
-        <BagSideGusset variant={v} />
-        {sides.left?.visible !== false && <PkgArt artwork={sides.left} side="left" />}
-      </div>
-    </div>
-  );
-}
-
-// ─────────────────────────────────────────────────────────
-// DOY-PACK 2.5D MOCKUP
-// Single coherent stand-up pouch — NO separated side panels.
-// Side depth is suggested by shadow strips, not 3D faces.
-// Rotation is converted to subtle perspective tilt.
-// ─────────────────────────────────────────────────────────
-function DoyPack2D({ sides, rotation, idle }){
-  const frontSide = sides.front || {};
-  const color = frontSide.backgroundColor || '#B08A5B';
-  const darkEdge = shade(color, -0.22);
-  const w = 210, h = 300;
-
-  // Convert drag rotation to gentle perspective tilt (no full 3D spin)
-  const tiltY = Math.max(-12, Math.min(12, rotation.y * 0.15));
-  const tiltX = Math.max(-6, Math.min(6, rotation.x * 0.1));
-
-  const wrapStyle = {
-    width: w, height: h,
-    position: 'absolute', left: '50%', top: '50%',
-    transform: `translate3d(-50%, -50%, 0) perspective(800px) rotateY(${tiltY}deg) rotateX(${tiltX}deg)`,
-    transition: 'transform .35s cubic-bezier(.4,.1,.2,1)',
-    ['--pkg-color']: color,
-    ['--pkg-art-color']: pktContrast(color),
-    ['--pkg-dark-edge']: darkEdge,
-  };
-
-  return (
-    <div className={`pkg-doy-mockup ${idle ? 'pkg-doy-idle' : ''}`} style={wrapStyle}>
-      {/* ── Main pouch body ── */}
-      <div className="pkg-doy-body">
-        {/* Kraft paper texture overlay */}
-        <div className="pkg-doy-texture" />
-        {/* Side fold shadows (left) */}
-        <div className="pkg-doy-side-shadow left" />
-        {/* Side fold shadows (right) */}
-        <div className="pkg-doy-side-shadow right" />
-        {/* Top seal band */}
-        <div className="pkg-doy-seal" />
-        {/* Zipper / closure lines */}
-        <div className="pkg-doy-zipper" />
-        {/* Tear notch left */}
-        <div className="pkg-doy-notch left" />
-        {/* Tear notch right */}
-        <div className="pkg-doy-notch right" />
-        {/* Bottom gusset */}
-        <div className="pkg-doy-bottom-gusset" />
-        {/* Central branding area */}
-        <div className="pkg-doy-art-area">
-          <PkgArt artwork={frontSide} />
-        </div>
-      </div>
-      {/* ── Thin side edge strip (right) — suggests depth ── */}
-      <div className="pkg-doy-edge right" />
-      {/* ── Floor contact shadow ── */}
-      <div className="pkg-doy-floor-shadow" />
-    </div>
-  );
-}
-
-// ─────────────────────────────────────────────────────────
-// ZIP-LOCK 2.5D FLAT POUCH MOCKUP
-// Flat plastic hermetic bag — NO side walls, NO depth.
-// Only a subtle tilt for perspective feel.
-// ─────────────────────────────────────────────────────────
-function ZipLock2D({ sides, rotation, idle }){
-  const frontSide = sides.front || {};
-  const color = frontSide.backgroundColor || '#B08A5B';
-  const w = 210, h = 280;
-
-  // Very subtle tilt — flat bag should barely rotate
-  const tiltY = Math.max(-10, Math.min(10, rotation.y * 0.12));
-  const tiltX = Math.max(-5, Math.min(5, rotation.x * 0.08));
-
-  const wrapStyle = {
-    width: w, height: h,
-    position: 'absolute', left: '50%', top: '50%',
-    transform: `translate3d(-50%, -50%, 0) perspective(900px) rotateY(${tiltY}deg) rotateX(${tiltX}deg)`,
-    transition: 'transform .35s cubic-bezier(.4,.1,.2,1)',
-    ['--pkg-color']: color,
-    ['--pkg-art-color']: pktContrast(color),
-  };
-
-  return (
-    <div className={`pkg-zip-mockup ${idle ? 'pkg-zip-idle' : ''}`} style={wrapStyle}>
-      {/* ── Main flat pouch body ── */}
-      <div className="pkg-zip-body">
-        {/* Plastic material highlights */}
-        <div className="pkg-zip-plastic" />
-        {/* Left edge seam */}
-        <div className="pkg-zip-seam left" />
-        {/* Right edge seam */}
-        <div className="pkg-zip-seam right" />
-        {/* Top flap above zipper */}
-        <div className="pkg-zip-top-flap" />
-        {/* Zip-lock closure strip */}
-        <div className="pkg-zip-closure" />
-        {/* Colored closure line */}
-        <div className="pkg-zip-closure-line" />
-        {/* Bottom edge */}
-        <div className="pkg-zip-bottom-edge" />
-        {/* Central branding area */}
-        <div className="pkg-zip-art-area">
-          <PkgArt artwork={frontSide} />
-        </div>
-      </div>
-      {/* ── Floor shadow ── */}
-      <div className="pkg-zip-floor-shadow" />
-    </div>
-  );
-}
-
-// ─────────────────────────────────────────────────────────
-// COURIER BAG 2.5D FLAT POLY MAILER MOCKUP
-// Flat rectangular mailing envelope — NO side walls.
-// Fold-over adhesive flap at top. Welded side seams.
-// ─────────────────────────────────────────────────────────
-function CourierBag2D({ sides, rotation, idle }){
-  const frontSide = sides.front || {};
-  const color = frontSide.backgroundColor || '#B08A5B';
-  const w = 260, h = 220;
-
-  // Subtle tilt — flat mailer should barely rotate
-  const tiltY = Math.max(-10, Math.min(10, rotation.y * 0.12));
-  const tiltX = Math.max(-5, Math.min(5, rotation.x * 0.08));
-
-  const wrapStyle = {
-    width: w, height: h,
-    position: 'absolute', left: '50%', top: '50%',
-    transform: `translate3d(-50%, -50%, 0) perspective(900px) rotateY(${tiltY}deg) rotateX(${tiltX}deg)`,
-    transition: 'transform .35s cubic-bezier(.4,.1,.2,1)',
-    ['--pkg-color']: color,
-    ['--pkg-art-color']: pktContrast(color),
-  };
-
-  return (
-    <div className={`pkg-courier-mockup ${idle ? 'pkg-courier-idle' : ''}`} style={wrapStyle}>
-      {/* ── Fold-over flap (behind body, visible at top) ── */}
-      <div className="pkg-courier-flap-back" />
-      {/* ── Main flat mailer body ── */}
-      <div className="pkg-courier-body">
-        {/* Plastic material highlights */}
-        <div className="pkg-courier-plastic" />
-        {/* Left welded seam */}
-        <div className="pkg-courier-weld left" />
-        {/* Right welded seam */}
-        <div className="pkg-courier-weld right" />
-        {/* Bottom welded seam */}
-        <div className="pkg-courier-weld-bottom" />
-        {/* Fold-over flap (front, folds down) */}
-        <div className="pkg-courier-flap-front">
-          {/* Adhesive strip */}
-          <div className="pkg-courier-adhesive" />
-          {/* Peel strip text */}
-          <div className="pkg-courier-peel-text" />
-          {/* Flap fold line */}
-          <div className="pkg-courier-fold-line" />
-        </div>
-        {/* Central branding area */}
-        <div className="pkg-courier-art-area">
-          <PkgArt artwork={frontSide} />
-        </div>
-      </div>
-      {/* ── Floor shadow ── */}
-      <div className="pkg-courier-floor-shadow" />
-    </div>
-  );
-}
-
-// ─────────────────────────────────────────────────────────
-// FLAT-BOTTOM BAG · REAL 3D POUCH (preserve-3d)
-// Five faces share one parent transform: front, back, two
-// integrated side gussets, and an integrated bottom. Every
-// face uses the same base color (var(--pkg-color)) — the
-// brightness differences are pure shadow overlays, so where
-// faces meet, the gradients line up and the seam reads as a
-// continuous fold of one material rather than two boards
-// bumping together. Rotation is clamped so the cuboid never
-// opens dramatically.
-// ─────────────────────────────────────────────────────────
-function FlatBottomBag3D({ sides, rotation, idle }){
-  const frontSide = sides.front || {};
-  const color = frontSide.backgroundColor || '#B08A5B';
-
-  // Pouch geometry — broad front, SLIM gusset so the side reads as a
-  // thin sliver of depth (matching the reference photo) rather than
-  // a visible panel. With D=32 and the default -24° Y rotation, the
-  // projected gusset width is sin(24°)·32 ≈ 13 px — a tiny edge hint.
-  const W = 210;
-  const H = 300;
-  const D = 32;
-
-  // Clamp rotation. Damped multipliers keep the cuboid from ever
-  // opening enough to expose the gusset as a clear board.
-  const ry = Math.max(-26, Math.min(26, rotation.y * 0.55));
-  const rx = Math.max(-14, Math.min(8,  rotation.x * 0.45));
-
-  const wrapStyle = {
-    width: W, height: H,
-    position: 'absolute', left: '50%', top: '50%',
-    transform: `translate3d(-50%, -50%, 0) rotateX(${rx}deg) rotateY(${ry}deg)`,
-    ['--pkg-color']: color,
-    ['--pkg-art-color']: pktContrast(color),
-  };
-
-  return (
-    <div className={`pkg-3d pkg-fb-3d ${idle ? 'pkg-fb-idle' : ''}`} style={wrapStyle}>
-      {/* FRONT */}
-      <div className="pkg-fb-face pkg-fb-front"
-           style={{ width: W, height: H, left: 0, top: 0,
-                    transform: `translateZ(${D/2}px)` }}>
-        <div className="pkg-fb-mat" />
-        <div className="pkg-fb-wrinkles" />
-        <div className="pkg-fb-edge left" />
-        <div className="pkg-fb-edge right" />
-        <div className="pkg-fb-bottom-fold" />
-        <div className="pkg-fb-seal">
-          <div className="pkg-fb-seal-ribs" />
-          <div className="pkg-fb-seal-shadow" />
-        </div>
-        <div className="pkg-fb-art-area">
-          <PkgArt artwork={frontSide} />
-        </div>
-      </div>
-
-      {/* BACK */}
-      <div className="pkg-fb-face pkg-fb-back"
-           style={{ width: W, height: H, left: 0, top: 0,
-                    transform: `rotateY(180deg) translateZ(${D/2}px)` }}>
-        <div className="pkg-fb-mat back" />
-        <div className="pkg-fb-edge left" />
-        <div className="pkg-fb-edge right" />
-        <div className="pkg-fb-bottom-fold" />
-        <div className="pkg-fb-seal">
-          <div className="pkg-fb-seal-ribs" />
-          <div className="pkg-fb-seal-shadow" />
-        </div>
-      </div>
-
-      {/* LEFT GUSSET */}
-      <div className="pkg-fb-face pkg-fb-gusset"
-           style={{ width: D, height: H, left: (W - D) / 2, top: 0,
-                    transform: `rotateY(-90deg) translateZ(${W/2}px)` }}>
-        <div className="pkg-fb-gusset-mat" />
-        <div className="pkg-fb-gusset-crease" />
-        <div className="pkg-fb-gusset-bottom" />
-        <div className="pkg-fb-seal">
-          <div className="pkg-fb-seal-ribs" />
-          <div className="pkg-fb-seal-shadow" />
-        </div>
-      </div>
-
-      {/* RIGHT GUSSET — visible by default */}
-      <div className="pkg-fb-face pkg-fb-gusset"
-           style={{ width: D, height: H, left: (W - D) / 2, top: 0,
-                    transform: `rotateY(90deg) translateZ(${W/2}px)` }}>
-        <div className="pkg-fb-gusset-mat" />
-        <div className="pkg-fb-gusset-crease" />
-        <div className="pkg-fb-gusset-bottom" />
-        <div className="pkg-fb-seal">
-          <div className="pkg-fb-seal-ribs" />
-          <div className="pkg-fb-seal-shadow" />
-        </div>
-      </div>
-
-      {/* BOTTOM — integrated flat base */}
-      <div className="pkg-fb-face pkg-fb-base"
-           style={{ width: W, height: D, left: 0, top: (H - D) / 2,
-                    transform: `rotateX(-90deg) translateZ(${H/2}px)` }}>
-        <div className="pkg-fb-base-mat" />
-      </div>
-    </div>
-  );
-}
-
-function BagFaceInner({ variant, artwork, faceId }){
-  const v = variant;
-  return (
-    <>
-      {/* zip-lock now has its own dedicated component — BagFaceInner no longer handles it */}
-      {/* flat-bottom-bag now has its own dedicated component */}
-      {v === 'paper-bag-with-handles' && (
-        <>
-          <div className="pkg-paper-top-fold" />
-          <div className="pkg-paper-crease left" />
-          <div className="pkg-paper-crease right" />
-          <div className="pkg-paper-handle left" />
-          <div className="pkg-paper-handle right" />
-        </>
-      )}
-      {/* courier-bag now has its own dedicated component */}
-      <PkgArt artwork={artwork} side={faceId === 'left' || faceId === 'right' ? 'left' : undefined} />
-    </>
-  );
-}
-
-function BagSideGusset({ variant }){
-  // тонкая боковина — гассет — с продольной складкой по центру
-  return (
-    <div style={{
-      position:'absolute', inset:0,
-      background:
-        'linear-gradient(90deg, rgba(255,255,255,.18) 0%, rgba(0,0,0,.16) 48%, rgba(0,0,0,.22) 52%, rgba(255,255,255,.10) 100%)',
-      mixBlendMode:'multiply',
-      pointerEvents:'none',
-    }}/>
-  );
-}
-
-// (DoyPackSideGusset removed — doy-pack now uses 2.5D mockup, no separate side faces)
 
 // ─────────────────────────────────────────────────────────
 // CUP
@@ -780,7 +351,8 @@ function Sticker3D({ sides, rotation, idle, variant }){
 }
 
 // ─────────────────────────────────────────────────────────
-// UNFOLD (плоская развёртка) — без изменений по структуре
+// UNFOLD (плоская развёртка)
+// Для bag-категории делегируем в BagUnfold (вариант-специфичные дайнлайны).
 // ─────────────────────────────────────────────────────────
 const UNFOLD_LABELS = {
   front: 'Лицо', back: 'Задняя сторона',
@@ -816,16 +388,7 @@ function Unfold({ type, variant, sides, size }){
     );
   }
   if (type === 'bag'){
-    return (
-      <div className="pkg-unfold-wrap">
-        <div className="pkg-unfold" style={{ gridTemplateColumns:'40px 180px 40px 180px', gridTemplateRows:'230px' }}>
-          {panel('left', 40, 230, 'a')}
-          {panel('front', 180, 230, 'b')}
-          {panel('right', 40, 230, 'c')}
-          {panel('back', 180, 230, 'd')}
-        </div>
-      </div>
-    );
+    return <BagUnfold variant={variant} sides={sides} />;
   }
   if (type === 'cup'){
     return (
@@ -856,7 +419,6 @@ function Unfold({ type, variant, sides, size }){
 
 // ─────────────────────────────────────────────────────────
 // PackagingPreview — главный экспорт
-// API совместимо со старым файлом.
 // ─────────────────────────────────────────────────────────
 export function PackagingPreview({
   type='box', variant='', color='#B08A5B', logo=null, text='',

@@ -442,685 +442,135 @@ export const PKG_STYLE = `
 }
 
 /* ────────────────────────────────────────────────── */
-/* BAGS — общая база                                  */
+/* BAGS — common chassis for all 5 real-3D bag models  */
 /* ────────────────────────────────────────────────── */
-.pkg-bag-wrap{
-  position: absolute; left:50%; top:50%;
-  transform-style: preserve-3d;
+/* Every bag (doy-pack, zip-lock, flat-bottom, paper, courier)
+   is now a real preserve-3d cuboid with five faces. They all
+   inherit shared face/art-area defaults from .pkg-bg below;
+   variant-specific classes layer shading and accessories. */
+.pkg-bg{
+  pointer-events: auto;
 }
-.pkg-bag-svg{
+.pkg-stage.dragging .pkg-bg{ transition: none; }
+
+/* Default for every bag face. */
+.pkg-bg [class*="3d-face"]{
   position: absolute;
-  inset: 0;
-  overflow: visible;
-}
-.pkg-bag-face{
-  position: absolute;
+  top: 0; left: 0;
+  background: var(--pkg-color, #B08A5B);
   backface-visibility: hidden;
   overflow: hidden;
 }
-.pkg-bag-face .pkg-art{ z-index: 5; }
+/* Default art-area sizing (variants override the inset). */
+.pkg-bg [class*="3d-art-area"]{
+  position: absolute;
+  z-index: 4;
+  display: flex; align-items: center; justify-content: center;
+  pointer-events: none;
+}
+.pkg-bg [class*="3d-art-area"] .pkg-art{
+  position: relative;
+  inset: auto;
+  width: 100%; height: 100%;
+  padding: 6% 5%;
+}
+
 `;
 
 export const PKG_STYLE_PART2 = `
-/* ─── DOY-PACK 2.5D MOCKUP ─────────────────────────
-   Single coherent stand-up pouch.
-   No separated 3D side panels.
-   Side depth suggested by shadows, not geometry.
-   ───────────────────────────────────────────────── */
+/* ════════════════════════════════════════════════════════
+   1) DOY-PACK 3D · stand-up pouch (FULL REBUILD)
+   ════════════════════════════════════════════════════════
+   Only TWO real panels (front + back). They meet at the top
+   seal, are connected along both sides (visible as a thin
+   seam line on the face), and spread apart at the bottom via
+   the flat K-folded gusset. Each panel is tilted around its
+   top edge so the side-view silhouette is a classic wedge.   */
 
-/* Wrapper — positions the pouch, handles tilt */
-.pkg-doy-mockup{
-  pointer-events: auto;
+@keyframes pkg-doy3d-rock{
+  0%   { transform: translate3d(-50%,-50%,0) rotateX(-6deg) rotateY(-18deg); }
+  50%  { transform: translate3d(-50%,-50%,0) rotateX(-6deg) rotateY(-10deg); }
+  100% { transform: translate3d(-50%,-50%,0) rotateX(-6deg) rotateY(-18deg); }
 }
-.pkg-stage.dragging .pkg-doy-mockup{
-  transition: none;
-}
+.pkg-doy3d-idle{ animation: pkg-doy3d-rock 11s ease-in-out infinite; }
 
-/* Idle gentle rocking */
-@keyframes pkg-doy-rock{
-  0%   { transform: translate3d(-50%,-50%,0) perspective(800px) rotateY(-3deg) rotateX(-1deg); }
-  50%  { transform: translate3d(-50%,-50%,0) perspective(800px) rotateY(3deg)  rotateX(-1deg); }
-  100% { transform: translate3d(-50%,-50%,0) perspective(800px) rotateY(-3deg) rotateX(-1deg); }
-}
-.pkg-doy-idle{
-  animation: pkg-doy-rock 10s ease-in-out infinite;
-}
-
-/* ── Main pouch body ────────────────────────────── */
-.pkg-doy-body{
-  position: absolute;
-  inset: 0;
-  background: var(--pkg-color, #B08A5B);
-  overflow: hidden;
-
-  /* Realistic doy-pack silhouette:
-     - slightly inset top (seal area narrower than body)
-     - gently rounded shoulders
-     - near-straight sides with very slight outward bow
-     - bottom with subtle upward curve (standing gusset) */
+.pkg-doy3d-front, .pkg-doy3d-back{
+  /* Pillow silhouette: rounded shoulders, soft bow at the waist,
+     and a subtle inward curve at the bottom where the gusset folds. */
   clip-path: polygon(
-    /* top seal — narrower than body */
-    14% 0%, 86% 0%,
-    /* right shoulder — smooth curve outward */
-    91% 0.6%, 94% 1.6%, 96.5% 3.5%, 98% 6%,
-    /* right side — very slight outward bow */
-    99% 10%, 99.5% 18%, 100% 30%,
-    100% 50%, 100% 70%,
-    99.5% 80%, 99% 87%,
-    /* lower right — gentle curve to base */
-    98% 91%, 96% 94.5%, 93% 96.5%,
-    /* bottom — subtle upward curve for standing gusset */
-    88% 98%, 78% 99.4%, 65% 100%,
-    50% 100.3%,
-    35% 100%, 22% 99.4%, 12% 98%,
-    /* lower left */
-    7% 96.5%, 4% 94.5%, 2% 91%,
-    /* left side */
-    1% 87%, 0.5% 80%, 0% 70%,
-    0% 50%, 0% 30%,
-    0.5% 18%, 1% 10%,
-    /* left shoulder */
-    2% 6%, 3.5% 3.5%, 6% 1.6%, 9% 0.6%
+    8% 0%, 92% 0%,
+    96% 4%, 100% 14%,
+    100% 50%,
+    100% 86%, 96% 96%,
+    88% 100%, 12% 100%,
+    4% 96%, 0% 86%,
+    0% 50%,
+    0% 14%, 4% 4%
   );
-
-  box-shadow:
-    0 2px 16px rgba(0,0,0,.10),
-    inset 0 0 0 1px rgba(0,0,0,.04);
+  border-radius: 14px;
+  background: var(--pkg-color);
 }
 
-/* ── Kraft paper texture + body shading ─────────── */
-.pkg-doy-texture{
-  position:absolute; inset:0;
-  pointer-events:none;
-  z-index: 1;
+.pkg-doy3d-mat{
+  position: absolute; inset: 0;
+  pointer-events: none; z-index: 1;
   background:
-    /* Central soft convex highlight */
-    radial-gradient(ellipse 55% 65% at 50% 45%,
-      rgba(255,255,255,.13) 0%,
-      rgba(255,255,255,.03) 55%,
-      rgba(255,255,255,0) 75%),
-    /* Side edge darkening */
-    linear-gradient(90deg,
-      rgba(0,0,0,.18) 0%,
-      rgba(0,0,0,.06) 5%,
-      rgba(0,0,0,0) 12%,
-      transparent 40%,
-      transparent 60%,
-      rgba(0,0,0,0) 88%,
-      rgba(0,0,0,.06) 95%,
-      rgba(0,0,0,.18) 100%),
-    /* Very subtle kraft paper grain */
-    repeating-linear-gradient(92deg,
-      rgba(0,0,0,.012) 0 1px,
-      transparent 1px 3px),
-    repeating-linear-gradient(2deg,
-      rgba(0,0,0,.008) 0 1px,
-      transparent 1px 4px);
-}
-
-/* ── Side fold shadows (gusset suggestion) ─────── */
-.pkg-doy-side-shadow{
-  position:absolute;
-  top: 9%; bottom: 13%;
-  width: 8%;
-  z-index: 2;
-  pointer-events:none;
-}
-.pkg-doy-side-shadow.left{
-  left: 0;
-  background:
-    linear-gradient(90deg,
-      rgba(0,0,0,.16) 0%,
-      rgba(0,0,0,.06) 40%,
-      rgba(0,0,0,0) 100%);
-}
-.pkg-doy-side-shadow.right{
-  right: 0;
-  background:
-    linear-gradient(-90deg,
-      rgba(0,0,0,.16) 0%,
-      rgba(0,0,0,.06) 40%,
-      rgba(0,0,0,0) 100%);
-}
-
-/* ── Top seal band ─────────────────────────────── */
-.pkg-doy-seal{
-  position:absolute;
-  left: 13%; right: 13%; top: 0;
-  height: 10%;
-  background:
-    linear-gradient(180deg,
-      rgba(0,0,0,.04) 0%,
-      rgba(255,255,255,.08) 25%,
-      rgba(0,0,0,.02) 50%,
-      rgba(255,255,255,.06) 75%,
-      rgba(0,0,0,.08) 100%);
-  border-bottom: 1px solid rgba(0,0,0,.12);
-  box-shadow: 0 1px 0 rgba(255,255,255,.08);
-  z-index: 5;
-  pointer-events:none;
-}
-
-/* ── Zipper / closure lines ────────────────────── */
-.pkg-doy-zipper{
-  position:absolute;
-  left: 10%; right: 10%;
-  top: 10%;
-  height: 2.2%;
-  background:
-    linear-gradient(180deg,
-      rgba(0,0,0,.05) 0%,
-      rgba(0,0,0,.12) 40%,
-      rgba(0,0,0,.10) 60%,
-      rgba(0,0,0,.04) 100%);
-  box-shadow:
-    0 1px 0 rgba(255,255,255,.06);
-  z-index: 5;
-  pointer-events:none;
-}
-/* Double track inside zipper */
-.pkg-doy-zipper::after{
-  content:"";
-  position:absolute;
-  left: 3%; right: 3%;
-  top: 35%;
-  height: 0;
-  border-top: 0.5px solid rgba(0,0,0,.10);
-  box-shadow: 0 1.5px 0 rgba(0,0,0,.06);
-}
-
-/* ── Tear notches ──────────────────────────────── */
-.pkg-doy-notch{
-  position:absolute;
-  top: 9.5%;
-  width: 4px;
-  height: 6px;
-  z-index: 6;
-  pointer-events:none;
-}
-.pkg-doy-notch.left{
-  left: 13%;
-  background: rgba(0,0,0,.22);
-  clip-path: polygon(0 20%, 100% 0, 100% 100%, 0 80%);
-}
-.pkg-doy-notch.right{
-  right: 13%;
-  background: rgba(0,0,0,.22);
-  clip-path: polygon(0 0, 100% 20%, 100% 80%, 0 100%);
-}
-
-/* ── Bottom gusset ─────────────────────────────── */
-.pkg-doy-bottom-gusset{
-  position:absolute;
-  left: 0; right: 0;
-  bottom: 0;
-  height: 13%;
-  z-index: 3;
-  pointer-events:none;
-  background:
-    linear-gradient(180deg,
-      rgba(0,0,0,0) 0%,
-      rgba(0,0,0,.03) 25%,
-      rgba(0,0,0,.08) 55%,
-      rgba(0,0,0,.16) 100%);
-}
-/* Fold crease line */
-.pkg-doy-bottom-gusset::before{
-  content:"";
-  position:absolute;
-  left: 5%; right: 5%; top: 0;
-  height: 0;
-  border-top: 1px solid rgba(0,0,0,.08);
-  box-shadow: 0 -1px 0 rgba(255,255,255,.05);
-}
-/* Curved bottom edge shadow */
-.pkg-doy-bottom-gusset::after{
-  content:"";
-  position:absolute;
-  left: 10%; right: 10%; bottom: 0;
-  height: 35%;
-  border-radius: 0 0 50% 50% / 0 0 100% 100%;
-  background:
-    linear-gradient(180deg,
-      rgba(0,0,0,.06),
-      rgba(0,0,0,.14));
-}
-
-/* ── Branding area (centered on pouch) ─────────── */
-.pkg-doy-art-area{
-  position:absolute;
-  left: 14%; right: 14%;
-  top: 16%; bottom: 18%;
-  z-index: 4;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  pointer-events: none;
-}
-.pkg-doy-art-area .pkg-art{
-  position: relative;
-  inset: auto;
-  width: 100%; height: 100%;
-  padding: 8% 6%;
-}
-
-/* ── Side edge strip (subtle depth indicator) ──── */
-.pkg-doy-edge{
-  position:absolute;
-  top: 6%; bottom: 5%;
-  width: 6px;
-  z-index: -1;
-  pointer-events:none;
-  border-radius: 0 2px 2px 0;
-}
-.pkg-doy-edge.right{
-  right: -5px;
-  background:
-    linear-gradient(90deg,
-      var(--pkg-dark-edge, #8a6d47),
-      rgba(0,0,0,.22));
-  clip-path: polygon(
-    0 2%, 100% 4%,
-    100% 96%, 0 98%
-  );
-  box-shadow: 1px 0 3px rgba(0,0,0,.12);
-}
-
-/* ── Floor contact shadow ──────────────────────── */
-.pkg-doy-floor-shadow{
-  position:absolute;
-  left: 8%; right: 8%;
-  bottom: -8px;
-  height: 16px;
-  background:
-    radial-gradient(ellipse at 50% 20%,
-      rgba(0,0,0,.22) 0%,
-      rgba(0,0,0,.08) 50%,
-      rgba(0,0,0,0) 80%);
-  filter: blur(4px);
-  pointer-events: none;
-  z-index: -1;
-}
-
-/* ── Keep old class names that other bag types use ── */
-.pkg-bag-doy .pkg-bag-face{
-  /* no longer used — doy-pack renders via .pkg-doy-mockup */
-}
-
-/* ─── ZIP-LOCK 2.5D FLAT POUCH ─────────────────────
-   Flat hermetic plastic bag — no side walls.
-   Translucent / milky plastic look.
-   ───────────────────────────────────────────────── */
-
-/* Wrapper */
-.pkg-zip-mockup{
-  pointer-events: auto;
-}
-.pkg-stage.dragging .pkg-zip-mockup{
-  transition: none;
-}
-
-/* Idle gentle rocking */
-@keyframes pkg-zip-rock{
-  0%   { transform: translate3d(-50%,-50%,0) perspective(900px) rotateY(-2deg) rotateX(-0.5deg); }
-  50%  { transform: translate3d(-50%,-50%,0) perspective(900px) rotateY(2deg)  rotateX(-0.5deg); }
-  100% { transform: translate3d(-50%,-50%,0) perspective(900px) rotateY(-2deg) rotateX(-0.5deg); }
-}
-.pkg-zip-idle{
-  animation: pkg-zip-rock 10s ease-in-out infinite;
-}
-
-/* ── Main flat pouch body ──────────────────────── */
-.pkg-zip-body{
-  position: absolute;
-  inset: 0;
-  background: var(--pkg-color, #B08A5B);
-  overflow: hidden;
-
-  /* Soft-rectangle silhouette — very slightly rounded corners,
-     nearly rectangular like a real plastic zip-lock bag */
-  border-radius: 3px;
-  clip-path: polygon(
-    1% 0%, 99% 0%,
-    100% 0.6%, 100% 99.4%,
-    99% 100%, 1% 100%,
-    0% 99.4%, 0% 0.6%
-  );
-
-  box-shadow:
-    0 2px 12px rgba(0,0,0,.10),
-    inset 0 0 0 1px rgba(255,255,255,.08);
-}
-
-/* ── Plastic material texture + highlights ──────── */
-.pkg-zip-plastic{
-  position:absolute; inset:0;
-  pointer-events:none;
-  z-index: 1;
-  background:
-    /* Central soft gloss — convex plastic feel */
-    radial-gradient(ellipse 50% 55% at 48% 50%,
-      rgba(255,255,255,.16) 0%,
-      rgba(255,255,255,.04) 50%,
-      rgba(255,255,255,0) 75%),
-    /* Side edge darkening — thin seam suggestion */
-    linear-gradient(90deg,
-      rgba(0,0,0,.14) 0%,
-      rgba(0,0,0,.04) 3%,
-      transparent 8%,
-      transparent 92%,
-      rgba(0,0,0,.04) 97%,
-      rgba(0,0,0,.14) 100%),
-    /* Vertical plastic sheen (subtle) */
-    linear-gradient(180deg,
-      rgba(255,255,255,.06) 0%,
-      rgba(255,255,255,.02) 15%,
-      transparent 40%,
-      transparent 75%,
-      rgba(0,0,0,.04) 100%),
-    /* Diagonal gloss streak — plastic film reflection */
-    linear-gradient(125deg,
-      transparent 0%,
-      transparent 30%,
+    /* central bow highlight (front bulge) */
+    radial-gradient(ellipse 75% 65% at 50% 50%,
+      rgba(255,255,255,.22) 0%,
       rgba(255,255,255,.06) 35%,
-      rgba(255,255,255,.10) 40%,
-      transparent 45%,
-      transparent 100%);
-}
-
-/* ── Edge seams (thin heat-sealed borders) ──────── */
-.pkg-zip-seam{
-  position:absolute;
-  top: 0; bottom: 0;
-  width: 3%;
-  z-index: 2;
-  pointer-events:none;
-}
-.pkg-zip-seam.left{
-  left: 0;
-  background:
+      transparent 65%),
+    /* deep shadow along both vertical edges */
     linear-gradient(90deg,
-      rgba(0,0,0,.10) 0%,
-      rgba(0,0,0,.04) 50%,
-      transparent 100%);
-  border-right: 0.5px solid rgba(0,0,0,.06);
-}
-.pkg-zip-seam.right{
-  right: 0;
-  background:
-    linear-gradient(-90deg,
-      rgba(0,0,0,.10) 0%,
-      rgba(0,0,0,.04) 50%,
-      transparent 100%);
-  border-left: 0.5px solid rgba(0,0,0,.06);
-}
-
-/* ── Top flap (above zipper) ───────────────────── */
-.pkg-zip-top-flap{
-  position:absolute;
-  left: 0; right: 0; top: 0;
-  height: 8%;
-  background:
-    linear-gradient(180deg,
-      rgba(255,255,255,.06) 0%,
-      rgba(0,0,0,.03) 60%,
-      rgba(0,0,0,.06) 100%);
-  border-bottom: 0.5px solid rgba(0,0,0,.08);
-  z-index: 4;
-  pointer-events:none;
-}
-
-/* ── Zip-lock closure strip ────────────────────── */
-.pkg-zip-closure{
-  position:absolute;
-  left: 3%; right: 3%;
-  top: 8%;
-  height: 6%;
-  z-index: 5;
-  pointer-events:none;
-  background:
-    /* Multiple horizontal track lines — the zip-lock mechanism */
-    linear-gradient(180deg,
-      rgba(255,255,255,.08) 0%,
-      rgba(0,0,0,.06) 10%,
-      rgba(255,255,255,.10) 18%,
-      rgba(0,0,0,.10) 28%,
-      rgba(255,255,255,.06) 36%,
-      rgba(0,0,0,.12) 46%,
-      rgba(255,255,255,.08) 56%,
-      rgba(0,0,0,.08) 66%,
-      rgba(255,255,255,.06) 76%,
-      rgba(0,0,0,.06) 88%,
-      rgba(255,255,255,.04) 100%);
-  border-top: 0.5px solid rgba(0,0,0,.10);
-  border-bottom: 0.5px solid rgba(0,0,0,.10);
-  box-shadow:
-    0 1px 0 rgba(255,255,255,.06);
-}
-
-/* ── Colored closure line (the main zip strip) ─── */
-.pkg-zip-closure-line{
-  position:absolute;
-  left: 4%; right: 4%;
-  top: 9.5%;
-  height: 1.6%;
-  z-index: 6;
-  pointer-events:none;
-  background:
-    linear-gradient(180deg,
-      rgba(220,60,50,.75) 0%,
-      rgba(200,45,40,.85) 50%,
-      rgba(180,40,35,.70) 100%);
-  box-shadow:
-    0 0.5px 0 rgba(255,255,255,.15),
-    0 -0.5px 0 rgba(0,0,0,.10);
-  border-radius: 0.5px;
-}
-
-/* ── Bottom edge ───────────────────────────────── */
-.pkg-zip-bottom-edge{
-  position:absolute;
-  left: 0; right: 0;
-  bottom: 0;
-  height: 2%;
-  z-index: 2;
-  pointer-events:none;
-  background:
-    linear-gradient(180deg,
-      transparent 0%,
-      rgba(0,0,0,.06) 60%,
-      rgba(0,0,0,.10) 100%);
-  border-top: 0.5px solid rgba(0,0,0,.04);
-}
-
-/* ── Branding area ─────────────────────────────── */
-.pkg-zip-art-area{
-  position:absolute;
-  left: 8%; right: 8%;
-  top: 18%; bottom: 8%;
-  z-index: 4;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  pointer-events: none;
-}
-.pkg-zip-art-area .pkg-art{
-  position: relative;
-  inset: auto;
-  width: 100%; height: 100%;
-  padding: 8% 6%;
-}
-
-/* ── Floor shadow ──────────────────────────────── */
-.pkg-zip-floor-shadow{
-  position:absolute;
-  left: 6%; right: 6%;
-  bottom: -6px;
-  height: 12px;
-  background:
-    radial-gradient(ellipse at 50% 20%,
-      rgba(0,0,0,.18) 0%,
-      rgba(0,0,0,.06) 50%,
-      rgba(0,0,0,0) 80%);
-  filter: blur(3px);
-  pointer-events: none;
-  z-index: -1;
-}
-
-/* ── Legacy class stubs (no longer used for zip-lock) ── */
-.pkg-bag-zip .pkg-bag-face{ /* bypassed — zip-lock uses .pkg-zip-mockup */ }
-.pkg-bag-zip .pkg-art{ inset: 18% 14% 18%; }
-
-/* ─── FLAT-BOTTOM BAG · REAL 3D POUCH ──────────────
-   Five faces (front, back, two gussets, bottom) share
-   one preserve-3d parent. Every face uses the same
-   var(--pkg-color); brightness differences come from
-   shadow overlays, so the shading at each seam lines
-   up continuously and the pouch reads as one folded
-   material, not five boards. */
-
-.pkg-fb-3d{ pointer-events: auto; }
-.pkg-stage.dragging .pkg-fb-3d{ transition: none; }
-
-/* Idle rock — kept very subtle so the gusset stays a thin sliver,
-   the way the reference photo presents it. */
-@keyframes pkg-fb-rock-3d{
-  0%   { transform: translate3d(-50%,-50%,0) rotateX(-8deg) rotateY(-16deg); }
-  50%  { transform: translate3d(-50%,-50%,0) rotateX(-8deg) rotateY(-10deg); }
-  100% { transform: translate3d(-50%,-50%,0) rotateX(-8deg) rotateY(-16deg); }
-}
-.pkg-fb-idle{ animation: pkg-fb-rock-3d 10s ease-in-out infinite; }
-
-/* ── Shared face base ─────────────────────────────
-   Same color on every face. Brightness is overlay only. */
-.pkg-fb-face{
-  position: absolute;
-  top: 0; left: 0;
-  transform-style: preserve-3d;
-  backface-visibility: hidden;
-  overflow: hidden;
-  background: var(--pkg-color, #B08A5B);
-}
-
-/* Slightly rounded top corners on every side face so
-   the cuboid's top doesn't read as a hard rectangle. */
-.pkg-fb-front,
-.pkg-fb-back,
-.pkg-fb-gusset{
-  border-radius: 10px 10px 2px 2px;
-  box-shadow: inset 0 0 0 1px rgba(0,0,0,.04);
-}
-
-/* ── Front material: convex highlight + corner vignette + kraft fiber ── */
-.pkg-fb-mat{
-  position: absolute; inset: 0;
-  pointer-events: none;
-  z-index: 1;
-  background:
-    /* central convex highlight — the pouch face catches light */
-    radial-gradient(ellipse 70% 70% at 50% 42%,
-      rgba(255,255,255,.16) 0%,
-      rgba(255,255,255,.05) 40%,
-      rgba(255,255,255,0)   75%),
-    /* corner vignette — softens the silhouette */
-    radial-gradient(ellipse 115% 95% at 50% 50%,
-      rgba(0,0,0,0)   55%,
-      rgba(0,0,0,.05) 82%,
-      rgba(0,0,0,.10) 100%),
-    /* kraft fiber micro-texture */
+      rgba(0,0,0,.32) 0%,
+      rgba(0,0,0,.16) 6%,
+      rgba(0,0,0,.04) 18%,
+      transparent 28%,
+      transparent 72%,
+      rgba(0,0,0,.04) 82%,
+      rgba(0,0,0,.16) 94%,
+      rgba(0,0,0,.32) 100%),
+    /* subtle vertical fiber */
     repeating-linear-gradient(88deg,
-      rgba(0,0,0,.012) 0 1px,
-      transparent 1px 3px),
+      rgba(0,0,0,.012) 0 1px, transparent 1px 3px),
     repeating-linear-gradient(2deg,
-      rgba(0,0,0,.008) 0 1px,
-      transparent 1px 4px);
+      rgba(0,0,0,.010) 0 1px, transparent 1px 4px);
 }
-.pkg-fb-mat.back{
-  background:
-    radial-gradient(ellipse 70% 70% at 50% 50%,
-      rgba(255,255,255,.05) 0%,
-      rgba(255,255,255,0) 70%),
-    linear-gradient(180deg,
-      rgba(0,0,0,.06) 0%, rgba(0,0,0,0) 22%,
-      rgba(0,0,0,0) 78%, rgba(0,0,0,.12) 100%);
-}
+.pkg-doy3d-mat.back{ filter: brightness(.96); }
 
-/* ── Soft, deliberate wrinkles/dents on the front ───
-   A few asymmetric radial gradients — not random noise. */
-.pkg-fb-wrinkles{
+.pkg-doy3d-wrinkles{
   position: absolute; inset: 0;
-  pointer-events: none;
-  z-index: 1;
+  pointer-events: none; z-index: 1;
   background:
-    radial-gradient(ellipse 32% 11% at 36% 62%,
-      rgba(0,0,0,.08) 0%, transparent 70%),
-    radial-gradient(ellipse 26% 10% at 68% 38%,
-      rgba(255,255,255,.06) 0%, transparent 65%),
-    radial-gradient(ellipse 22% 9% at 24% 30%,
-      rgba(0,0,0,.05) 0%, transparent 70%),
-    radial-gradient(ellipse 20% 9% at 76% 70%,
-      rgba(0,0,0,.06) 0%, transparent 70%);
+    radial-gradient(ellipse 28% 8%  at 32% 58%, rgba(0,0,0,.07) 0%, transparent 70%),
+    radial-gradient(ellipse 22% 7%  at 68% 42%, rgba(255,255,255,.06) 0%, transparent 70%),
+    radial-gradient(ellipse 20% 6%  at 22% 28%, rgba(0,0,0,.05) 0%, transparent 70%),
+    radial-gradient(ellipse 18% 6%  at 74% 72%, rgba(0,0,0,.04) 0%, transparent 70%);
+  mix-blend-mode: multiply;
 }
 
-/* ── Edge shadows on front/back ──────────────────────
-   These ALIGN with the dark edges of the gusset's mat,
-   so the fold seam reads continuously across the join. */
-.pkg-fb-edge{
+/* Heat-sealed side seams — visible as thin dark vertical stripes
+   right at the panel edges (these are where front meets back). */
+.pkg-doy3d-side-seam{
   position: absolute;
-  top: 9%; bottom: 14%;
-  width: 12%;
-  pointer-events: none;
-  z-index: 2;
-}
-.pkg-fb-edge.left{
-  left: 0;
+  top: 12%; bottom: 14%;
+  width: 6px;
+  pointer-events: none; z-index: 2;
   background:
     linear-gradient(90deg,
-      rgba(0,0,0,.26) 0%,
-      rgba(0,0,0,.14) 28%,
-      rgba(0,0,0,.04) 65%,
-      rgba(0,0,0,0)   100%);
+      rgba(0,0,0,.40) 0%,
+      rgba(0,0,0,.55) 50%,
+      rgba(0,0,0,.40) 100%);
+  box-shadow:
+    inset 1px 0 0 rgba(255,255,255,.10),
+    inset -1px 0 0 rgba(255,255,255,.10);
+  filter: blur(.3px);
 }
-.pkg-fb-edge.right{
-  right: 0;
-  background:
-    linear-gradient(90deg,
-      rgba(0,0,0,0)   0%,
-      rgba(0,0,0,.04) 35%,
-      rgba(0,0,0,.14) 72%,
-      rgba(0,0,0,.26) 100%);
-}
+.pkg-doy3d-side-seam.left{ left: 1.5%; }
+.pkg-doy3d-side-seam.right{ right: 1.5%; }
 
-/* ── Bottom fold on front/back ──────────────────────
-   Strong darkening at the bottom 12% suggests the
-   pouch curls into the flat bottom. The crease line
-   at the top of this zone is the fold itself. */
-.pkg-fb-bottom-fold{
-  position: absolute;
-  left: 0; right: 0; bottom: 0;
-  height: 12%;
-  pointer-events: none;
-  z-index: 3;
-  background:
-    linear-gradient(180deg,
-      rgba(0,0,0,0)   0%,
-      rgba(0,0,0,.05) 25%,
-      rgba(0,0,0,.18) 70%,
-      rgba(0,0,0,.30) 100%);
-}
-.pkg-fb-bottom-fold::before{
-  content: "";
-  position: absolute;
-  left: 3%; right: 3%; top: 0;
-  height: 0;
-  border-top: 1px solid rgba(0,0,0,.12);
-  box-shadow: 0 -1px 0 rgba(255,255,255,.05);
-}
-
-/* ── Top seal band ─────────────────────────────────
-   Painted on every side face. The ribbed micro-stripes
-   match the welded ridges in the reference. */
-.pkg-fb-seal{
+/* Top heat seal — the strip above the zipper, slightly wrinkled */
+.pkg-doy3d-top-seal{
   position: absolute;
   left: 0; right: 0; top: 0;
   height: 9%;
@@ -1128,438 +578,960 @@ export const PKG_STYLE_PART2 = `
   pointer-events: none;
   background:
     linear-gradient(180deg,
-      rgba(255,255,255,.05) 0%,
-      rgba(255,255,255,.02) 40%,
-      rgba(0,0,0,.04)       70%,
-      rgba(0,0,0,.14)      100%);
+      rgba(255,255,255,.10) 0%,
+      rgba(255,255,255,.04) 25%,
+      rgba(0,0,0,.04) 55%,
+      rgba(0,0,0,.18) 100%);
+  border-bottom: 1px solid rgba(0,0,0,.16);
 }
-/* Many subtle parallel ridges */
-.pkg-fb-seal-ribs{
+.pkg-doy3d-top-seal::before{
+  /* fine ribbed seal texture */
+  content: "";
   position: absolute; inset: 0;
   background:
     repeating-linear-gradient(0deg,
-      rgba(0,0,0,.08) 0px 1px,
+      rgba(0,0,0,.10) 0 1px,
       rgba(255,255,255,.10) 1px 2px,
-      rgba(0,0,0,0) 2px 3px);
+      transparent 2px 3px);
   mix-blend-mode: overlay;
   opacity: .9;
 }
-/* Subtle dark line under the seal */
-.pkg-fb-seal-shadow{
+
+.pkg-doy3d-zip-track{
   position: absolute;
-  left: 0; right: 0; bottom: 0;
-  height: 2px;
-  background: linear-gradient(180deg, rgba(0,0,0,.18), rgba(0,0,0,0));
+  left: 6%; right: 6%;
+  top: 52%;
+  height: 40%;
+  background:
+    linear-gradient(180deg,
+      rgba(255,255,255,.22) 0%,
+      rgba(0,0,0,.34) 30%,
+      rgba(255,255,255,.20) 52%,
+      rgba(0,0,0,.34) 74%,
+      rgba(255,255,255,.10) 100%);
+  border-radius: 1px;
+  box-shadow:
+    inset 0 .5px 0 rgba(255,255,255,.20),
+    inset 0 -.5px 0 rgba(0,0,0,.24);
 }
 
-/* ── Branding area ─────────────────────────────────
-   Sits comfortably between the seal and the bottom fold. */
-.pkg-fb-art-area{
+.pkg-doy3d-notch{
+  position: absolute;
+  top: 105%;
+  width: 5px;
+  height: 8px;
+  z-index: 6;
+  background: rgba(0,0,0,.34);
+}
+.pkg-doy3d-notch.left{
+  left: 2%;
+  clip-path: polygon(0 20%, 100% 0, 100% 100%, 0 80%);
+}
+.pkg-doy3d-notch.right{
+  right: 2%;
+  clip-path: polygon(0 0, 100% 20%, 100% 80%, 0 100%);
+}
+
+/* Bottom gusset shadow on the panel (where it folds in) */
+.pkg-doy3d-bottom-shadow{
+  position: absolute;
+  left: 4%; right: 4%; bottom: 0;
+  height: 14%;
+  pointer-events: none; z-index: 3;
+  background:
+    linear-gradient(180deg,
+      transparent 0%,
+      rgba(0,0,0,.04) 30%,
+      rgba(0,0,0,.18) 70%,
+      rgba(0,0,0,.32) 100%);
+}
+
+/* Bottom flat-fold gusset — the diamond pattern that makes the bag stand */
+.pkg-doy3d-base{
+  background: var(--pkg-color);
+  filter: brightness(.78);
+}
+.pkg-doy3d-base-mat{
+  position: absolute; inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg,
+      rgba(0,0,0,.18) 0%,
+      rgba(0,0,0,.04) 50%,
+      rgba(0,0,0,.18) 100%),
+    linear-gradient(90deg,
+      rgba(0,0,0,.16) 0%,
+      transparent 14%,
+      transparent 86%,
+      rgba(0,0,0,.16) 100%);
+}
+/* Central horizontal fold of the K-gusset */
+.pkg-doy3d-base-fold-x{
+  position: absolute;
+  left: 6%; right: 6%;
+  top: 50%;
+  height: 0;
+  border-top: 1px solid rgba(0,0,0,.30);
+  pointer-events: none;
+}
+/* Two diagonal folds from edges toward the centre line */
+.pkg-doy3d-base-fold-d1,
+.pkg-doy3d-base-fold-d2{
+  position: absolute;
+  top: 50%; bottom: 6%;
+  width: 1px;
+  background: rgba(0,0,0,.22);
+  pointer-events: none;
+  transform-origin: 50% 0%;
+}
+.pkg-doy3d-base-fold-d1{ left: 14%; transform: rotate(-22deg); }
+.pkg-doy3d-base-fold-d2{ right: 14%; transform: rotate(22deg); }
+
+.pkg-doy3d-art-area{
   position: absolute;
   left: 14%; right: 14%;
-  top: 18%; bottom: 22%;
-  z-index: 4;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  pointer-events: none;
-}
-.pkg-fb-art-area .pkg-art{
-  position: relative;
-  inset: auto;
-  width: 100%; height: 100%;
-  padding: 6% 5%;
+  top: 18%; bottom: 18%;
 }
 
-/* ── Side gusset ────────────────────────────────────
-   Same base color as the front. The strong dark fades
-   on its left and right edges meet the front's and
-   back's edge shadows respectively, so the fold seam
-   reads continuously instead of as two boards meeting. */
-.pkg-fb-gusset-mat{
+/* ════════════════════════════════════════════════════════
+   2) ZIP-LOCK 3D · flat resealable pouch
+   ════════════════════════════════════════════════════════
+   Very thin D=18 cuboid. Visible interlocking zipper teeth
+   sit just below a top flap with a punched hang-hole.        */
+
+@keyframes pkg-zip3d-rock{
+  0%   { transform: translate3d(-50%,-50%,0) rotateX(-6deg) rotateY(-12deg); }
+  50%  { transform: translate3d(-50%,-50%,0) rotateX(-6deg) rotateY(-6deg);  }
+  100% { transform: translate3d(-50%,-50%,0) rotateX(-6deg) rotateY(-12deg); }
+}
+.pkg-zip3d-idle{ animation: pkg-zip3d-rock 11s ease-in-out infinite; }
+
+.pkg-zip3d-front, .pkg-zip3d-back{
+  border-radius: 4px 4px 2px 2px;
+}
+
+.pkg-zip3d-mat{
   position: absolute; inset: 0;
-  pointer-events: none;
-  z-index: 1;
+  pointer-events: none; z-index: 1;
   background:
-    /* horizontal shading: dark at both edges (seam fades),
-       darker again in the middle (the inward fold) */
+    radial-gradient(ellipse 55% 60% at 48% 50%,
+      rgba(255,255,255,.20) 0%,
+      rgba(255,255,255,.04) 50%,
+      transparent 75%),
     linear-gradient(90deg,
-      rgba(0,0,0,.28) 0%,
-      rgba(0,0,0,.16) 18%,
-      rgba(0,0,0,.08) 38%,
-      rgba(0,0,0,.18) 50%,
-      rgba(0,0,0,.08) 62%,
-      rgba(0,0,0,.16) 82%,
-      rgba(0,0,0,.28) 100%),
-    /* slight vertical shading */
-    linear-gradient(180deg,
-      rgba(0,0,0,.04) 0%,
-      rgba(0,0,0,0)   18%,
-      rgba(0,0,0,0)   78%,
-      rgba(0,0,0,.12) 100%);
-}
-/* The inward fold crease — a thin vertical dark line down the middle */
-.pkg-fb-gusset-crease{
-  position: absolute;
-  top: 10%; bottom: 14%;
-  left: 0; right: 0;
-  pointer-events: none;
-  z-index: 2;
-  background:
-    linear-gradient(90deg,
-      rgba(0,0,0,0)  0%,
-      rgba(0,0,0,0)  46%,
-      rgba(0,0,0,.30) 49.5%,
-      rgba(0,0,0,.30) 50.5%,
-      rgba(0,0,0,0)  54%,
-      rgba(0,0,0,0)  100%);
-}
-/* Gusset narrows into the base — bottom of the gusset is darkest */
-.pkg-fb-gusset-bottom{
-  position: absolute;
-  left: 0; right: 0; bottom: 0;
-  height: 14%;
-  pointer-events: none;
-  z-index: 3;
-  background:
-    linear-gradient(180deg,
-      rgba(0,0,0,0)   0%,
-      rgba(0,0,0,.14) 50%,
-      rgba(0,0,0,.30) 100%);
-}
-
-/* ── Bottom face — integrated flat base ─────────────
-   Same base color. Heavy darkening overlay (it's facing
-   the floor and in self-shadow), with slight lift along
-   the front edge where it meets the front's bottom-fold. */
-.pkg-fb-base-mat{
-  position: absolute; inset: 0;
-  pointer-events: none;
-  background:
-    /* heavy general darkening */
-    linear-gradient(180deg,
-      rgba(0,0,0,.30) 0%,
-      rgba(0,0,0,.36) 50%,
-      rgba(0,0,0,.24) 100%),
-    /* side darkening so corners read as folded */
-    linear-gradient(90deg,
-      rgba(0,0,0,.22) 0%,
-      rgba(0,0,0,0)   18%,
-      rgba(0,0,0,0)   82%,
-      rgba(0,0,0,.22) 100%);
-}
-
-/* ── Legacy stubs (kept as no-ops for any external reference) ── */
-.pkg-bag-flat .pkg-bag-face{ /* bypassed */ }
-.pkg-bag-flat .pkg-art{ inset: 18% 18% 28%; }
-
-/* ─── PAPER BAG WITH HANDLES ──────────────────────
-   квадратный коричневый мешок с загнутым краем и ручками.
-   ───────────────────────────────────────────────── */
-.pkg-bag-paper .pkg-bag-face{
-  background:
-    /* боковая складка слева и справа */
-    linear-gradient(90deg,
-      rgba(0,0,0,.28) 0 6%,
-      rgba(0,0,0,.04) 6% 18%,
-      rgba(255,255,255,.06) 18% 50%,
-      rgba(255,255,255,.06) 50% 82%,
-      rgba(0,0,0,.04) 82% 94%,
-      rgba(0,0,0,.28) 94% 100%),
-    /* лёгкая бумажная текстура */
-    repeating-linear-gradient(90deg,
-      rgba(0,0,0,.02) 0 1px, transparent 1px 4px),
-    var(--pkg-color);
-  background-blend-mode: multiply, multiply, normal;
-  border: 1px solid rgba(0,0,0,.18);
-  border-radius: 3px;
-  box-shadow:
-    0 20px 26px rgba(0,0,0,.20),
-    inset 0 0 0 1px rgba(0,0,0,.04);
-}
-/* загнутый верхний край */
-.pkg-paper-top-fold{
-  position:absolute;
-  left: -1px; right: -1px; top: 0;
-  height: 11%;
-  background:
-    linear-gradient(180deg,
-      rgba(0,0,0,.06) 0%,
-      rgba(255,255,255,.10) 40%,
-      rgba(0,0,0,.18) 100%);
-  border-bottom: 1px solid rgba(0,0,0,.26);
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,.30),
-    0 1px 0 rgba(0,0,0,.18);
-  z-index: 3;
-}
-/* ручки */
-.pkg-paper-handle{
-  position:absolute;
-  top: -22px;
-  width: 28px; height: 56px;
-  border: 5px solid var(--pkg-handle-color, rgba(120,75,40,.85));
-  border-bottom: 0;
-  border-radius: 999px 999px 0 0;
-  z-index: 5;
-  box-shadow: 0 2px 4px rgba(0,0,0,.20);
-}
-.pkg-paper-handle.left{ left: 20%; }
-.pkg-paper-handle.right{ right: 20%; }
-/* боковая складка (вертикальные пунктиры) */
-.pkg-paper-crease{
-  position:absolute;
-  top: 12%; bottom: 6%;
-  width: 0;
-  border-left: 1px dashed rgba(0,0,0,.18);
-  z-index: 2;
-}
-.pkg-paper-crease.left{ left: 18%; }
-.pkg-paper-crease.right{ right: 18%; }
-.pkg-bag-paper .pkg-art{
-  inset: 22% 24% 14%;
-}
-
-/* ─── COURIER BAG 2.5D FLAT POLY MAILER ────────────
-   Flat rectangular mailing envelope — no side walls.
-   Fold-over adhesive flap at top.
-   ───────────────────────────────────────────────── */
-
-/* Wrapper */
-.pkg-courier-mockup{
-  pointer-events: auto;
-}
-.pkg-stage.dragging .pkg-courier-mockup{
-  transition: none;
-}
-
-/* Idle gentle rocking */
-@keyframes pkg-courier-rock{
-  0%   { transform: translate3d(-50%,-50%,0) perspective(900px) rotateY(-2.5deg) rotateX(-0.8deg); }
-  50%  { transform: translate3d(-50%,-50%,0) perspective(900px) rotateY(2.5deg)  rotateX(-0.8deg); }
-  100% { transform: translate3d(-50%,-50%,0) perspective(900px) rotateY(-2.5deg) rotateX(-0.8deg); }
-}
-.pkg-courier-idle{
-  animation: pkg-courier-rock 10s ease-in-out infinite;
-}
-
-/* ── Fold-over flap (behind body — the back portion) ── */
-.pkg-courier-flap-back{
-  position: absolute;
-  left: 1.5%; right: 1.5%;
-  top: -11%;
-  height: 18%;
-  background: var(--pkg-color, #B08A5B);
-  filter: brightness(.88);
-  border-radius: 2px 2px 0 0;
-  clip-path: polygon(
-    0.5% 12%, 99.5% 12%,
-    100% 14%, 100% 100%,
-    0% 100%, 0% 14%
-  );
-  z-index: 0;
-  pointer-events: none;
-}
-/* Subtle shading on the flap back */
-.pkg-courier-flap-back::after{
-  content:"";
-  position:absolute; inset:0;
-  background:
-    linear-gradient(180deg,
-      rgba(0,0,0,.10) 0%,
-      rgba(0,0,0,.03) 40%,
-      rgba(0,0,0,.06) 100%);
-  pointer-events:none;
-}
-
-/* ── Main flat mailer body ─────────────────────── */
-.pkg-courier-body{
-  position: absolute;
-  inset: 0;
-  background: var(--pkg-color, #B08A5B);
-  overflow: hidden;
-  border-radius: 2px;
-
-  box-shadow:
-    0 2px 14px rgba(0,0,0,.12),
-    inset 0 0 0 1px rgba(0,0,0,.05);
-}
-
-/* ── Polymer material highlights ───────────────── */
-.pkg-courier-plastic{
-  position:absolute; inset:0;
-  pointer-events:none;
-  z-index: 1;
-  background:
-    /* Soft central gloss */
-    radial-gradient(ellipse 55% 60% at 50% 48%,
-      rgba(255,255,255,.12) 0%,
-      rgba(255,255,255,.03) 50%,
-      rgba(255,255,255,0) 72%),
-    /* Side edge darkening */
-    linear-gradient(90deg,
-      rgba(0,0,0,.12) 0%,
-      rgba(0,0,0,.04) 3.5%,
+      rgba(0,0,0,.14) 0%,
+      rgba(0,0,0,.04) 4%,
       transparent 10%,
       transparent 90%,
-      rgba(0,0,0,.04) 96.5%,
-      rgba(0,0,0,.12) 100%),
-    /* Vertical sheen */
-    linear-gradient(180deg,
-      rgba(255,255,255,.04) 0%,
-      transparent 20%,
-      transparent 80%,
-      rgba(0,0,0,.03) 100%),
-    /* Subtle diagonal plastic streak */
-    linear-gradient(118deg,
-      transparent 0%,
-      transparent 35%,
-      rgba(255,255,255,.05) 40%,
-      rgba(255,255,255,.08) 44%,
-      transparent 48%,
+      rgba(0,0,0,.04) 96%,
+      rgba(0,0,0,.14) 100%),
+    linear-gradient(125deg,
+      transparent 30%,
+      rgba(255,255,255,.08) 36%,
+      rgba(255,255,255,.10) 40%,
+      transparent 46%,
       transparent 100%);
 }
+.pkg-zip3d-mat.back{ filter: brightness(.95); }
 
-/* ── Welded side seams ─────────────────────────── */
-.pkg-courier-weld{
-  position:absolute;
-  top: 0; bottom: 0;
-  width: 2.5%;
-  z-index: 3;
-  pointer-events:none;
+.pkg-zip3d-edge{
+  position: absolute;
+  top: 18%; bottom: 4%;
+  width: 4%;
+  pointer-events: none; z-index: 2;
 }
-.pkg-courier-weld.left{
+.pkg-zip3d-edge.left{
   left: 0;
   background:
     linear-gradient(90deg,
-      rgba(0,0,0,.12) 0%,
-      rgba(0,0,0,.05) 45%,
+      rgba(0,0,0,.22) 0%,
+      rgba(0,0,0,.06) 60%,
       transparent 100%);
-  border-right: 0.5px solid rgba(0,0,0,.06);
 }
-.pkg-courier-weld.right{
+.pkg-zip3d-edge.right{
   right: 0;
   background:
-    linear-gradient(-90deg,
-      rgba(0,0,0,.12) 0%,
-      rgba(0,0,0,.05) 45%,
-      transparent 100%);
-  border-left: 0.5px solid rgba(0,0,0,.06);
+    linear-gradient(90deg,
+      transparent 0%,
+      rgba(0,0,0,.06) 40%,
+      rgba(0,0,0,.22) 100%);
 }
 
-/* ── Welded bottom seam ────────────────────────── */
-.pkg-courier-weld-bottom{
-  position:absolute;
-  left: 0; right: 0;
-  bottom: 0;
-  height: 2.5%;
-  z-index: 3;
-  pointer-events:none;
+.pkg-zip3d-top-flap{
+  position: absolute;
+  left: 0; right: 0; top: 0;
+  height: 9%;
+  z-index: 4;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg,
+      rgba(255,255,255,.06) 0%,
+      rgba(0,0,0,.03) 60%,
+      rgba(0,0,0,.12) 100%);
+  border-bottom: 0.5px solid rgba(0,0,0,.10);
+}
+.pkg-zip3d-hang-hole{
+  position: absolute;
+  left: 50%; top: 38%;
+  transform: translateX(-50%);
+  width: 32px; height: 8px;
+  background: linear-gradient(180deg, #0a0e16, #1a2238);
+  border-radius: 999px;
+  box-shadow:
+    inset 0 1px 2px rgba(0,0,0,.6),
+    0 .5px 0 rgba(255,255,255,.18);
+}
+
+.pkg-zip3d-zip{
+  position: absolute;
+  left: 2%; right: 2%;
+  top: 9%;
+  height: 8%;
+  z-index: 5;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg,
+      rgba(0,0,0,.04) 0%,
+      rgba(0,0,0,.10) 50%,
+      rgba(0,0,0,.04) 100%);
+  border-top: 0.5px solid rgba(0,0,0,.22);
+  border-bottom: 0.5px solid rgba(0,0,0,.22);
+}
+.pkg-zip3d-zip-teeth{
+  position: absolute; inset: 0;
+  background:
+    repeating-linear-gradient(90deg,
+      rgba(0,0,0,.34) 0 1.5px,
+      rgba(255,255,255,.22) 1.5px 3px,
+      rgba(0,0,0,.18) 3px 4.5px,
+      transparent 4.5px 6px);
+}
+.pkg-zip3d-zip-rail{
+  position: absolute;
+  left: 0; right: 0; top: 38%;
+  height: 22%;
+  background:
+    linear-gradient(180deg,
+      rgba(255,255,255,.26) 0%,
+      rgba(0,0,0,.18) 50%,
+      rgba(255,255,255,.10) 100%);
+  box-shadow:
+    0 .5px 0 rgba(255,255,255,.14),
+    inset 0 .5px 0 rgba(0,0,0,.10);
+}
+
+.pkg-zip3d-bottom-seam{
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  height: 3.5%;
+  z-index: 2;
+  pointer-events: none;
   background:
     linear-gradient(180deg,
       transparent 0%,
-      rgba(0,0,0,.06) 40%,
-      rgba(0,0,0,.12) 100%);
-  border-top: 0.5px solid rgba(0,0,0,.05);
+      rgba(0,0,0,.08) 60%,
+      rgba(0,0,0,.16) 100%);
+  border-top: 0.5px solid rgba(0,0,0,.12);
 }
 
-/* ── Fold-over flap (front portion) ────────────── */
-.pkg-courier-flap-front{
-  position:absolute;
-  left: 0; right: 0; top: 0;
-  height: 14%;
+.pkg-zip3d-art-area{
+  left: 8%; right: 8%;
+  top: 22%; bottom: 9%;
+}
+
+.pkg-zip3d-seam-mat{
+  position: absolute; inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg,
+      rgba(0,0,0,.55) 0%,
+      rgba(0,0,0,.40) 50%,
+      rgba(0,0,0,.55) 100%);
+}
+
+/* ════════════════════════════════════════════════════════
+   3) FLAT-BOTTOM BAG 3D · block-bottom coffee bag (REBUILT)
+   ════════════════════════════════════════════════════════
+   Five faces + a real 3D "fin seal" ridge sticking up from
+   the top. Each gusset has diagonal corner folds where the
+   block-bottom geometry pinches in. Front face has a
+   degassing valve disc.                                       */
+
+@keyframes pkg-fb3d-rock{
+  0%   { transform: translate3d(-50%,-50%,0) rotateX(-8deg) rotateY(-18deg); }
+  50%  { transform: translate3d(-50%,-50%,0) rotateX(-8deg) rotateY(-10deg); }
+  100% { transform: translate3d(-50%,-50%,0) rotateX(-8deg) rotateY(-18deg); }
+}
+.pkg-fb3d-idle{ animation: pkg-fb3d-rock 11s ease-in-out infinite; }
+
+.pkg-fb3d-front, .pkg-fb3d-back, .pkg-fb3d-gusset{
+  border-radius: 2px;
+}
+
+.pkg-fb3d-mat{
+  position: absolute; inset: 0;
+  pointer-events: none; z-index: 1;
+  background:
+    radial-gradient(ellipse 80% 80% at 50% 50%,
+      rgba(255,255,255,.18) 0%,
+      rgba(255,255,255,.04) 40%,
+      transparent 70%),
+    linear-gradient(90deg,
+      rgba(0,0,0,.20) 0%,
+      rgba(0,0,0,.05) 8%,
+      transparent 22%,
+      transparent 78%,
+      rgba(0,0,0,.05) 92%,
+      rgba(0,0,0,.20) 100%),
+    linear-gradient(180deg,
+      rgba(0,0,0,.10) 0%,
+      transparent 14%,
+      transparent 84%,
+      rgba(0,0,0,.16) 100%);
+}
+.pkg-fb3d-mat.back{ filter: brightness(.95); }
+
+/* Diagonal corner pinches on the body (where the gusset folds in) */
+.pkg-fb3d-corner{
+  position: absolute;
+  width: 14%; height: 10%;
+  pointer-events: none; z-index: 2;
+  background: linear-gradient(135deg, rgba(0,0,0,.18) 0%, transparent 80%);
+}
+.pkg-fb3d-corner.tl{ left: 0; top: 0;
+  background: linear-gradient(135deg, rgba(0,0,0,.26) 0%, transparent 80%); }
+.pkg-fb3d-corner.tr{ right: 0; top: 0;
+  background: linear-gradient(225deg, rgba(0,0,0,.26) 0%, transparent 80%); }
+.pkg-fb3d-corner.bl{ left: 0; bottom: 0;
+  background: linear-gradient(45deg, rgba(0,0,0,.22) 0%, transparent 80%); }
+.pkg-fb3d-corner.br{ right: 0; bottom: 0;
+  background: linear-gradient(315deg, rgba(0,0,0,.22) 0%, transparent 80%); }
+
+/* Degassing valve on the front face */
+.pkg-fb3d-valve{
+  position: absolute;
+  left: 50%; top: 28%;
+  transform: translateX(-50%);
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 50% 40%,
+      rgba(0,0,0,.20) 0%,
+      rgba(0,0,0,.08) 38%,
+      rgba(255,255,255,.12) 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.30),
+    inset 0 -1px 0 rgba(0,0,0,.18),
+    0 1px 2px rgba(0,0,0,.10);
+  z-index: 3;
+}
+.pkg-fb3d-valve::after{
+  content: "";
+  position: absolute;
+  inset: 35%;
+  border-radius: 50%;
+  background: rgba(0,0,0,.30);
+  box-shadow: inset 0 0 2px rgba(0,0,0,.5);
+}
+
+.pkg-fb3d-gusset-mat{
+  position: absolute; inset: 0;
+  pointer-events: none; z-index: 1;
+  background:
+    linear-gradient(90deg,
+      rgba(0,0,0,.32) 0%,
+      rgba(0,0,0,.18) 22%,
+      rgba(0,0,0,.10) 42%,
+      rgba(0,0,0,.20) 50%,
+      rgba(0,0,0,.10) 58%,
+      rgba(0,0,0,.18) 78%,
+      rgba(0,0,0,.32) 100%);
+}
+.pkg-fb3d-gusset-crease{
+  position: absolute;
+  top: 0; bottom: 0; left: 50%; width: 1px;
+  background: rgba(0,0,0,.35);
+  transform: translateX(-50%);
+  pointer-events: none; z-index: 2;
+}
+
+/* Diagonal fold lines at gusset corners (block-bottom geometry) */
+.pkg-fb3d-gusset-diag{
+  position: absolute;
+  width: 1px;
+  background: rgba(0,0,0,.30);
+  pointer-events: none; z-index: 3;
+  transform-origin: 50% 50%;
+}
+.pkg-fb3d-gusset-diag.tl{
+  left: 0; top: 0; height: 18%;
+  transform: rotate(-32deg) translateY(0);
+  transform-origin: 0% 0%;
+  width: 70%;
+  height: 1px;
+}
+.pkg-fb3d-gusset-diag.tr{
+  right: 0; top: 0; height: 1px;
+  transform: rotate(32deg);
+  transform-origin: 100% 0%;
+  width: 70%;
+}
+.pkg-fb3d-gusset-diag.bl{
+  left: 0; bottom: 0; height: 1px;
+  transform: rotate(32deg);
+  transform-origin: 0% 100%;
+  width: 70%;
+}
+.pkg-fb3d-gusset-diag.br{
+  right: 0; bottom: 0; height: 1px;
+  transform: rotate(-32deg);
+  transform-origin: 100% 100%;
+  width: 70%;
+}
+
+.pkg-fb3d-base-mat{
+  position: absolute; inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg,
+      rgba(0,0,0,.34) 0%,
+      rgba(0,0,0,.38) 50%,
+      rgba(0,0,0,.24) 100%);
+}
+
+/* Top face — flat seal area at the very top of the body, below the fin */
+.pkg-fb3d-top-mat{
+  position: absolute; inset: 0;
+  background:
+    linear-gradient(180deg,
+      rgba(255,255,255,.18) 0%,
+      rgba(0,0,0,.08) 80%,
+      rgba(0,0,0,.20) 100%),
+    repeating-linear-gradient(90deg,
+      rgba(0,0,0,.06) 0 1px, transparent 1px 3px);
+}
+
+/* ── Fin seal — the 3D ridge sticking up above the top ── */
+.pkg-fb3d-fin{
+  position: absolute;
+  pointer-events: none;
+  background: var(--pkg-color);
+  filter: brightness(1.06);
   z-index: 5;
-  pointer-events:none;
+}
+.pkg-fb3d-fin-mat{
+  position: absolute; inset: 0;
   background:
     linear-gradient(180deg,
-      rgba(0,0,0,.02) 0%,
-      rgba(255,255,255,.04) 30%,
-      rgba(0,0,0,.04) 90%,
-      rgba(0,0,0,.08) 100%);
+      rgba(0,0,0,.16) 0%,
+      rgba(255,255,255,.18) 32%,
+      rgba(255,255,255,.10) 50%,
+      rgba(0,0,0,.06) 75%,
+      rgba(0,0,0,.22) 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(0,0,0,.25),
+    inset 0 -1px 0 rgba(0,0,0,.18);
+}
+.pkg-fb3d-fin-ribs{
+  position: absolute; inset: 0;
+  background:
+    repeating-linear-gradient(0deg,
+      rgba(0,0,0,.10) 0 1px,
+      rgba(255,255,255,.12) 1px 2px,
+      transparent 2px 3px);
+  mix-blend-mode: overlay;
+  opacity: .85;
+}
+.pkg-fb3d-fin-pull{
+  position: absolute;
+  left: 50%; top: 20%;
+  transform: translateX(-50%);
+  width: 22px; height: 12px;
+  background: rgba(245,240,232,.88);
+  border-radius: 999px 999px 4px 4px;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.6),
+    0 1px 2px rgba(0,0,0,.22);
+}
+.pkg-fb3d-fin-pull::after{
+  content: "";
+  position: absolute;
+  left: 6px; right: 6px; top: 3px; bottom: 3px;
+  background: rgba(0,0,0,.18);
+  border-radius: 999px 999px 2px 2px;
 }
 
-/* ── Adhesive strip (inside flap) ──────────────── */
-.pkg-courier-adhesive{
-  position:absolute;
-  left: 4%; right: 4%;
-  bottom: 15%;
-  height: 28%;
-  background:
-    linear-gradient(180deg,
-      rgba(255,255,255,.14) 0%,
-      rgba(255,255,255,.08) 40%,
-      rgba(255,255,255,.12) 80%,
-      rgba(255,255,255,.06) 100%);
-  border: 0.5px solid rgba(255,255,255,.10);
+.pkg-fb3d-art-area{
+  position: absolute;
+  left: 14%; right: 14%;
+  top: 42%; bottom: 18%;
+}
+
+/* ════════════════════════════════════════════════════════
+   4) PAPER BAG WITH HANDLES · shopping bag (FULL REBUILD)
+   ════════════════════════════════════════════════════════
+   Kraft shopping bag. Flat paper-strap handles, prominent
+   top fold band, visible diagonal fold lines on the gussets
+   where the side wall pinches in at the corners.            */
+
+@keyframes pkg-pb3d-rock{
+  0%   { transform: translate3d(-50%,-50%,0) rotateX(-12deg) rotateY(-22deg); }
+  50%  { transform: translate3d(-50%,-50%,0) rotateX(-12deg) rotateY(-14deg); }
+  100% { transform: translate3d(-50%,-50%,0) rotateX(-12deg) rotateY(-22deg); }
+}
+.pkg-pb3d-idle{ animation: pkg-pb3d-rock 11s ease-in-out infinite; }
+
+.pkg-pb3d-front, .pkg-pb3d-back, .pkg-pb3d-gusset{
   border-radius: 1px;
+  box-shadow: 0 8px 14px rgba(0,0,0,.12);
 }
 
-/* ── Peel strip indicator text ─────────────────── */
-.pkg-courier-peel-text{
-  position:absolute;
-  right: 6%; bottom: 22%;
-  width: 28px; height: 0;
-  border-top: 0.5px dashed rgba(0,0,0,.18);
+.pkg-pb3d-mat{
+  position: absolute; inset: 0;
+  pointer-events: none; z-index: 1;
+  background:
+    /* central highlight from soft light */
+    radial-gradient(ellipse 65% 70% at 50% 45%,
+      rgba(255,255,255,.20) 0%,
+      rgba(255,255,255,.06) 45%,
+      transparent 75%),
+    /* edge shadows where paper folds onto the gusset */
+    linear-gradient(90deg,
+      rgba(0,0,0,.24) 0%,
+      rgba(0,0,0,.06) 7%,
+      transparent 18%,
+      transparent 82%,
+      rgba(0,0,0,.06) 93%,
+      rgba(0,0,0,.24) 100%),
+    /* kraft fiber texture — dense crosshatch */
+    repeating-linear-gradient(92deg,
+      rgba(0,0,0,.028) 0 1px, transparent 1px 3px),
+    repeating-linear-gradient(3deg,
+      rgba(0,0,0,.022) 0 1px, transparent 1px 4px),
+    repeating-linear-gradient(48deg,
+      rgba(0,0,0,.014) 0 1px, transparent 1px 6px),
+    /* warm kraft top-to-bottom shading — subtle */
+    linear-gradient(180deg,
+      rgba(120, 75, 30, .03) 0%,
+      transparent 30%,
+      rgba(70, 40, 12, .04) 100%);
 }
-.pkg-courier-peel-text::after{
-  content:"PEEL";
-  position:absolute;
-  right: 0; top: 2px;
+.pkg-pb3d-mat.back{ filter: brightness(.93); }
+
+/* Random crinkles/folds across the paper — make it look used */
+.pkg-pb3d-wrinkles{
+  position: absolute; inset: 0;
+  pointer-events: none; z-index: 1;
+  background:
+    radial-gradient(ellipse 35% 6%  at 30% 38%, rgba(0,0,0,.07) 0%, transparent 70%),
+    radial-gradient(ellipse 28% 5%  at 65% 56%, rgba(255,255,255,.06) 0%, transparent 70%),
+    radial-gradient(ellipse 22% 5%  at 22% 70%, rgba(0,0,0,.06) 0%, transparent 70%),
+    radial-gradient(ellipse 30% 4%  at 72% 26%, rgba(0,0,0,.05) 0%, transparent 70%),
+    radial-gradient(ellipse 18% 4%  at 48% 64%, rgba(0,0,0,.04) 0%, transparent 70%);
+  mix-blend-mode: multiply;
+}
+
+.pkg-pb3d-edge{
+  position: absolute;
+  top: 14%; bottom: 18%;
+  width: 6%;
+  pointer-events: none; z-index: 2;
+}
+.pkg-pb3d-edge.left{
+  left: 0;
+  background:
+    linear-gradient(90deg,
+      rgba(0,0,0,.36) 0%,
+      rgba(0,0,0,.10) 50%,
+      transparent 100%);
+}
+.pkg-pb3d-edge.right{
+  right: 0;
+  background:
+    linear-gradient(90deg,
+      transparent 0%,
+      rgba(0,0,0,.10) 50%,
+      rgba(0,0,0,.36) 100%);
+}
+
+/* Top fold band — the visible folded-over reinforcement at the top edge */
+.pkg-pb3d-top-fold{
+  position: absolute;
+  left: 0; right: 0; top: 0;
+  height: 9%;
+  pointer-events: none; z-index: 4;
+  background:
+    linear-gradient(180deg,
+      rgba(0,0,0,.08) 0%,
+      rgba(255,255,255,.12) 14%,
+      rgba(0,0,0,.04) 70%,
+      rgba(0,0,0,.26) 100%);
+  border-bottom: 1px solid rgba(0,0,0,.32);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.22),
+    0 1px 0 rgba(0,0,0,.20);
+}
+
+/* Bottom interior shadow & visible fold line where base flap attaches */
+.pkg-pb3d-bottom-shadow{
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  height: 10%;
+  pointer-events: none; z-index: 3;
+  background:
+    linear-gradient(180deg,
+      transparent 0%,
+      rgba(0,0,0,.05) 50%,
+      rgba(0,0,0,.15) 100%);
+}
+.pkg-pb3d-bottom-fold-line{
+  position: absolute;
+  left: 4%; right: 4%;
+  bottom: 12%;
+  height: 0;
+  border-top: 1px solid rgba(0,0,0,.20);
+  pointer-events: none; z-index: 3;
+}
+
+.pkg-pb3d-gusset-mat{
+  position: absolute; inset: 0;
+  pointer-events: none; z-index: 1;
+  background:
+    linear-gradient(90deg,
+      rgba(0,0,0,.30) 0%,
+      rgba(0,0,0,.12) 22%,
+      rgba(0,0,0,.06) 42%,
+      rgba(0,0,0,.26) 50%,
+      rgba(0,0,0,.06) 58%,
+      rgba(0,0,0,.12) 78%,
+      rgba(0,0,0,.30) 100%),
+    repeating-linear-gradient(3deg,
+      rgba(0,0,0,.024) 0 1px, transparent 1px 4px),
+    repeating-linear-gradient(92deg,
+      rgba(0,0,0,.018) 0 1px, transparent 1px 3px);
+}
+/* Central vertical fold (the gusset bends inward along this line) */
+.pkg-pb3d-gusset-crease{
+  position: absolute;
+  top: 9%; bottom: 14%; left: 50%;
+  width: 1px;
+  transform: translateX(-50%);
+  background: rgba(0,0,0,.38);
+  pointer-events: none; z-index: 2;
+}
+/* Diagonal corner folds — top-left and bottom-left of each gusset */
+.pkg-pb3d-gusset-corner{
+  position: absolute;
+  pointer-events: none; z-index: 3;
+  background: rgba(0,0,0,.20);
+  width: 60%; height: 1px;
+  transform-origin: 0% 0%;
+}
+.pkg-pb3d-gusset-corner.tl{
+  left: 0; top: 9%;
+  transform: rotate(35deg);
+}
+.pkg-pb3d-gusset-corner.bl{
+  left: 0; bottom: 14%;
+  transform: rotate(-35deg);
+}
+
+.pkg-pb3d-base{
+  background: var(--pkg-color);
+  filter: brightness(.85);
+}
+.pkg-pb3d-base-mat{
+  position: absolute; inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg,
+      rgba(0,0,0,.30) 0%,
+      rgba(0,0,0,.40) 50%,
+      rgba(0,0,0,.26) 100%);
+}
+.pkg-pb3d-base-fold{
+  position: absolute;
+  background: rgba(0,0,0,.28);
+  pointer-events: none;
+}
+.pkg-pb3d-base-fold.v{
+  top: 8%; bottom: 8%;
+  left: 50%; width: 1px;
+  transform: translateX(-50%);
+}
+.pkg-pb3d-base-fold.h{
+  left: 8%; right: 8%;
+  top: 50%; height: 1px;
+}
+.pkg-pb3d-base-fold.d1{
+  left: 8%; top: 50%;
+  width: 38%; height: 1px;
+  transform: rotate(28deg);
+  transform-origin: 0% 0%;
+  background: rgba(0,0,0,.18);
+}
+.pkg-pb3d-base-fold.d2{
+  right: 8%; top: 50%;
+  width: 38%; height: 1px;
+  transform: rotate(-28deg);
+  transform-origin: 100% 0%;
+  background: rgba(0,0,0,.18);
+}
+
+/* ── FLAT PAPER-STRAP HANDLES (arched, single div) ── */
+.pkg-pb3d-handle-layer{
+  position: absolute;
+  top: 0; left: 0;
+  transform-style: preserve-3d;
+  pointer-events: none;
+}
+.pkg-pb3d-handle{
+  position: absolute;
+  top: -38px;
+  width: 26%;
+  height: 50px;
+  border: 6px solid var(--pkg-handle-color, #8b6b40);
+  border-bottom: 0;
+  /* Flat-topped arch with rounded corners — like real folded-paper strap */
+  border-radius: 999px 999px 4px 4px;
+  background: transparent;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.14),
+    inset 0 -1px 0 rgba(0,0,0,.18),
+    0 2px 3px rgba(0,0,0,.20);
+}
+.pkg-pb3d-handle.left{  left: 16%; }
+.pkg-pb3d-handle.right{ right: 16%; }
+
+/* Reinforcement patches where each leg attaches to the bag top */
+.pkg-pb3d-handle-anchor{
+  position: absolute;
+  bottom: -8px;
+  width: 16px; height: 12px;
+  background:
+    linear-gradient(180deg,
+      var(--pkg-handle-color, #8b6b40) 0%,
+      var(--pkg-handle-dark, #6b4f29) 100%);
+  border-radius: 0 0 2px 2px;
+  box-shadow:
+    0 1px 2px rgba(0,0,0,.20),
+    inset 0 1px 0 rgba(255,255,255,.08);
+}
+.pkg-pb3d-handle-anchor.left{  left: -5px; }
+.pkg-pb3d-handle-anchor.right{ right: -5px; }
+
+.pkg-pb3d-art-area{
+  position: absolute;
+  left: 14%; right: 14%;
+  top: 22%; bottom: 22%;
+}
+
+/* ════════════════════════════════════════════════════════
+   5) COURIER MAILER 3D · poly mailer
+   ════════════════════════════════════════════════════════
+   Very thin cuboid + a real 3D fold-over flap on top, tilted
+   forward so you can see the adhesive strip. Front face has
+   a printed shipping label patch.                              */
+
+@keyframes pkg-cb3d-rock{
+  0%   { transform: translate3d(-50%,-50%,0) rotateX(-6deg) rotateY(-12deg); }
+  50%  { transform: translate3d(-50%,-50%,0) rotateX(-6deg) rotateY(-6deg);  }
+  100% { transform: translate3d(-50%,-50%,0) rotateX(-6deg) rotateY(-12deg); }
+}
+.pkg-cb3d-idle{ animation: pkg-cb3d-rock 11s ease-in-out infinite; }
+
+.pkg-cb3d-front, .pkg-cb3d-back{ border-radius: 2px; }
+
+.pkg-cb3d-mat{
+  position: absolute; inset: 0;
+  pointer-events: none; z-index: 1;
+  background:
+    radial-gradient(ellipse 60% 60% at 50% 48%,
+      rgba(255,255,255,.14) 0%,
+      rgba(255,255,255,.03) 50%,
+      transparent 72%),
+    linear-gradient(90deg,
+      rgba(0,0,0,.12) 0%,
+      rgba(0,0,0,.04) 4%,
+      transparent 10%,
+      transparent 90%,
+      rgba(0,0,0,.04) 96%,
+      rgba(0,0,0,.12) 100%),
+    linear-gradient(118deg,
+      transparent 35%,
+      rgba(255,255,255,.06) 40%,
+      rgba(255,255,255,.10) 44%,
+      transparent 48%,
+      transparent 100%);
+}
+.pkg-cb3d-mat.back{ filter: brightness(.94); }
+
+.pkg-cb3d-weld{
+  position: absolute;
+  pointer-events: none;
+  z-index: 3;
+}
+.pkg-cb3d-weld.left{
+  left: 0; top: 18%; bottom: 0; width: 3%;
+  background:
+    linear-gradient(90deg,
+      rgba(0,0,0,.16) 0%,
+      rgba(0,0,0,.05) 50%,
+      transparent 100%);
+  border-right: 0.5px solid rgba(0,0,0,.10);
+}
+.pkg-cb3d-weld.right{
+  right: 0; top: 18%; bottom: 0; width: 3%;
+  background:
+    linear-gradient(90deg,
+      transparent 0%,
+      rgba(0,0,0,.05) 50%,
+      rgba(0,0,0,.16) 100%);
+  border-left: 0.5px solid rgba(0,0,0,.10);
+}
+.pkg-cb3d-weld.bottom{
+  left: 0; right: 0; bottom: 0; height: 3%;
+  background:
+    linear-gradient(180deg,
+      transparent 0%,
+      rgba(0,0,0,.06) 50%,
+      rgba(0,0,0,.14) 100%);
+  border-top: 0.5px solid rgba(0,0,0,.08);
+}
+
+/* Shipping label patch (printed on the front face) */
+.pkg-cb3d-label{
+  position: absolute;
+  left: 8%; top: 32%;
+  width: 38%; height: 36%;
+  background: #f6f3ec;
+  border: 1px solid rgba(0,0,0,.22);
+  border-radius: 2px;
+  z-index: 4;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.6),
+    0 1px 2px rgba(0,0,0,.10);
+  overflow: hidden;
+}
+.pkg-cb3d-label::before{
+  content: "SHIP TO";
+  position: absolute;
+  left: 6px; top: 8px;
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 6px;
-  letter-spacing: .15em;
-  color: rgba(0,0,0,.25);
-  white-space: nowrap;
+  letter-spacing: .14em;
+  color: rgba(0,0,0,.55);
 }
-
-/* ── Flap fold line ────────────────────────────── */
-.pkg-courier-fold-line{
-  position:absolute;
-  left: 0; right: 0; bottom: 0;
-  height: 0;
-  border-bottom: 1px solid rgba(0,0,0,.12);
-  box-shadow:
-    0 1px 0 rgba(255,255,255,.06),
-    0 -1px 0 rgba(0,0,0,.04);
+.pkg-cb3d-label::after{
+  content: "";
+  position: absolute;
+  left: 6px; right: 6px; top: 18px;
+  height: 28px;
+  background:
+    linear-gradient(180deg,
+      rgba(0,0,0,.55) 0 1px, transparent 1px 6px,
+      rgba(0,0,0,.55) 6px 7px, transparent 7px 12px,
+      rgba(0,0,0,.55) 12px 13px, transparent 13px 22px);
 }
-
-/* ── Branding area ─────────────────────────────── */
-.pkg-courier-art-area{
-  position:absolute;
-  left: 8%; right: 8%;
-  top: 18%; bottom: 8%;
-  z-index: 4;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  pointer-events: none;
+.pkg-cb3d-label-stripe{
+  position: absolute;
+  left: 0; right: 0; top: 0;
+  height: 5px;
+  background: linear-gradient(90deg, #d9534f, #b04543);
+  border-bottom: 1px solid rgba(0,0,0,.20);
 }
-.pkg-courier-art-area .pkg-art{
-  position: relative;
-  inset: auto;
-  width: 100%; height: 100%;
-  padding: 6% 8%;
-}
-
-/* ── Floor shadow ──────────────────────────────── */
-.pkg-courier-floor-shadow{
-  position:absolute;
-  left: 5%; right: 5%;
-  bottom: -6px;
+.pkg-cb3d-label-barcode{
+  position: absolute;
+  left: 6px; right: 6px; bottom: 4px;
   height: 14px;
   background:
-    radial-gradient(ellipse at 50% 20%,
-      rgba(0,0,0,.18) 0%,
-      rgba(0,0,0,.06) 50%,
-      rgba(0,0,0,0) 80%);
-  filter: blur(3px);
-  pointer-events: none;
-  z-index: -1;
+    repeating-linear-gradient(90deg,
+      #0a0e16 0 1px,
+      transparent 1px 2px,
+      #0a0e16 2px 4px,
+      transparent 4px 6px,
+      #0a0e16 6px 7px,
+      transparent 7px 11px);
 }
 
-/* ── Legacy stubs (courier no longer uses generic bag faces) ── */
-.pkg-bag-courier .pkg-bag-face{ /* bypassed */ }
-.pkg-bag-courier .pkg-art{ inset: 32% 22% 18%; }
+.pkg-cb3d-art-area{
+  left: 50%; right: 6%;
+  top: 32%; bottom: 8%;
+}
+
+.pkg-cb3d-seam-mat{
+  position: absolute; inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg,
+      rgba(0,0,0,.55) 0%,
+      rgba(0,0,0,.40) 50%,
+      rgba(0,0,0,.55) 100%);
+}
+
+/* Fold-over flap — its own 3D sub-stage tilted forward */
+.pkg-cb3d-flap{
+  position: absolute;
+  transform-style: preserve-3d;
+  pointer-events: none;
+  background: var(--pkg-color, #B08A5B);
+  border-radius: 2px 2px 0 0;
+  box-shadow:
+    0 -2px 4px rgba(0,0,0,.10),
+    inset 0 1px 0 rgba(255,255,255,.12);
+  overflow: hidden;
+  filter: brightness(1.06);
+  clip-path: polygon(0 0, 100% 0, 96% 100%, 4% 100%);
+}
+.pkg-cb3d-flap-mat{
+  position: absolute; inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg,
+      rgba(255,255,255,.10) 0%,
+      rgba(0,0,0,.04) 60%,
+      rgba(0,0,0,.10) 100%),
+    linear-gradient(118deg,
+      transparent 30%,
+      rgba(255,255,255,.08) 38%,
+      rgba(255,255,255,.12) 42%,
+      transparent 50%);
+}
+.pkg-cb3d-flap-fold-line{
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  height: 0;
+  border-bottom: 1px solid rgba(0,0,0,.22);
+  box-shadow:
+    0 -1px 0 rgba(0,0,0,.06),
+    0 1px 0 rgba(255,255,255,.08);
+}
+.pkg-cb3d-flap-adhesive{
+  position: absolute;
+  left: 6%; right: 6%;
+  bottom: 18%;
+  height: 46%;
+  background:
+    repeating-linear-gradient(90deg,
+      rgba(255,255,255,.26) 0 5px,
+      rgba(255,255,255,.10) 5px 8px),
+    linear-gradient(180deg,
+      rgba(255,255,255,.22) 0%,
+      rgba(255,255,255,.08) 100%);
+  border: 0.5px dashed rgba(0,0,0,.20);
+  border-radius: 1px;
+}
+.pkg-cb3d-flap-peel{
+  position: absolute;
+  left: 0; right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  text-align: center;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 7px;
+  letter-spacing: .22em;
+  color: rgba(0,0,0,.40);
+}
 
 /* ────────────────────────────────────────────────── */
 /* CUPS                                                */
@@ -1841,6 +1813,34 @@ export const PKG_STYLE_PART2 = `
   background: rgba(255,255,255,.55);
   padding: 2px 5px; border-radius: 4px;
   z-index: 5;
+}
+
+/* ── Variant-specific dieline helpers ── */
+.pkg-unfold .panel.ghost{
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background:
+    repeating-linear-gradient(135deg,
+      rgba(15,22,38,.04) 0 8px,
+      rgba(15,22,38,.08) 8px 16px);
+  border: 1px dashed rgba(15,22,38,.22);
+  color: rgba(0,0,0,.45);
+}
+.pkg-unfold .panel.ghost .panel-label{
+  position: static;
+  background: rgba(255,255,255,.7);
+}
+.pkg-unfold-caption{
+  width: 100%;
+  text-align: center;
+  margin-top: 14px;
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 10px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: rgba(0,0,0,.45);
 }
 
 /* idle-вращение */
