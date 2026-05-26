@@ -84,19 +84,25 @@ const CFG = {
     bag: [{ id:'front', label:'Лицо' }, { id:'back', label:'Задняя сторона' }, { id:'left', label:'Левый бок' }, { id:'right', label:'Правый бок' }],
     box: [{ id:'front', label:'Лицо' }, { id:'back', label:'Задняя сторона' }, { id:'left', label:'Левый бок' }, { id:'right', label:'Правый бок' }, { id:'top', label:'Верх' }, { id:'bottom', label:'Низ' }],
   },
+  sideOptionsByVariant: {
+    'zip-lock-bag': [{ id:'front', label:'Лицо' }, { id:'back', label:'Задняя сторона' }],
+    'courier-bag': [{ id:'front', label:'Лицо' }, { id:'back', label:'Задняя сторона' }],
+    'flat-bottom-bag': [{ id:'front', label:'Лицо' }, { id:'back', label:'Задняя сторона' }, { id:'left', label:'Левый бок' }, { id:'right', label:'Правый бок' }, { id:'bottom', label:'Низ' }],
+  },
   qty: [50, 100, 200, 500, 1000, 2000, 5000],
   sides: ['Лицо', 'Зад', 'Бок Л', 'Бок П', 'Верх', 'Низ'],
 };
 
 const SIDE_IDS = ['front', 'back', 'left', 'right', 'top', 'bottom'];
 function defaultVariantForType(type){ return CFG.variants[type]?.[0]?.id || ''; }
-function sideOptionsForType(type){ return CFG.sideOptions[type] || CFG.sideOptions.box; }
-function firstSideForType(type){ return sideOptionsForType(type)[0]?.id || 'front'; }
+function sideOptionsForType(type, variant){ return CFG.sideOptionsByVariant[variant] || CFG.sideOptions[type] || CFG.sideOptions.box; }
+function firstSideForType(type, variant){ return sideOptionsForType(type, variant)[0]?.id || 'front'; }
 function createSideState(color, text = ''){ return { logo: null, text, backgroundColor: color, visible: true, alignment: 'center', scale: 1 }; }
-function createSides(type, color, text = 'малые тиражи'){
-  const visible = new Set(sideOptionsForType(type).map(s=>s.id));
+function createSides(type, variant, color, text = 'малые тиражи', existing = {}){
+  const visible = new Set(sideOptionsForType(type, variant).map(s=>s.id));
   return SIDE_IDS.reduce((acc, id)=>{
-    acc[id] = createSideState(color, id === 'front' ? text : '');
+    acc[id] = { ...createSideState(color, id === 'front' ? text : ''), ...(existing[id] || {}) };
+    if (acc[id].backgroundColor == null) acc[id].backgroundColor = color;
     acc[id].visible = visible.has(id);
     return acc;
   }, {});
@@ -104,10 +110,10 @@ function createSides(type, color, text = 'малые тиражи'){
 function activeSide(state){ return state.sides?.[state.activeSide] || state.sides?.front || createSideState(state.color || '#B08A5B'); }
 function variantConfig(type, variant){ return (CFG.variants[type] || []).find(v=>v.id===variant) || CFG.variants[type]?.[0] || { multiplier: 1 }; }
 function variantName(type, variant){ return (CFG.variants[type] || []).find(v=>v.id===variant)?.name || variant; }
-function sideLabel(type, sideId){ return sideOptionsForType(type).find(s=>s.id===sideId)?.label || sideId; }
-function visibleSideIds(type){ return sideOptionsForType(type).map(s=>s.id); }
+function sideLabel(type, variant, sideId){ return sideOptionsForType(type, variant).find(s=>s.id===sideId)?.label || sideId; }
+function visibleSideIds(type, variant){ return sideOptionsForType(type, variant).map(s=>s.id); }
 function sideHasContent(side){ return !!(side?.visible && (side.logo || String(side.text || '').trim())); }
-function hasAnySideContent(state){ return visibleSideIds(state.type).some(id=>sideHasContent(state.sides?.[id])); }
+function hasAnySideContent(state){ return visibleSideIds(state.type, state.variant).some(id=>sideHasContent(state.sides?.[id])); }
 function readinessInfo(state){
   const active = activeSide(state);
   const checks = [
@@ -162,7 +168,7 @@ function Stepper({ step, onStep, full }){
 function SettingsPanel({ state, set, setSide, tweaks }){
   const detail = tweaks.constructorDetail || 'full';
   const side = activeSide(state);
-  const sideOptions = sideOptionsForType(state.type);
+  const sideOptions = sideOptionsForType(state.type, state.variant);
   const variants = CFG.variants[state.type] || [];
   const SECTIONS = [
     { id:'type', label:'01. Тип упаковки' },
@@ -312,7 +318,7 @@ function SettingsPanel({ state, set, setSide, tweaks }){
                        onChange={(e)=>set('text', e.target.value)}/>
                 <div className="cst-text-meta mono">
                   <span>{side.text.length}/42</span>
-                  <span>{sideLabel(state.type, state.activeSide)}</span>
+                  <span>{sideLabel(state.type, state.variant, state.activeSide)}</span>
                 </div>
               </div>
             )}
@@ -361,7 +367,7 @@ function SettingsPanel({ state, set, setSide, tweaks }){
               <button className="cst-toggle-row" type="button" aria-pressed={side.visible} onClick={()=>setSide(state.activeSide, { visible: !side.visible })}>
                 <span>
                   <b>{side.visible ? 'Отображается' : 'Скрыто'}</b>
-                  <small>{sideLabel(state.type, state.activeSide)}</small>
+                  <small>{sideLabel(state.type, state.variant, state.activeSide)}</small>
                 </span>
                 <i/>
               </button>
@@ -401,7 +407,7 @@ function PreviewArea({ state, view, setView }){
         <div className="cst-preview-meta mono">
           <span>{currentTypeName(state.type)} · {variantName(state.type, state.variant)}</span>
           <span className="cst-dot"/>
-          <span>{currentSizeDims(state)} · {sideLabel(state.type, state.activeSide)}</span>
+          <span>{currentSizeDims(state)} · {sideLabel(state.type, state.variant, state.activeSide)}</span>
           <span className="cst-dot"/>
           <span style={{color:'var(--pkt-craft-dark)'}}>RGB {side.backgroundColor.toUpperCase()}</span>
         </div>
@@ -433,7 +439,7 @@ function PreviewArea({ state, view, setView }){
       <div className="cst-preview-footer mono">
         <span>{currentTypeName(state.type)}</span>
         <span>{variantName(state.type, state.variant)}</span>
-        <span>{sideLabel(state.type, state.activeSide)}</span>
+        <span>{sideLabel(state.type, state.variant, state.activeSide)}</span>
       </div>
       <div className="cst-preview-actions">
         <button className="btn btn-ghost btn-sm">
@@ -635,7 +641,7 @@ function RequestModal({ state, tweaks, onClose, onComplete }){
             <Row label="Вид / форма" value={variantName(state.type, state.variant)}/>
             <Row label="Размер" value={currentSizeDims(state)}/>
             <Row label="Материал" value={currentMaterialName(state.material)}/>
-            <Row label="Активная сторона" value={sideLabel(state.type, state.activeSide)}/>
+            <Row label="Активная сторона" value={sideLabel(state.type, state.variant, state.activeSide)}/>
             <Row label="Тираж" value={`${state.qty.toLocaleString('ru-RU')} шт`}/>
             <Row label="Срок производства" value={`${price.days} дн.`}/>
             <div className="cst-row-divider"/>
@@ -737,29 +743,47 @@ function currentMaterialName(id){ return CFG.materials.find(m=>m.id===id).name; 
 // ── Constructor root ───────────────────────────────────────
 export function Constructor({ onNavigate, tweaks = {}, initial }){
   const initialType = initial?.type || tweaks.heroType || 'box';
+  const initialVariant = defaultVariantForType(initialType);
   const initialColor = tweaks.heroType ? '#2563EB' : '#B08A5B';
   const [state, setState] = React.useState({
     type: initialType,
-    variant: defaultVariantForType(initialType),
+    variant: initialVariant,
     size: 'm',
     material: 'craft',
     color: initialColor,
     logo: null,
     text: 'малые тиражи',
-    activeSide: firstSideForType(initialType),
-    sides: createSides(initialType, initialColor),
+    activeSide: firstSideForType(initialType, initialVariant),
+    sides: createSides(initialType, initialVariant, initialColor),
     qty: 200,
   });
   const setSide = (sideId, edits) => setState(s=>({
     ...s,
-    sides: { ...s.sides, [sideId]: { ...s.sides[sideId], ...edits } },
+    sides: { ...s.sides, [sideId]: { ...createSideState(s.color), ...(s.sides[sideId] || {}), ...edits } },
   }));
   const set = (k, v) => setState(s=>{
     if (k === 'type') {
       const nextColor = activeSide(s).backgroundColor || s.color;
-      return { ...s, type: v, variant: defaultVariantForType(v), activeSide: firstSideForType(v), sides: createSides(v, nextColor, s.sides?.front?.text || s.text || ''), color: nextColor };
+      const nextVariant = defaultVariantForType(v);
+      return {
+        ...s,
+        type: v,
+        variant: nextVariant,
+        activeSide: firstSideForType(v, nextVariant),
+        sides: createSides(v, nextVariant, nextColor, s.sides?.front?.text || s.text || '', s.sides),
+        color: nextColor
+      };
     }
-    if (k === 'variant') return { ...s, variant: v };
+    if (k === 'variant') {
+      const available = sideOptionsForType(s.type, v).map(side=>side.id);
+      const nextActiveSide = available.includes(s.activeSide) ? s.activeSide : available[0] || 'front';
+      return {
+        ...s,
+        variant: v,
+        activeSide: nextActiveSide,
+        sides: createSides(s.type, v, s.color, s.sides?.front?.text || s.text || '', s.sides)
+      };
+    }
     if (k === 'activeSide') return { ...s, activeSide: v };
     if (k === 'color') {
       const current = s.activeSide;
@@ -776,7 +800,7 @@ export function Constructor({ onNavigate, tweaks = {}, initial }){
       return { ...s, material: v, color, sides: { ...s.sides, [current]: { ...s.sides[current], backgroundColor: color } } };
     }
     if (k === 'applyColorAll') {
-      const visible = new Set(visibleSideIds(s.type));
+      const visible = new Set(visibleSideIds(s.type, s.variant));
       const sides = Object.fromEntries(Object.entries(s.sides).map(([id, side])=>[
         id,
         visible.has(id) ? { ...side, backgroundColor: v } : side,
@@ -868,7 +892,7 @@ function ConstructorSuccess({ state, tweaks, onBack, onHome }){
               <Row label="Размер" value={currentSizeDims(state)}/>
               <Row label="Материал" value={currentMaterialName(state.material)}/>
               <Row label="Тираж" value={`${state.qty.toLocaleString('ru-RU')} шт`}/>
-              <Row label="Сторона" value={sideLabel(state.type, state.activeSide)}/>
+              <Row label="Сторона" value={sideLabel(state.type, state.variant, state.activeSide)}/>
               <div className="cst-row-divider"/>
               <Row label="Срок" value={`${price.days} дн.`}/>
               <Row label="Цена" value={<b className="tabular">{finalTotal.toLocaleString('ru-RU')} ₽</b>} large/>

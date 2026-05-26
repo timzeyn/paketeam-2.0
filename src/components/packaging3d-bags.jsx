@@ -43,6 +43,16 @@ function FaceArt({ artwork, side }){
   return <PkgArt artwork={artwork} side={side} />;
 }
 
+function faceStyle(sides, side, extra = {}){
+  const color = sides[side]?.backgroundColor || sides.front?.backgroundColor || '#B08A5B';
+  return {
+    backgroundColor: color,
+    ['--pkg-color']: color,
+    ['--pkg-art-color']: pktContrast(color),
+    ...extra,
+  };
+}
+
 // Shared wrapper-style helper
 function bagWrapStyle({ w, h, rx, ry, color, extra }){
   return {
@@ -91,12 +101,12 @@ export function DoyPack3D({ sides, rotation, idle, geometryId = 'doy-pack', seal
 
       {/* FRONT panel — anchored at top, tilted forward */}
       <div className="pkg-doy3d-face pkg-doy3d-front"
-           style={{
+           style={faceStyle(sides, 'front', {
              width: W, height: H,
              left: 0, top: 0,
              transformOrigin: '50% 0%',
              transform: `rotateX(${tiltDeg}deg)`,
-           }}>
+           })}>
         <div className="pkg-doy3d-mat" />
         <div className="pkg-doy3d-wrinkles" />
         <div className="pkg-doy3d-side-seam left" />
@@ -114,12 +124,12 @@ export function DoyPack3D({ sides, rotation, idle, geometryId = 'doy-pack', seal
 
       {/* BACK panel — anchored at top, tilted backward */}
       <div className="pkg-doy3d-face pkg-doy3d-back"
-           style={{
+           style={faceStyle(sides, 'back', {
              width: W, height: H,
              left: 0, top: 0,
              transformOrigin: '50% 0%',
              transform: `rotateY(180deg) rotateX(${tiltDeg}deg)`,
-           }}>
+           })}>
         <div className="pkg-doy3d-mat back" />
         <div className="pkg-doy3d-wrinkles" />
         <div className="pkg-doy3d-side-seam left" />
@@ -136,12 +146,12 @@ export function DoyPack3D({ sides, rotation, idle, geometryId = 'doy-pack', seal
       {/* RIGHT TRIANGULAR SIDE WALL — apex at the top seam, base spreads
           to the full gusset depth at the bottom. Mirrors the left wall. */}
       <div className="pkg-doy3d-face pkg-doy3d-side right"
-           style={{
+           style={faceStyle(sides, 'right', {
              width: D, height: baseY,
              left: (W - D) / 2, top: 0,
              transform: `rotateY(90deg) translateZ(${W/2}px)`,
              clipPath: 'polygon(50% 0%, 100% 100%, 0% 100%)',
-           }}>
+           })}>
         <div className="pkg-doy3d-side-mat" />
         <div className="pkg-doy3d-side-crease" />
         {renderSideArt && <FaceArt artwork={sides.right} side="right" />}
@@ -151,12 +161,12 @@ export function DoyPack3D({ sides, rotation, idle, geometryId = 'doy-pack', seal
           silhouette: a single point at the top heat seal that fans out
           into the full gusset depth at the base. */}
       <div className="pkg-doy3d-face pkg-doy3d-side left"
-           style={{
+           style={faceStyle(sides, 'left', {
              width: D, height: baseY,
              left: (W - D) / 2, top: 0,
              transform: `rotateY(-90deg) translateZ(${W/2}px)`,
              clipPath: 'polygon(50% 0%, 100% 100%, 0% 100%)',
-           }}>
+           })}>
         <div className="pkg-doy3d-side-mat" />
         <div className="pkg-doy3d-side-crease" />
         {renderSideArt && <FaceArt artwork={sides.left} side="left" />}
@@ -164,11 +174,11 @@ export function DoyPack3D({ sides, rotation, idle, geometryId = 'doy-pack', seal
 
       {/* BOTTOM GUSSET — flat horizontal panel at the base */}
       <div className="pkg-doy3d-face pkg-doy3d-base"
-           style={{
+           style={faceStyle(sides, 'bottom', {
              width: W, height: D,
              left: 0, top: baseY - D/2,
              transform: `rotateX(90deg)`,
-           }}>
+           })}>
         <div className="pkg-doy3d-base-mat" />
         <div className="pkg-doy3d-base-fold-x" />
         <div className="pkg-doy3d-base-fold-d1" />
@@ -196,7 +206,7 @@ export function ZipLock3D({ sides, rotation, idle }){
 
       {/* FRONT */}
       <div className="pkg-zip3d-face pkg-zip3d-front"
-           style={{ width: W, height: H, transform: `translateZ(${D/2}px)` }}>
+           style={faceStyle(sides, 'front', { width: W, height: H, transform: `translateZ(${D/2}px)` })}>
         <div className="pkg-zip3d-mat" />
         <div className="pkg-zip3d-edge left" />
         <div className="pkg-zip3d-edge right" />
@@ -215,7 +225,7 @@ export function ZipLock3D({ sides, rotation, idle }){
 
       {/* BACK */}
       <div className="pkg-zip3d-face pkg-zip3d-back"
-           style={{ width: W, height: H, transform: `rotateY(180deg) translateZ(${D/2}px)` }}>
+           style={faceStyle(sides, 'back', { width: W, height: H, transform: `rotateY(180deg) translateZ(${D/2}px)` })}>
         <div className="pkg-zip3d-mat back" />
         <div className="pkg-zip3d-edge left" />
         <div className="pkg-zip3d-edge right" />
@@ -315,7 +325,7 @@ export function PaperBag3D({ sides, rotation, idle }){
 
       {/* FRONT */}
       <div className="pkg-pb3d-face pkg-pb3d-front"
-           style={{ width: W, height: H, transform: `translateZ(${D/2}px)` }}>
+           style={faceStyle(sides, 'front', { width: W, height: H, transform: `translateZ(${D/2}px)` })}>
         <div className="pkg-pb3d-mat" />
         <div className="pkg-pb3d-wrinkles" />
         <div className="pkg-pb3d-edge left" />
@@ -330,7 +340,7 @@ export function PaperBag3D({ sides, rotation, idle }){
 
       {/* BACK */}
       <div className="pkg-pb3d-face pkg-pb3d-back"
-           style={{ width: W, height: H, transform: `rotateY(180deg) translateZ(${D/2}px)` }}>
+           style={faceStyle(sides, 'back', { width: W, height: H, transform: `rotateY(180deg) translateZ(${D/2}px)` })}>
         <div className="pkg-pb3d-mat back" />
         <div className="pkg-pb3d-wrinkles" />
         <div className="pkg-pb3d-edge left" />
@@ -345,8 +355,8 @@ export function PaperBag3D({ sides, rotation, idle }){
 
       {/* LEFT GUSSET — visible vertical center fold + corner folds */}
       <div className="pkg-pb3d-face pkg-pb3d-gusset"
-           style={{ width: D, height: H, left: (W - D) / 2, top: 0,
-                    transform: `rotateY(-90deg) translateZ(${W/2}px)` }}>
+           style={faceStyle(sides, 'left', { width: D, height: H, left: (W - D) / 2, top: 0,
+                    transform: `rotateY(-90deg) translateZ(${W/2}px)` })}>
         <div className="pkg-pb3d-gusset-mat" />
         <div className="pkg-pb3d-gusset-crease" />
         <div className="pkg-pb3d-gusset-corner tl" />
@@ -357,8 +367,8 @@ export function PaperBag3D({ sides, rotation, idle }){
 
       {/* RIGHT GUSSET */}
       <div className="pkg-pb3d-face pkg-pb3d-gusset"
-           style={{ width: D, height: H, left: (W - D) / 2, top: 0,
-                    transform: `rotateY(90deg) translateZ(${W/2}px)` }}>
+           style={faceStyle(sides, 'right', { width: D, height: H, left: (W - D) / 2, top: 0,
+                    transform: `rotateY(90deg) translateZ(${W/2}px)` })}>
         <div className="pkg-pb3d-gusset-mat" />
         <div className="pkg-pb3d-gusset-crease" />
         <div className="pkg-pb3d-gusset-corner tl" />
@@ -369,8 +379,8 @@ export function PaperBag3D({ sides, rotation, idle }){
 
       {/* BOTTOM — folded base with visible fold lines */}
       <div className="pkg-pb3d-face pkg-pb3d-base"
-           style={{ width: W, height: D, left: 0, top: (H - D) / 2,
-                    transform: `rotateX(-90deg) translateZ(${H/2}px)` }}>
+           style={faceStyle(sides, 'bottom', { width: W, height: D, left: 0, top: (H - D) / 2,
+                    transform: `rotateX(-90deg) translateZ(${H/2}px)` })}>
         <div className="pkg-pb3d-base-mat" />
         <div className="pkg-pb3d-base-fold v" />
         <div className="pkg-pb3d-base-fold h" />
@@ -414,7 +424,7 @@ export function CourierBag3D({ sides, rotation, idle }){
 
       {/* FRONT BODY */}
       <div className="pkg-cb3d-face pkg-cb3d-front"
-           style={{ width: W, height: H, transform: `translateZ(${D/2}px)` }}>
+           style={faceStyle(sides, 'front', { width: W, height: H, transform: `translateZ(${D/2}px)` })}>
         <div className="pkg-cb3d-mat" />
         <div className="pkg-cb3d-weld left" />
         <div className="pkg-cb3d-weld right" />
@@ -431,7 +441,7 @@ export function CourierBag3D({ sides, rotation, idle }){
 
       {/* BACK BODY */}
       <div className="pkg-cb3d-face pkg-cb3d-back"
-           style={{ width: W, height: H, transform: `rotateY(180deg) translateZ(${D/2}px)` }}>
+           style={faceStyle(sides, 'back', { width: W, height: H, transform: `rotateY(180deg) translateZ(${D/2}px)` })}>
         <div className="pkg-cb3d-mat back" />
         <div className="pkg-cb3d-weld left" />
         <div className="pkg-cb3d-weld right" />

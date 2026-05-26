@@ -190,8 +190,16 @@ function Box3D({ sides, rotation, idle, size, variant }){
     const lidColor  = shade(frontColor, 0.18);
     const baseColor = shade(frontColor, -0.10);
 
-    const lidSides  = SIDE_IDS.reduce((a,id)=>{ a[id] = { ...sides[id], backgroundColor: lidColor }; return a; }, {});
-    const baseSides = SIDE_IDS.reduce((a,id)=>{ a[id] = { ...sides[id], backgroundColor: baseColor }; return a; }, {});
+    const lidSides  = SIDE_IDS.reduce((a,id)=>{
+      const sideColor = sides[id]?.backgroundColor || frontColor;
+      a[id] = { ...sides[id], backgroundColor: shade(sideColor, 0.18) };
+      return a;
+    }, {});
+    const baseSides = SIDE_IDS.reduce((a,id)=>{
+      const sideColor = sides[id]?.backgroundColor || frontColor;
+      a[id] = { ...sides[id], backgroundColor: shade(sideColor, -0.10) };
+      return a;
+    }, {});
     const renderArt = (faceSides) => (id) => {
       const s = faceSides[id];
       return <>{s?.visible !== false && <PkgArt artwork={s} side={id === 'left' || id === 'right' ? 'left' : undefined} />}</>;
