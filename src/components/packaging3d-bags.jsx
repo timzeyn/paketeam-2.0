@@ -74,10 +74,10 @@ function bagWrapStyle({ w, h, rx, ry, color, extra }){
 // The bottom-gusset depth = 2 * H * sin(tiltDeg), so the math
 // closes naturally at the base.
 // ─────────────────────────────────────────────────────────
-export function DoyPack3D({ sides, rotation, idle }){
-  const { w: W, h: H, d: D } = BAG_GEOMETRY['doy-pack'];
+export function DoyPack3D({ sides, rotation, idle, geometryId = 'doy-pack', sealedTop = false, renderSideArt = false }){
+  const { w: W, h: H, d: D } = BAG_GEOMETRY[geometryId] || BAG_GEOMETRY['doy-pack'];
   const color = sides.front?.backgroundColor || '#B08A5B';
-  const { rx, ry } = clampRotation('doy-pack', rotation);
+  const { rx, ry } = clampRotation(geometryId, rotation);
 
   // Tilt angle derived from gusset depth so the base aligns
   const tiltRad = Math.atan((D / 2) / H);
@@ -103,9 +103,9 @@ export function DoyPack3D({ sides, rotation, idle }){
         <div className="pkg-doy3d-side-seam right" />
         <div className="pkg-doy3d-bottom-shadow" />
         <div className="pkg-doy3d-top-seal">
-          <div className="pkg-doy3d-zip-track" />
-          <div className="pkg-doy3d-notch left" />
-          <div className="pkg-doy3d-notch right" />
+          {!sealedTop && <div className="pkg-doy3d-zip-track" />}
+          {!sealedTop && <div className="pkg-doy3d-notch left" />}
+          {!sealedTop && <div className="pkg-doy3d-notch right" />}
         </div>
         <div className="pkg-doy3d-art-area">
           <FaceArt artwork={sides.front} side="front" />
@@ -126,7 +126,7 @@ export function DoyPack3D({ sides, rotation, idle }){
         <div className="pkg-doy3d-side-seam right" />
         <div className="pkg-doy3d-bottom-shadow" />
         <div className="pkg-doy3d-top-seal">
-          <div className="pkg-doy3d-zip-track" />
+          {!sealedTop && <div className="pkg-doy3d-zip-track" />}
         </div>
         <div className="pkg-doy3d-art-area">
           <FaceArt artwork={sides.back} side="back" />
@@ -144,6 +144,7 @@ export function DoyPack3D({ sides, rotation, idle }){
            }}>
         <div className="pkg-doy3d-side-mat" />
         <div className="pkg-doy3d-side-crease" />
+        {renderSideArt && <FaceArt artwork={sides.right} side="right" />}
       </div>
 
       {/* LEFT TRIANGULAR SIDE WALL — the classic stand-up pouch
@@ -158,6 +159,7 @@ export function DoyPack3D({ sides, rotation, idle }){
            }}>
         <div className="pkg-doy3d-side-mat" />
         <div className="pkg-doy3d-side-crease" />
+        {renderSideArt && <FaceArt artwork={sides.left} side="left" />}
       </div>
 
       {/* BOTTOM GUSSET — flat horizontal panel at the base */}
@@ -262,106 +264,15 @@ export function ZipLock3D({ sides, rotation, idle }){
 // silhouette where the gussets fold inward into the corners.
 // ─────────────────────────────────────────────────────────
 export function FlatBottomBag3D({ sides, rotation, idle }){
-  const { w: W, h: H, d: D } = BAG_GEOMETRY['flat-bottom-bag'];
-  const color = sides.front?.backgroundColor || '#B08A5B';
-  const { rx, ry } = clampRotation('flat-bottom-bag', rotation);
-  const finH = 22;  // height of the top fin seal sticking up
-
   return (
-    <div className={`pkg-3d pkg-bg pkg-fb3d ${idle ? 'pkg-fb3d-idle' : ''}`}
-         style={bagWrapStyle({ w: W, h: H, rx, ry, color })}>
-
-      {/* FRONT */}
-      <div className="pkg-fb3d-face pkg-fb3d-front"
-           style={{ width: W, height: H, transform: `translateZ(${D/2}px)` }}>
-        <div className="pkg-fb3d-mat" />
-        <div className="pkg-fb3d-corner tl" />
-        <div className="pkg-fb3d-corner tr" />
-        <div className="pkg-fb3d-corner bl" />
-        <div className="pkg-fb3d-corner br" />
-        <div className="pkg-fb3d-valve" />
-        <div className="pkg-fb3d-art-area">
-          <FaceArt artwork={sides.front} side="front" />
-        </div>
-      </div>
-
-      {/* BACK */}
-      <div className="pkg-fb3d-face pkg-fb3d-back"
-           style={{ width: W, height: H, transform: `rotateY(180deg) translateZ(${D/2}px)` }}>
-        <div className="pkg-fb3d-mat back" />
-        <div className="pkg-fb3d-corner tl" />
-        <div className="pkg-fb3d-corner tr" />
-        <div className="pkg-fb3d-corner bl" />
-        <div className="pkg-fb3d-corner br" />
-        <div className="pkg-fb3d-art-area">
-          <FaceArt artwork={sides.back} side="back" />
-        </div>
-      </div>
-
-      {/* LEFT GUSSET — diagonal corner folds at top and bottom */}
-      <div className="pkg-fb3d-face pkg-fb3d-gusset"
-           style={{ width: D, height: H, left: (W - D) / 2, top: 0,
-                    transform: `rotateY(-90deg) translateZ(${W/2}px)` }}>
-        <div className="pkg-fb3d-gusset-mat" />
-        <div className="pkg-fb3d-gusset-crease" />
-        <div className="pkg-fb3d-gusset-diag tl" />
-        <div className="pkg-fb3d-gusset-diag tr" />
-        <div className="pkg-fb3d-gusset-diag bl" />
-        <div className="pkg-fb3d-gusset-diag br" />
-        <FaceArt artwork={sides.left} side="left" />
-      </div>
-
-      {/* RIGHT GUSSET */}
-      <div className="pkg-fb3d-face pkg-fb3d-gusset"
-           style={{ width: D, height: H, left: (W - D) / 2, top: 0,
-                    transform: `rotateY(90deg) translateZ(${W/2}px)` }}>
-        <div className="pkg-fb3d-gusset-mat" />
-        <div className="pkg-fb3d-gusset-crease" />
-        <div className="pkg-fb3d-gusset-diag tl" />
-        <div className="pkg-fb3d-gusset-diag tr" />
-        <div className="pkg-fb3d-gusset-diag bl" />
-        <div className="pkg-fb3d-gusset-diag br" />
-        <FaceArt artwork={sides.right} side="right" />
-      </div>
-
-      {/* BOTTOM — flat base */}
-      <div className="pkg-fb3d-face pkg-fb3d-base"
-           style={{ width: W, height: D, left: 0, top: (H - D) / 2,
-                    transform: `rotateX(-90deg) translateZ(${H/2}px)` }}>
-        <div className="pkg-fb3d-base-mat" />
-        <FaceArt artwork={sides.bottom} side="bottom" />
-      </div>
-
-      {/* TOP FACE — pinched seal area between the fin and the body */}
-      <div className="pkg-fb3d-face pkg-fb3d-top"
-           style={{ width: W, height: D, left: 0, top: (H - D) / 2,
-                    transform: `rotateX(90deg) translateZ(${H/2}px)` }}>
-        <div className="pkg-fb3d-top-mat" />
-      </div>
-
-      {/* FIN SEAL — real 3D ridge sticking up above the top, formed
-          by two thin walls (front-facing + back-facing) joined at
-          the very top. Centered above the bag, ~22px tall.       */}
-      <div className="pkg-fb3d-fin pkg-fb3d-fin-front"
-           style={{
-             width: W, height: finH,
-             left: 0, top: -finH,
-             transform: `translateZ(0.5px)`,
-           }}>
-        <div className="pkg-fb3d-fin-mat" />
-        <div className="pkg-fb3d-fin-ribs" />
-        <div className="pkg-fb3d-fin-pull" />
-      </div>
-      <div className="pkg-fb3d-fin pkg-fb3d-fin-back"
-           style={{
-             width: W, height: finH,
-             left: 0, top: -finH,
-             transform: `rotateY(180deg) translateZ(0.5px)`,
-           }}>
-        <div className="pkg-fb3d-fin-mat" />
-        <div className="pkg-fb3d-fin-ribs" />
-      </div>
-    </div>
+    <DoyPack3D
+      sides={sides}
+      rotation={rotation}
+      idle={idle}
+      geometryId="flat-bottom-bag"
+      sealedTop
+      renderSideArt
+    />
   );
 }
 
